@@ -1,28 +1,15 @@
-# coding: utf-8
-lib = File.expand_path('../lib', __FILE__)
-$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'aerospike_c_ruby/version'
+Gem::Specification.new do |s|
+  s.name        = 'aerospike_c_ruby'
+  s.version     = '0.1.0'
+  s.date        = '2015-11-20'
+  s.summary     = "aerospike_c_ruby"
+  s.description = "aerospike_c_ruby"
+  s.authors     = ["Adam Stomski"]
+  s.email       = 'adam.stomski@gmail.com'
 
-Gem::Specification.new do |spec|
-  spec.name          = "aerospike_c_ruby"
-  spec.version       = AerospikeCRuby::VERSION
-  spec.authors       = ["Adam Stomski"]
-  spec.email         = ["adam.stomski@gmail.com"]
+  s.files       = Dir["{lib}/**/*", "Rakefile", "README.md", 'ext/**/*.c', 'ext/**/*.h']
+  s.test_files  = Dir["spec/**/*"]
+  s.extensions = %w[ext/aerospike_c_ruby/extconf.rb]
 
-  if spec.respond_to?(:metadata)
-    spec.metadata['allowed_push_host'] = "TODO: Set to 'http://mygemserver.com' to prevent pushes to rubygems.org, or delete to allow pushes to any server."
-  end
-
-  spec.summary       = %q{TODO: Write a short summary, because Rubygems requires one.}
-  spec.description   = %q{TODO: Write a longer description or delete this line.}
-  spec.homepage      = "TODO: Put your gem's website or public repo URL here."
-  spec.license       = "MIT"
-
-  spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
-  spec.bindir        = "exe"
-  spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
-  spec.require_paths = ["lib"]
-
-  spec.add_development_dependency "bundler", "~> 1.8"
-  spec.add_development_dependency "rake", "~> 10.0"
+  s.license = 'MIT'
 end
