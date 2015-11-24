@@ -15,7 +15,7 @@ static void key_deallocate(as_key * key) {
 // def initialize
 //
 static void key_initialize(VALUE self, VALUE as_namespace, VALUE set, VALUE key) {
-  log_debug("[AerospikeC::Key][initialize] initializing key");
+  VALUE key_struct;
 
   char * c_namespace = arg_to_cstr(as_namespace);
   char * c_set = arg_to_cstr(set);
@@ -31,9 +31,11 @@ static void key_initialize(VALUE self, VALUE as_namespace, VALUE set, VALUE key)
   rb_iv_set(self, "@set", set);
   rb_iv_set(self, "@key", key);
 
-  VALUE key_struct = Data_Wrap_Struct(Key, NULL, key_deallocate, k);
+  key_struct = Data_Wrap_Struct(Key, NULL, key_deallocate, k);
 
   rb_iv_set(self, "as_key", key_struct);
+
+  log_debug("[AerospikeC::Key][initialize] initializing key");
 }
 
 //

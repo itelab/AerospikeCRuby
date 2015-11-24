@@ -374,3 +374,43 @@ static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE hmap) {
 
 }
 **************************************************************************/
+
+//
+// ruby array to char **
+// remember to destroy allocated memory with inputArray_destroy(inputArray)
+//
+char ** rb_array2inputArray(VALUE ary) {
+  char ** inputArray;
+
+  long len = rb_ary_len_long(ary);
+
+  inputArray = malloc( (len + 1) * sizeof(char *) );
+
+  for ( long i = 0; i < len; ++i ) {
+    VALUE element = rb_ary_entry(ary, i);
+
+    char * str = StringValueCStr(element);
+
+    inputArray[i] = malloc( strlen(str) * sizeof(char *) );
+    strcpy(inputArray[i], str);
+  }
+
+  inputArray[len] = NULL;
+
+  return inputArray;
+}
+
+//
+// frees inputArray memory
+//
+void inputArray_destroy(char ** inputArray) {
+  for (int i = 0; ; ++i) {
+    if ( inputArray[i] == NULL ) {
+      break;
+    }
+
+    free(inputArray[i]);
+  }
+
+  free(inputArray);
+}

@@ -3,6 +3,9 @@
 
 #include <ruby.h>
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <aerospike/aerospike.h>
 #include <aerospike/aerospike_index.h>
 #include <aerospike/aerospike_key.h>
@@ -60,6 +63,9 @@ VALUE record2hash(as_record * rec);
 void hash2record(VALUE hash, VALUE rec);
 as_arraylist array2as_list(VALUE ary);
 VALUE as_list2array(as_arraylist * list);
+
+char ** rb_array2inputArray(VALUE ary);
+void inputArray_destroy(char ** inputArray);
 
 // ---------------------------------------------------
 // extern variables

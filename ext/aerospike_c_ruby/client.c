@@ -62,16 +62,58 @@ static VALUE put(VALUE self, VALUE key, VALUE hash) {
 }
 
 //
-// def get(key)
+// def get(key, specific_bins = nil, options = {})
 //
-static VALUE get(VALUE self, VALUE key) {
+// specific bins should be an Array of bins
+// @TODO options
+//
+static VALUE get(int argc, VALUE * argv, VALUE self) {
   as_error err;
   as_status status;
-  as_key * k      = get_key_struct(key);;
   aerospike * as  = get_client_struct(self);
   as_record * rec = NULL;
-  VALUE bins;
 
+  VALUE bins;
+  VALUE key;
+  VALUE specific_bins;
+  VALUE options;
+
+  rb_scan_args(argc, argv, "12", &key, &specific_bins, &options);
+
+  if ( NIL_P(specific_bins) ) specific_bins = Qnil;
+  if ( NIL_P(options) ) options = rb_hash_new();
+
+  as_key * k = get_key_struct(key);
+
+  // read specific bins
+  if ( specific_bins != Qnil ) {
+    if ( TYPE(specific_bins) != T_ARRAY ) {
+      rb_raise(rb_eRuntimeError, "[AerospikeC::Client][get] specific_bins must be an Array");
+    }
+
+    char ** inputArray = rb_array2inputArray(specific_bins);
+
+    if ( ( status = aerospike_key_select(as, &err, NULL, k, inputArray, &rec) ) != AEROSPIKE_OK) {
+      as_record_destroy(rec);
+      inputArray_destroy(inputArray);
+
+      if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
+        log_warn("[AerospikeC::Client][get] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+        return Qnil;
+      }
+
+      raise_as_error(err);
+    }
+
+    bins = record2hash(rec);
+
+    as_record_destroy(rec);
+    inputArray_destroy(inputArray);
+
+    return bins;
+  }
+
+  // read all bins
   if ( ( status = aerospike_key_get(as, &err, NULL, k, &rec) ) != AEROSPIKE_OK) {
     as_record_destroy(rec);
 
@@ -162,7 +204,7 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   //
   rb_define_method(Client, "initialize", RB_FN_ANY()client_initialize, 2);
   rb_define_method(Client, "put", RB_FN_ANY()put, 2);
-  rb_define_method(Client, "get", RB_FN_ANY()get, 1);
+  rb_define_method(Client, "get", RB_FN_ANY()get, -1);
   rb_define_method(Client, "delete", RB_FN_ANY()delete_record, 1);
   rb_define_method(Client, "logger=", RB_FN_ANY()set_logger, 1);
   rb_define_method(Client, "exists?", RB_FN_ANY()key_exists, 1);
