@@ -34,21 +34,40 @@ static void client_initialize(VALUE self, VALUE host, VALUE port) {
 }
 
 //
-// def put(key, bins)
+// def put(key, bins, options = {})
 //
-static VALUE put(VALUE self, VALUE key, VALUE hash) {
+static VALUE put(int argc, VALUE * argv, VALUE self) {
   as_error err;
   as_record * rec = NULL;
-
-  as_key * k      = get_key_struct(key);
   aerospike * as  = get_client_struct(self);
 
-  if ( TYPE(hash) != T_HASH ) {
-    rb_raise(rb_eRuntimeError, "Bins must be a Hash");
+  VALUE key;
+  VALUE hash;
+  VALUE options;
+  VALUE option_tmp;
+  VALUE ttlsym = ID2SYM(rb_intern("ttl"));
+
+  rb_scan_args(argc, argv, "21", &key, &hash, &options);
+
+  // default values for optional arguments
+  if ( NIL_P(options) ) options = rb_hash_new();
+  if ( TYPE(hash) != T_HASH ) rb_raise(rb_eRuntimeError, "Bins must be a Hash");
+
+  // check ttl option
+  option_tmp = rb_hash_aref(options, ttlsym);
+  if ( option_tmp == Qnil ) {
+    rb_hash_aset(options, ttlsym, INT2FIX(0));
+  }
+  else if ( TYPE(option_tmp) != T_FIXNUM ) {
+    rb_raise(rb_eRuntimeError, "ttl must be an integer");
   }
 
+  as_key * k = get_key_struct(key);
+
   VALUE new_rec = rb_funcall(Record, rb_intern("new"), 1, hash);
+
   rec = get_record_struct(new_rec);
+  rec->ttl = FIX2INT( rb_hash_aref(options, ttlsym) );
 
   if (aerospike_key_put(as, &err, NULL, k, rec) != AEROSPIKE_OK) {
     raise_as_error(err);
@@ -204,7 +223,7 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   // methods
   //
   rb_define_method(Client, "initialize", RB_FN_ANY()client_initialize, 2);
-  rb_define_method(Client, "put", RB_FN_ANY()put, 2);
+  rb_define_method(Client, "put", RB_FN_ANY()put, -1);
   rb_define_method(Client, "get", RB_FN_ANY()get, -1);
   rb_define_method(Client, "delete", RB_FN_ANY()delete_record, 1);
   rb_define_method(Client, "logger=", RB_FN_ANY()set_logger, 1);
