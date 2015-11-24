@@ -406,6 +406,7 @@ char ** rb_array2inputArray(VALUE ary) {
 void inputArray_destroy(char ** inputArray) {
   for (int i = 0; ; ++i) {
     if ( inputArray[i] == NULL ) {
+      free(inputArray[i]);
       break;
     }
 
