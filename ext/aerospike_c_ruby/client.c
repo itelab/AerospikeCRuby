@@ -35,6 +35,7 @@ static void client_initialize(VALUE self, VALUE host, VALUE port) {
 
 //
 // def put(key, bins, options = {})
+// @TODO options policy
 //
 static VALUE put(int argc, VALUE * argv, VALUE self) {
   as_error err;
@@ -84,7 +85,7 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
 // def get(key, specific_bins = nil, options = {})
 //
 // specific bins should be an Array of bins
-// @TODO options
+// @TODO options policy
 //
 static VALUE get(int argc, VALUE * argv, VALUE self) {
   as_error err;
@@ -209,6 +210,36 @@ static VALUE key_exists(VALUE self, VALUE key) {
   }
 }
 
+//
+// def get_header(key)
+//
+static VALUE get_header(VALUE self, VALUE key) {
+  as_error err;
+  as_status status;
+  aerospike * as = get_client_struct(self);
+  as_key * k     = get_key_struct(key);
+  as_record * rec = NULL;
+
+  VALUE header = rb_hash_new();
+
+  const char * inputArray[] = { NULL };
+
+  if ( ( status = aerospike_key_select(as, &err, NULL, k, inputArray, &rec) ) != AEROSPIKE_OK) {
+    if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
+      log_warn("[AerospikeC::Client][get] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      return Qnil;
+    }
+
+    raise_as_error(err);
+  }
+
+  rb_hash_aset(header, rb_str_new2("gen"), INT2FIX(rec->gen));
+  rb_hash_aset(header, rb_str_new2("ttl"), INT2FIX(rec->ttl));
+
+  as_record_destroy(rec);
+
+  return header;
+}
 
 // ----------------------------------------------------------------------------------
 // Init
@@ -228,6 +259,7 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   rb_define_method(Client, "delete", RB_FN_ANY()delete_record, 1);
   rb_define_method(Client, "logger=", RB_FN_ANY()set_logger, 1);
   rb_define_method(Client, "exists?", RB_FN_ANY()key_exists, 1);
+  rb_define_method(Client, "get_header", RB_FN_ANY()get_header, 1);
 
   //
   // attr_reader
