@@ -39,7 +39,6 @@ static void client_initialize(VALUE self, VALUE host, VALUE port) {
 static VALUE put(VALUE self, VALUE key, VALUE hash) {
   as_error err;
   as_record * rec = NULL;
-  bool is_hash = false;
 
   as_key * k      = get_key_struct(key);
   aerospike * as  = get_client_struct(self);
@@ -55,9 +54,7 @@ static VALUE put(VALUE self, VALUE key, VALUE hash) {
     raise_as_error(err);
   }
 
-  if ( is_hash == true ) {
-    as_record_destroy(rec);
-  }
+  as_record_destroy(rec);
 
   log_info("[AerospikeC::Client][put] success");
 
