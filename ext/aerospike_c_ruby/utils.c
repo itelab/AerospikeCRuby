@@ -380,16 +380,25 @@ static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE hmap) {
 // remember to destroy allocated memory with inputArray_destroy(inputArray)
 //
 char ** rb_array2inputArray(VALUE ary) {
+  VALUE str_val;
+  VALUE element;
   char ** inputArray;
+  char * str;
 
   long len = rb_ary_len_long(ary);
 
   inputArray = malloc( (len + 1) * sizeof(char *) );
 
   for ( long i = 0; i < len; ++i ) {
-    VALUE element = rb_ary_entry(ary, i);
+    element = rb_ary_entry(ary, i);
 
-    char * str = StringValueCStr(element);
+    if ( TYPE(element) != T_STRING ) {
+      str_val = rb_funcall(element, rb_intern("to_s"), 0);
+      str = StringValueCStr(str_val);
+    }
+    else {
+      str = StringValueCStr(element);
+    }
 
     inputArray[i] = malloc( strlen(str) * sizeof(char *) );
     strcpy(inputArray[i], str);
@@ -405,12 +414,9 @@ char ** rb_array2inputArray(VALUE ary) {
 //
 void inputArray_destroy(char ** inputArray) {
   for (int i = 0; ; ++i) {
-    if ( inputArray[i] == NULL ) {
-      free(inputArray[i]);
-      break;
-    }
-
     free(inputArray[i]);
+
+    if ( inputArray[i] == NULL ) break;
   }
 
   free(inputArray);

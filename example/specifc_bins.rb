@@ -11,8 +11,16 @@ bins = {
   "a" => 1,
   "b" => 2,
   "c" => "trzy",
+  "d" => "dddd",
+  "e" => "cycki",
 }
+
+class E
+  def to_s
+    "e"
+  end
+end
 
 client.put(key, bins)
 
-puts client.get(key, ["a", "b"]).inspect
+puts client.get(key, [:a, "b", E.new]).inspect

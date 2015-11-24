@@ -80,6 +80,7 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
 
   rb_scan_args(argc, argv, "12", &key, &specific_bins, &options);
 
+  // default values for optional arguments
   if ( NIL_P(specific_bins) ) specific_bins = Qnil;
   if ( NIL_P(options) ) options = rb_hash_new();
 
@@ -91,7 +92,7 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
       rb_raise(rb_eRuntimeError, "[AerospikeC::Client][get] specific_bins must be an Array");
     }
 
-    char ** inputArray = rb_array2inputArray(specific_bins);
+    char ** inputArray = rb_array2inputArray(specific_bins); // convert ruby array to char **
 
     if ( ( status = aerospike_key_select(as, &err, NULL, k, inputArray, &rec) ) != AEROSPIKE_OK) {
       as_record_destroy(rec);
