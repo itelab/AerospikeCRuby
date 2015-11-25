@@ -364,6 +364,59 @@ static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
   return records_bins;
 }
 
+//
+// def touch(key, options = {})
+// @TODO options policy
+//
+static VALUE touch(int argc, VALUE * argv, VALUE self) {
+  as_error err;
+  as_status status;
+  aerospike * as = get_client_struct(self);
+
+  VALUE key;
+  VALUE options;
+
+  rb_scan_args(argc, argv, "11", &key, &options);
+
+  // default values for optional arguments
+  if ( NIL_P(options) ) {
+    options = rb_hash_new();
+    rb_hash_aset(options, ttl_sym, rb_zero);
+  }
+  else {
+    if ( TYPE(rb_hash_aref(options, ttl_sym)) != T_FIXNUM ) { // check ttl option
+      rb_raise(rb_eRuntimeError, "[AerospikeC::Client][put] ttl must be an integer");
+    }
+  }
+
+  as_key * k = get_key_struct(key);
+  as_record * rec = NULL;
+
+  as_operations ops;
+  as_operations_inita(&ops, 1);
+  as_operations_add_touch(&ops);
+
+  ops.ttl = FIX2INT( rb_hash_aref(options, ttl_sym) );
+
+  if ( ( status = aerospike_key_operate(as, &err, NULL, k, &ops, &rec) ) != AEROSPIKE_OK ) {
+    if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
+      log_warn("[AerospikeC::Client][touch] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      return Qnil;
+    }
+
+    raise_as_error(err);
+  }
+
+  VALUE header = rb_hash_new();
+
+  rb_hash_aset(header, rb_str_new2("gen"), INT2FIX(rec->gen));
+  rb_hash_aset(header, rb_str_new2("expire_in"), INT2FIX(rec->ttl));
+
+  as_record_destroy(rec);
+  as_operations_destroy(&ops);
+
+  return header;
+}
 // ----------------------------------------------------------------------------------
 // Init
 //
@@ -386,6 +439,7 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   rb_define_method(Client, "exists?", RB_FN_ANY()key_exists, 1);
   rb_define_method(Client, "get_header", RB_FN_ANY()get_header, 1);
   rb_define_method(Client, "batch_get", RB_FN_ANY()batch_get, -1);
+  rb_define_method(Client, "touch", RB_FN_ANY()touch, -1);
 
   //
   // attr_reader

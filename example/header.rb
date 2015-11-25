@@ -18,6 +18,15 @@ ttl = 3
 client.put(key, bins, ttl: ttl)
 puts client.get_header(key).inspect
 
+(ttl - 1).times do
+  sleep 1
+  puts client.get_header(key).inspect
+end
+
+ttl = 5
+
+puts client.touch(key, ttl: ttl).inspect
+
 (ttl + 1).times do
   sleep 1
   puts client.get_header(key).inspect
