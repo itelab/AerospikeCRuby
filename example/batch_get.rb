@@ -7,9 +7,9 @@ client.logger = Logger.new("log/batch_get.log")
 keys = []
 
 i = 0
-50.times do
+5000.times do
   bins = {"index" => i, "message" => "message_#{i}"}
-  key = AerospikeC::Key.new("test", "batch_get", "batch_get_#{i}")
+  key = AerospikeC::Key.new("giligili_dev", "batch_get", "batch_get_#{i}")
 
   client.delete(key)
   client.put(key, bins)
@@ -20,10 +20,10 @@ end
 
 recs = client.batch_get(keys)
 
-puts recs.inspect
+puts recs
 
-puts "-----------------------------"
+# puts "-----------------------------"
 
-recs = client.batch_get(keys, ["index"], with_header: true)
+# recs = client.batch_get(keys, ["index"], with_header: true)
 
-puts recs.inspect
+# puts recs.inspect

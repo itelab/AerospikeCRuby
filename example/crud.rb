@@ -4,7 +4,7 @@ require "logger"
 client = AerospikeC::Client.new("127.0.0.1", 3000)
 client.logger = Logger.new("log/crud.log")
 
-key = AerospikeC::Key.new("test", "test", "crud")
+key = AerospikeC::Key.new("giligili_dev", "test", "crud")
 client.delete(key)
 
 puts "\n--- key:"

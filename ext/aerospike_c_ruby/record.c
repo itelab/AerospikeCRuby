@@ -14,6 +14,7 @@ static VALUE bin_val(VALUE self) {
 //
 static void rec_deallocate(as_record * rec) {
   as_record_destroy(rec);
+  free(rec);
 }
 
 //
@@ -24,9 +25,10 @@ static void rec_initialize(VALUE self, VALUE value) {
 
   rb_iv_set(self, "@bins", value);
 
-  int len = rb_ary_len_int(self);
+  long len = rb_ary_len_long(value);
 
-  as_record * rec = as_record_new(len);
+  as_record * rec = (as_record *) malloc( sizeof(as_record) );
+  as_record_init(rec, len);
 
   VALUE record = Data_Wrap_Struct(Record, NULL, rec_deallocate, rec);
 

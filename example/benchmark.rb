@@ -35,6 +35,12 @@ all_time = Benchmark.realtime do
   puts "#{(time*1000).round(2)}ms read"
 
   time = Benchmark.realtime do
+    client.batch_get(keys[0..4999])
+  end
+
+  puts "#{(time*1000).round(2)}ms batch read"
+
+  time = Benchmark.realtime do
     keys.each do |key|
       client.delete(key)
     end

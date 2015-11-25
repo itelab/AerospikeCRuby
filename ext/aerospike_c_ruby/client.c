@@ -78,11 +78,17 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
       rb_raise(rb_eRuntimeError, "[AerospikeC::Client][put] ttl must be an integer");
     }
   }
-  if ( TYPE(hash) != T_HASH ) rb_raise(rb_eRuntimeError, "[AerospikeC::Client][put] Bins must be a Hash");
 
   as_key * k = get_key_struct(key);
 
-  VALUE new_rec = rb_funcall(Record, rb_intern("new"), 1, hash);
+  VALUE new_rec;
+
+  if ( TYPE(hash) == T_HASH ) {
+    new_rec = rb_funcall(Record, rb_intern("new"), 1, hash);
+  }
+  else {
+    new_rec = hash;
+  }
 
   rec = get_record_struct(new_rec);
   rec->ttl = FIX2INT( rb_hash_aref(options, ttl_sym) );
@@ -296,7 +302,6 @@ static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
     rb_hash_aset(options, with_header_sym, Qfalse);
   }
 
-
   long keys_len = rb_ary_len_long(keys);
 
   VALUE records_bins = rb_ary_new();
@@ -340,7 +345,7 @@ static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
 
   as_vector list = records.list;
 
-  for (uint32_t i = 0; i < list.size; ++i) {
+  for (long i = 0; i < list.size; ++i) {
     as_batch_read_record * record = as_vector_get(&list, i);
     as_record rec = record->record;
 
@@ -351,7 +356,10 @@ static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
   }
 
   as_batch_read_destroy(&records);
+
   if ( specific_bins != Qnil ) bin_names_destroy(bin_names, n_bin_names);
+
+  log_debug("[AerospikeC::Client][batch_get] success");
 
   return records_bins;
 }

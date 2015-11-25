@@ -112,6 +112,8 @@ VALUE record2hash(as_record * rec) {
     }
   }
 
+  log_debug("[Utils][record2hash] success");
+
   return hash;
 }
 
@@ -215,37 +217,35 @@ static int foreach_hash2record(VALUE key, VALUE val, VALUE record) {
   as_arraylist tmp_list;
   as_hashmap tmp_map;
 
-  char * bin_name = key2bin_name(key);
-
   as_record * rec;
   Data_Get_Struct(record, as_record, rec);
 
   switch ( TYPE(val) ) { // set bin_name = val dependent on type
     case T_NIL:
       log_debug("[Utils][foreach_hash2record] TYPE(val) -> nil");
-      as_record_set_nil(rec, bin_name);
+      as_record_set_nil(rec, key2bin_name(key));
       break;
 
     case T_SYMBOL:
       log_debug("[Utils][foreach_hash2record] TYPE(val) -> symbol");
       tmp = rb_funcall(val, rb_intern("to_s"), 0);
-      as_record_set_str(rec, bin_name, StringValueCStr(tmp));
+      as_record_set_str(rec, key2bin_name(key), StringValueCStr(tmp));
       break;
 
     case T_FIXNUM:
       log_debug("[Utils][foreach_hash2record] TYPE(val) -> fixnum");
-      as_record_set_int64(rec, bin_name, FIX2LONG(val));
+      as_record_set_int64(rec, key2bin_name(key), FIX2LONG(val));
       break;
 
     case T_STRING:
       log_debug("[Utils][foreach_hash2record] TYPE(val) -> string");
-      as_record_set_str(rec, bin_name, StringValueCStr(val));
+      as_record_set_str(rec, key2bin_name(key), StringValueCStr(val));
       break;
 
     case T_ARRAY:
       log_debug("[Utils][foreach_hash2record] TYPE(val) -> array");
       tmp_list = array2as_list(val);
-      as_record_set_list(rec, bin_name, (as_list *)&tmp_list);
+      as_record_set_list(rec, key2bin_name(key), (as_list *)&tmp_list);
       break;
 
     // case T_HASH:
@@ -267,7 +267,6 @@ static int foreach_hash2record(VALUE key, VALUE val, VALUE record) {
 //
 static char * key2bin_name(VALUE key) {
   VALUE tmp;
-  char * bin_name;
 
   switch ( TYPE(key) ) { // get bin name from key
     case T_NIL:
@@ -278,20 +277,18 @@ static char * key2bin_name(VALUE key) {
     case T_SYMBOL:
       log_debug("[Utils][key2bin_name] TYPE(val) symbol");
       tmp = rb_funcall(key, rb_intern("to_s"), 0);
-      bin_name = StringValueCStr( tmp );
+      return StringValueCStr( tmp );
       break;
 
     case T_STRING:
       log_debug("[Utils][key2bin_name] TYPE(val) string");
-      bin_name = StringValueCStr(key);
+      return StringValueCStr(key);
       break;
 
     default:
       rb_raise(rb_eRuntimeError, "Unsupported key type");
       break;
   }
-
-  return bin_name;
 }
 
 /**************************************************************************

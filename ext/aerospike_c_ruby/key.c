@@ -9,6 +9,7 @@ static char * arg_to_cstr(VALUE key);
 //
 static void key_deallocate(as_key * key) {
   as_key_destroy(key);
+  free(key);
 }
 
 //
@@ -21,7 +22,8 @@ static void key_initialize(VALUE self, VALUE as_namespace, VALUE set, VALUE key)
   char * c_set = arg_to_cstr(set);
   char * c_key = arg_to_cstr(key);
 
-  as_key * k = as_key_new(c_namespace, c_set, c_key);
+  as_key * k = (as_key *) malloc ( sizeof(as_key) );
+  as_key_init(k, c_namespace, c_set, c_key);
 
   if ( k == NULL ) {
     rb_raise(rb_eRuntimeError, "Initialization key %s:%s:%s failed", c_namespace, c_set, c_key);
