@@ -1,6 +1,8 @@
 #ifndef AEROSPIKE_C_RUBY_H
 #define AEROSPIKE_C_RUBY_H
 
+#define AEROSPIKE_C_RUBY_DEBUG
+
 #include <ruby.h>
 
 #include <stdio.h>

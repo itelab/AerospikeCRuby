@@ -8,10 +8,12 @@ static char * key2bin_name(VALUE key);
 // logger methods
 //
 void log_debug(const char * msg) {
+#ifdef AEROSPIKE_C_RUBY_DEBUG
   if ( TYPE(Logger) != T_OBJECT ) {
     return;
   }
   rb_funcall(Logger, rb_intern("debug"), 1, rb_str_new2(msg));
+#endif
 }
 
 void log_info(const char * msg) {
