@@ -74,7 +74,7 @@ as_record * get_record_struct(VALUE rec) {
 //
 void raise_as_error(as_error err) {
   log_fatal(err.message);
-  rb_raise(rb_eRuntimeError, "%s -- Error code: %d", err.message, err.code);
+  rb_raise(rb_eRuntimeError, "%s -- Error code: %d, at: [%s:%d]", err.message, err.code, err.file, err.line);
 }
 
 //
@@ -113,13 +113,6 @@ VALUE record2hash(as_record * rec) {
   }
 
   return hash;
-}
-
-//
-// free memory method
-//
-static void rec_deallocate(as_record * rec) {
-  as_record_destroy(rec);
 }
 
 //
@@ -376,7 +369,7 @@ static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE hmap) {
 **************************************************************************/
 
 //
-// ruby array to char **
+// ruby array to char ** with last element NULL
 // remember to destroy allocated memory with inputArray_destroy(inputArray)
 //
 char ** rb_array2inputArray(VALUE ary) {
@@ -420,4 +413,47 @@ void inputArray_destroy(char ** inputArray) {
   }
 
   free(inputArray);
+}
+
+//
+// ruby array to char **
+// remember to destroy allocated memory with bin_names_destroy(bin_names)
+//
+char ** rb_array2bin_names(VALUE ary) {
+  VALUE str_val;
+  VALUE element;
+  char ** bin_names;
+  char * str;
+
+  long len = rb_ary_len_long(ary);
+
+  bin_names = malloc( (len) * sizeof(char *) );
+
+  for ( long i = 0; i < len; ++i ) {
+    element = rb_ary_entry(ary, i);
+
+    if ( TYPE(element) != T_STRING ) {
+      str_val = rb_funcall(element, rb_intern("to_s"), 0);
+      str = StringValueCStr(str_val);
+    }
+    else {
+      str = StringValueCStr(element);
+    }
+
+    bin_names[i] = malloc( strlen(str) * sizeof(char *) );
+    strcpy(bin_names[i], str);
+  }
+
+  return bin_names;
+}
+
+//
+// frees bin_names memory
+//
+void bin_names_destroy(char ** bin_names, long len) {
+  for (int i = 0; i < len ; ++i) {
+    free(bin_names[i]);
+  }
+
+  free(bin_names);
 }

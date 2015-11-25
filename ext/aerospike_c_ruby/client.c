@@ -11,6 +11,26 @@ static void client_deallocate(aerospike * as) {
 }
 
 //
+// if with_header = true then add header to hash
+//
+static VALUE check_with_header(VALUE bins, VALUE options, as_record * rec) {
+  if ( rb_hash_aref(options, with_header_sym) == Qtrue ) {
+    VALUE header_hash = rb_hash_new();
+    rb_hash_aset(header_hash, rb_str_new2("gen"), INT2FIX(rec->gen));
+    rb_hash_aset(header_hash, rb_str_new2("expire_in"), INT2FIX(rec->ttl));
+
+    if ( rb_hash_aref(bins, rb_str_new2("header")) != Qnil ) {
+      rb_hash_aset(bins, rb_str_new2("record_header"), header_hash);
+    }
+    else {
+      rb_hash_aset(bins, rb_str_new2("header"), header_hash);
+    }
+  }
+
+  return bins;
+}
+
+//
 // def initialize(host, port)
 //
 static void client_initialize(VALUE self, VALUE host, VALUE port) {
@@ -45,30 +65,27 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
   VALUE key;
   VALUE hash;
   VALUE options;
-  VALUE option_tmp;
-  VALUE ttlsym = ID2SYM(rb_intern("ttl"));
 
   rb_scan_args(argc, argv, "21", &key, &hash, &options);
 
   // default values for optional arguments
-  if ( NIL_P(options) ) options = rb_hash_new();
-  if ( TYPE(hash) != T_HASH ) rb_raise(rb_eRuntimeError, "Bins must be a Hash");
-
-  // check ttl option
-  option_tmp = rb_hash_aref(options, ttlsym);
-  if ( option_tmp == Qnil ) {
-    rb_hash_aset(options, ttlsym, INT2FIX(0));
+  if ( NIL_P(options) ) {
+    options = rb_hash_new();
+    rb_hash_aset(options, ttl_sym, rb_zero);
   }
-  else if ( TYPE(option_tmp) != T_FIXNUM ) {
-    rb_raise(rb_eRuntimeError, "ttl must be an integer");
+  else {
+    if ( TYPE(rb_hash_aref(options, ttl_sym)) != T_FIXNUM ) { // check ttl option
+      rb_raise(rb_eRuntimeError, "[AerospikeC::Client][put] ttl must be an integer");
+    }
   }
+  if ( TYPE(hash) != T_HASH ) rb_raise(rb_eRuntimeError, "[AerospikeC::Client][put] Bins must be a Hash");
 
   as_key * k = get_key_struct(key);
 
   VALUE new_rec = rb_funcall(Record, rb_intern("new"), 1, hash);
 
   rec = get_record_struct(new_rec);
-  rec->ttl = FIX2INT( rb_hash_aref(options, ttlsym) );
+  rec->ttl = FIX2INT( rb_hash_aref(options, ttl_sym) );
 
   if (aerospike_key_put(as, &err, NULL, k, rec) != AEROSPIKE_OK) {
     raise_as_error(err);
@@ -102,7 +119,10 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
 
   // default values for optional arguments
   if ( NIL_P(specific_bins) ) specific_bins = Qnil;
-  if ( NIL_P(options) ) options = rb_hash_new();
+  if ( NIL_P(options) ) {
+    options = rb_hash_new();
+    rb_hash_aset(options, with_header_sym, Qfalse);
+  }
 
   as_key * k = get_key_struct(key);
 
@@ -127,6 +147,7 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
     }
 
     bins = record2hash(rec);
+    bins = check_with_header(bins, options, rec);
 
     as_record_destroy(rec);
     inputArray_destroy(inputArray);
@@ -147,6 +168,8 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
   }
 
   bins = record2hash(rec);
+  bins = check_with_header(bins, options, rec);
+
   as_record_destroy(rec);
 
   log_info("[AerospikeC::Client][get] success");
@@ -191,9 +214,9 @@ static VALUE set_logger(VALUE self, VALUE logger) {
 static VALUE key_exists(VALUE self, VALUE key) {
   as_error err;
   as_status status;
+  aerospike * as  = get_client_struct(self);
+  as_key * k      = get_key_struct(key);
   as_record * rec = NULL;
-  as_key * k     = get_key_struct(key);
-  aerospike * as = get_client_struct(self);
 
   if ( ( status = aerospike_key_exists(as, &err, NULL, k, &rec) ) != AEROSPIKE_OK ) {
     as_record_destroy(rec);
@@ -216,8 +239,8 @@ static VALUE key_exists(VALUE self, VALUE key) {
 static VALUE get_header(VALUE self, VALUE key) {
   as_error err;
   as_status status;
-  aerospike * as = get_client_struct(self);
-  as_key * k     = get_key_struct(key);
+  aerospike * as  = get_client_struct(self);
+  as_key * k      = get_key_struct(key);
   as_record * rec = NULL;
 
   VALUE header = rb_hash_new();
@@ -226,7 +249,7 @@ static VALUE get_header(VALUE self, VALUE key) {
 
   if ( ( status = aerospike_key_select(as, &err, NULL, k, inputArray, &rec) ) != AEROSPIKE_OK) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[AerospikeC::Client][get] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      log_warn("[AerospikeC::Client][get_header] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
@@ -234,11 +257,103 @@ static VALUE get_header(VALUE self, VALUE key) {
   }
 
   rb_hash_aset(header, rb_str_new2("gen"), INT2FIX(rec->gen));
-  rb_hash_aset(header, rb_str_new2("ttl"), INT2FIX(rec->ttl));
+  rb_hash_aset(header, rb_str_new2("expire_in"), INT2FIX(rec->ttl));
 
   as_record_destroy(rec);
 
   return header;
+}
+
+//
+// def batch_get(keys, specific_bins = nil, options = {})
+// @TODO options policy
+//
+static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
+  as_error err;
+  as_status status;
+  aerospike * as = get_client_struct(self);
+  char ** bin_names;
+  long n_bin_names;
+
+  VALUE keys;
+  VALUE specific_bins;
+  VALUE options;
+
+  rb_scan_args(argc, argv, "12", &keys, &specific_bins, &options);
+
+  // default values for optional arguments
+  if ( NIL_P(specific_bins) ) {
+    specific_bins = Qnil;
+  }
+  else {
+    if ( TYPE(specific_bins) != T_ARRAY ) rb_raise(rb_eRuntimeError, "[AerospikeC::Client][batch_get] specific_bins must be an Array");
+
+    bin_names   = rb_array2bin_names(specific_bins);
+    n_bin_names = rb_ary_len_long(specific_bins);
+  }
+  if ( NIL_P(options) ) {
+    options = rb_hash_new();
+    rb_hash_aset(options, with_header_sym, Qfalse);
+  }
+
+
+  long keys_len = rb_ary_len_long(keys);
+
+  VALUE records_bins = rb_ary_new();
+
+  as_batch_read_records records;
+  as_batch_read_inita(&records, keys_len);
+
+  for (int i = 0; i < keys_len; ++i) {
+    VALUE element = rb_ary_entry(keys, i);
+    VALUE tmp;
+
+    tmp = rb_funcall(element, rb_intern("namespace"), 0);
+    char * c_namespace = StringValueCStr( tmp );
+
+    tmp = rb_funcall(element, rb_intern("set"), 0);
+    char * c_set = StringValueCStr( tmp );
+
+    tmp = rb_funcall(element, rb_intern("key"), 0);
+    char * c_key = StringValueCStr( tmp );
+
+    as_batch_read_record * record = as_batch_read_reserve(&records);
+    as_key_init(&record->key, c_namespace, c_set, c_key);
+
+    if ( specific_bins == Qnil ) {
+      record->read_all_bins = true;
+    }
+    else {
+      record->bin_names  = bin_names;
+      record->n_bin_names = n_bin_names;
+    }
+  }
+
+  if ( ( status = aerospike_batch_read(as, &err, NULL, &records) ) != AEROSPIKE_OK ) {
+    if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
+      log_warn("[AerospikeC::Client][batch_get] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      return Qnil;
+    }
+
+    raise_as_error(err);
+  }
+
+  as_vector list = records.list;
+
+  for (uint32_t i = 0; i < list.size; ++i) {
+    as_batch_read_record * record = as_vector_get(&list, i);
+    as_record rec = record->record;
+
+    VALUE bins = record2hash(&rec);
+    bins = check_with_header(bins, options, &rec);
+
+    rb_ary_push(records_bins, bins);
+  }
+
+  as_batch_read_destroy(&records);
+  if ( specific_bins != Qnil ) bin_names_destroy(bin_names, n_bin_names);
+
+  return records_bins;
 }
 
 // ----------------------------------------------------------------------------------
@@ -254,12 +369,15 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   // methods
   //
   rb_define_method(Client, "initialize", RB_FN_ANY()client_initialize, 2);
+
   rb_define_method(Client, "put", RB_FN_ANY()put, -1);
   rb_define_method(Client, "get", RB_FN_ANY()get, -1);
   rb_define_method(Client, "delete", RB_FN_ANY()delete_record, 1);
+
   rb_define_method(Client, "logger=", RB_FN_ANY()set_logger, 1);
   rb_define_method(Client, "exists?", RB_FN_ANY()key_exists, 1);
   rb_define_method(Client, "get_header", RB_FN_ANY()get_header, 1);
+  rb_define_method(Client, "batch_get", RB_FN_ANY()batch_get, -1);
 
   //
   // attr_reader

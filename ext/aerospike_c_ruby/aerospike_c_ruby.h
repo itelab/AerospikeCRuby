@@ -27,12 +27,19 @@
 #include <aerospike/as_map.h>
 #include <aerospike/as_hashmap.h>
 #include <aerospike/as_stringmap.h>
+#include <aerospike/as_log.h>
+#include <aerospike/aerospike_batch.h>
 
 
 // ---------------------------------------------------
 // macros
 //
 #define RB_FN_ANY() (VALUE(*)(ANYARGS))
+#define rb_zero INT2FIX(0)
+
+#define with_header_sym ID2SYM(rb_intern("with_header"))
+#define ttl_sym         ID2SYM(rb_intern("ttl"))
+
 #define as_val_int_2_val(val) INT2FIX( as_integer_get( as_integer_fromval(val) ) )          //(int)    as_val * -> VALUE
 #define as_val_str_2_val(val) rb_str_new2( as_string_tostring( as_string_fromval(value) ) ) //(string) as_val * -> VALUE
 #define rb_ary_len_int(ary) FIX2INT( rb_funcall(ary, rb_intern("length"), 0) )              //(int)    VALUE -> int
@@ -66,6 +73,9 @@ VALUE as_list2array(as_arraylist * list);
 
 char ** rb_array2inputArray(VALUE ary);
 void inputArray_destroy(char ** inputArray);
+
+char ** rb_array2bin_names(VALUE ary);
+void bin_names_destroy(char ** bin_names, long len);
 
 // ---------------------------------------------------
 // extern variables

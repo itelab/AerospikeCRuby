@@ -23,4 +23,4 @@ end
 
 client.put(key, bins)
 
-puts client.get(key, [:a, "b", E.new]).inspect
+puts client.get(key, [:a, "b", E.new], with_header: true).inspect

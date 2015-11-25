@@ -13,7 +13,12 @@ bins = {
   "c" => "trzy",
 }
 
-ttl = 15
+ttl = 3
 
 client.put(key, bins, ttl: ttl)
 puts client.get_header(key).inspect
+
+(ttl + 1).times do
+  sleep 1
+  puts client.get_header(key).inspect
+end
