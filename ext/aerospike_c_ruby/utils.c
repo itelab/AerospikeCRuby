@@ -456,3 +456,10 @@ void bin_names_destroy(char ** bin_names, long len) {
 
   free(bin_names);
 }
+
+//
+// call to_s on val
+//
+VALUE value_to_s(VALUE val) {
+  return rb_funcall(val, rb_intern("to_s"), 0);
+}

@@ -37,10 +37,20 @@
 // macros
 //
 #define RB_FN_ANY() (VALUE(*)(ANYARGS))
+
 #define rb_zero INT2FIX(0)
 
-#define with_header_sym ID2SYM(rb_intern("with_header"))
-#define ttl_sym         ID2SYM(rb_intern("ttl"))
+#define with_header_sym ID2SYM(rb_intern("with_header")) // :with_header
+#define ttl_sym         ID2SYM(rb_intern("ttl"))         // :ttl
+#define write_sym       ID2SYM(rb_intern("write"))       // :write
+#define read_sym        ID2SYM(rb_intern("read"))        // :read
+#define increment_sym   ID2SYM(rb_intern("increment"))   // :increment
+#define append_sym      ID2SYM(rb_intern("append"))      // :append
+#define prepend_sym     ID2SYM(rb_intern("prepend"))     // :prepend
+#define touch_sym       ID2SYM(rb_intern("touch"))       // :touch
+#define operation_sym   ID2SYM(rb_intern("operation"))   // :operation
+#define bin_sym         ID2SYM(rb_intern("bin"))         // :bin
+#define value_sym       ID2SYM(rb_intern("value"))       // :value
 
 #define as_val_int_2_val(val) INT2FIX( as_integer_get( as_integer_fromval(val) ) )          //(int)    as_val * -> VALUE
 #define as_val_str_2_val(val) rb_str_new2( as_string_tostring( as_string_fromval(value) ) ) //(string) as_val * -> VALUE
@@ -51,9 +61,10 @@
 // ---------------------------------------------------
 // definitions
 //
-void init_aerospike_c_client(VALUE AerospikeC); // client.c
-void init_aerospike_c_key   (VALUE AerospikeC); // key.c
-void init_aerospike_c_record(VALUE AerospikeC); // record.c
+void init_aerospike_c_client(VALUE AerospikeC);    // client.c
+void init_aerospike_c_key   (VALUE AerospikeC);    // key.c
+void init_aerospike_c_record(VALUE AerospikeC);    // record.c
+void init_aerospike_c_operation(VALUE AerospikeC); // operation.c
 
 // utils.c
 void log_debug (const char * msg);
@@ -79,12 +90,15 @@ void inputArray_destroy(char ** inputArray);
 char ** rb_array2bin_names(VALUE ary);
 void bin_names_destroy(char ** bin_names, long len);
 
+VALUE value_to_s(VALUE val);
+
 // ---------------------------------------------------
 // extern variables
 //
 extern VALUE Record;
 extern VALUE Key;
 extern VALUE Client;
+extern VALUE Operation;
 extern VALUE Logger;
 
 #endif // AEROSPIKE_C_RUBY_H

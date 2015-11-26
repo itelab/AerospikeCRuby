@@ -511,6 +511,88 @@ static VALUE touch(int argc, VALUE * argv, VALUE self) {
   return header;
 }
 
+// ----------------------------------------------------------------------------------
+//
+// def operate(key, operations)
+//
+static VALUE operate(VALUE self, VALUE key, VALUE operations) {
+  as_error err;
+  as_status status;
+  aerospike * as = get_client_struct(self);
+  as_key * k     = get_key_struct(key);
+
+  VALUE is_aerospike_c_operation = rb_funcall(operations, rb_intern("is_a?"), 1, Operation);
+  if ( is_aerospike_c_operation != Qtrue ) {
+    rb_raise(rb_eRuntimeError, "[AerospikeC::Client][operate] use AerospikeC::Operation class to perform operations");
+  }
+
+  VALUE rb_ops = rb_iv_get(operations, "@operations");
+
+  int ops_count = rb_ary_len_int(rb_ops);
+
+  as_operations ops;
+  as_operations_inita(&ops, ops_count);
+
+  for (int i = 0; i < ops_count; ++i) {
+    VALUE op = rb_ary_entry(rb_ops, i);
+
+    VALUE rb_bin = rb_hash_aref(op, bin_sym);
+    char * bin_name = StringValueCStr(rb_bin);
+
+    VALUE val = rb_hash_aref(op, value_sym);
+    VALUE operation_type = rb_hash_aref(op, operation_sym);
+
+    if ( operation_type == touch_sym ) {
+      as_operations_add_touch(&ops);
+    }
+    else if ( operation_type == read_sym ) {
+      as_operations_add_read(&ops, bin_name);
+    }
+    else if ( operation_type == increment_sym ) {
+      as_operations_add_incr(&ops, bin_name, FIX2LONG(val));
+    }
+    else if ( operation_type == append_sym ) {
+      as_operations_add_append_str(&ops, bin_name, StringValueCStr(val));
+    }
+    else if ( operation_type == prepend_sym ) {
+      as_operations_add_prepend_str(&ops, bin_name, StringValueCStr(val));
+    }
+    else if ( operation_type == write_sym ) {
+      if ( TYPE(val) == T_FIXNUM ) {
+        as_operations_add_write_int64(&ops, bin_name, FIX2LONG(val));
+      }
+      else if ( TYPE(val) == T_STRING ) {
+        as_operations_add_write_str(&ops, bin_name, StringValueCStr(val));
+      }
+      else {
+        VALUE tmp = value_to_s(val);
+        as_operations_add_write_str(&ops, bin_name, StringValueCStr(tmp));
+      }
+    }
+    else {
+      rb_raise(rb_eRuntimeError, "[AerospikeC::Client][operate] uknown operation type");
+    }
+  }
+
+  as_record * rec = NULL;
+
+  if ( ( status = aerospike_key_operate(as, &err, NULL, k, &ops, &rec) ) != AEROSPIKE_OK ) {
+    if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
+      log_warn("[AerospikeC::Client][touch] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      return Qnil;
+    }
+
+    raise_as_error(err);
+  }
+
+  VALUE record = record2hash(rec);
+
+  as_record_destroy(rec);
+  as_operations_destroy(&ops);
+
+  return record;
+}
+
 
 // ----------------------------------------------------------------------------------
 //
@@ -536,6 +618,7 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   rb_define_method(Client, "get_header", RB_FN_ANY()get_header, 1);
   rb_define_method(Client, "batch_get", RB_FN_ANY()batch_get, -1);
   rb_define_method(Client, "touch", RB_FN_ANY()touch, -1);
+  rb_define_method(Client, "operate", RB_FN_ANY()operate, 2);
 
   //
   // attr_reader

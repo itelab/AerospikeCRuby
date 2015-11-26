@@ -2,7 +2,27 @@
 
 VALUE Key;
 
-static char * arg_to_cstr(VALUE key);
+//
+// key to char * key_name
+//
+static char * arg_to_cstr(VALUE key) {
+  VALUE tmp;
+
+  switch ( TYPE(key) ) {
+    case T_NIL:
+      rb_raise(rb_eRuntimeError, "AerospikeC::Key][initialize] argument cannot be nil");
+      break;
+
+    case T_STRING:
+      return StringValueCStr(key);
+      break;
+
+    default:
+      tmp = rb_funcall(key, rb_intern("to_s"), 0);
+      return StringValueCStr(tmp);
+      break;
+  }
+}
 
 //
 // free memory method
@@ -40,27 +60,6 @@ static void key_initialize(VALUE self, VALUE as_namespace, VALUE set, VALUE key)
   log_debug("[AerospikeC::Key][initialize] initializing key");
 }
 
-//
-// key to char * key_name
-//
-static char * arg_to_cstr(VALUE key) {
-  VALUE tmp;
-
-  switch ( TYPE(key) ) {
-    case T_NIL:
-      rb_raise(rb_eRuntimeError, "AerospikeC::Key][initialize] argument cannot be nil");
-      break;
-
-    case T_STRING:
-      return StringValueCStr(key);
-      break;
-
-    default:
-      tmp = rb_funcall(key, rb_intern("to_s"), 0);
-      return StringValueCStr(tmp);
-      break;
-  }
-}
 
 // ----------------------------------------------------------------------------------
 // Init
