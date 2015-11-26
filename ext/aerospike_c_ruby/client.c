@@ -3,6 +3,7 @@
 VALUE Client;
 VALUE Logger;
 
+// ----------------------------------------------------------------------------------
 //
 // free memory method
 //
@@ -10,6 +11,7 @@ static void client_deallocate(aerospike * as) {
   aerospike_destroy(as);
 }
 
+// ----------------------------------------------------------------------------------
 //
 // if with_header = true then add header to hash
 //
@@ -53,8 +55,18 @@ static void client_initialize(VALUE self, VALUE host, VALUE port) {
   rb_iv_set(self, "client", client_struct);
 }
 
+// ----------------------------------------------------------------------------------
+//
+// adding record to the cluster
 //
 // def put(key, bins, options = {})
+//
+// params:
+//   key - AerospikeC::Key object
+//   bins - either hash {"bin name" => "value"} or AerospikeC::Record object
+//   options - hash of options:
+//     ttl: time to live record (default: 0)
+//
 // @TODO options policy
 //
 static VALUE put(int argc, VALUE * argv, VALUE self) {
@@ -104,10 +116,24 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
   return Qtrue;
 }
 
+// ----------------------------------------------------------------------------------
+//
+// getting record for specifed key
+// read all bins of record or given in specific_bins argument
 //
 // def get(key, specific_bins = nil, options = {})
 //
-// specific bins should be an Array of bins
+// params:
+//   keys - Array of AerospikeC::Key objects
+//   specific bins - Array of strings representing bin names
+//   options - hash of options:
+//     with_header: returns also generation and expire_in field (default: false)
+//
+//  ------
+//  RETURN:
+//    1. hash representing record
+//    2. nil when AEROSPIKE_ERR_RECORD_NOT_FOUND
+//
 // @TODO options policy
 //
 static VALUE get(int argc, VALUE * argv, VALUE self) {
@@ -183,8 +209,19 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
   return bins;
 }
 
+// ----------------------------------------------------------------------------------
+//
+// removing record from the cluster
 //
 // def delete(key)
+//
+// params:
+//   key - AerospikeC::Key object
+//
+//  ------
+//  RETURN:
+//    1. true if deleted
+//    2. nil if AEROSPIKE_ERR_RECORD_NOT_FOUND
 //
 static VALUE delete_record(VALUE self, VALUE key) {
   as_error err;
@@ -206,8 +243,18 @@ static VALUE delete_record(VALUE self, VALUE key) {
   return Qtrue;
 }
 
+// ----------------------------------------------------------------------------------
+//
+// setting logger object
 //
 // def logger=(logger)
+//
+// params:
+//   logger - any object that responds to: :debug, :info, :warn, :error, :fatal methods
+//
+//  ------
+//  RETURN:
+//    1. true if no errors
 //
 static VALUE set_logger(VALUE self, VALUE logger) {
   Logger = logger;
@@ -216,6 +263,14 @@ static VALUE set_logger(VALUE self, VALUE logger) {
 
 //
 // def exists?(key)
+//
+// params:
+//   key - AerospikeC::Key object
+//
+//  ------
+//  RETURN:
+//    1. true if exist
+//    2. false otherwise
 //
 static VALUE key_exists(VALUE self, VALUE key) {
   as_error err;
@@ -239,8 +294,17 @@ static VALUE key_exists(VALUE self, VALUE key) {
   }
 }
 
+// ----------------------------------------------------------------------------------
 //
 // def get_header(key)
+//
+// params:
+//   key - AerospikeC::Key object
+//
+//  ------
+//  RETURN:
+//    1. hash representing record header
+//    2. nil when AEROSPIKE_ERR_RECORD_NOT_FOUND
 //
 static VALUE get_header(VALUE self, VALUE key) {
   as_error err;
@@ -270,8 +334,22 @@ static VALUE get_header(VALUE self, VALUE key) {
   return header;
 }
 
+// ----------------------------------------------------------------------------------
+//
+// getting batch of records in one call
+// batch size is limited on aerospike server (default: 5000)
 //
 // def batch_get(keys, specific_bins = nil, options = {})
+//
+// params:
+//   keys - Array of AerospikeC::Key objects
+//   specific bins - Array of strings representing bin names
+//   options - hash of options:
+//     with_header: returns also generation and expire_in field (default: false)
+//
+//  ------
+//  RETURN: Array of hashes where each hash represents record bins
+//
 // @TODO options policy
 //
 static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
@@ -309,6 +387,7 @@ static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
   as_batch_read_records records;
   as_batch_read_inita(&records, keys_len);
 
+  // map array into as_batch_read_record * record
   for (int i = 0; i < keys_len; ++i) {
     VALUE element = rb_ary_entry(keys, i);
     VALUE tmp;
@@ -334,6 +413,7 @@ static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
     }
   }
 
+  // read here!
   if ( ( status = aerospike_batch_read(as, &err, NULL, &records) ) != AEROSPIKE_OK ) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
       log_warn("[AerospikeC::Client][batch_get] AEROSPIKE_ERR_RECORD_NOT_FOUND");
@@ -345,6 +425,7 @@ static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
 
   as_vector list = records.list;
 
+  // map records into array of hashes
   for (long i = 0; i < list.size; ++i) {
     as_batch_read_record * record = as_vector_get(&list, i);
     as_record rec = record->record;
@@ -364,8 +445,20 @@ static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
   return records_bins;
 }
 
+// ----------------------------------------------------------------------------------
 //
 // def touch(key, options = {})
+//
+// params:
+//   key - AeropsikeC::Key object
+//   options - hash of options:
+//     ttl: time to live record (default: 0)
+//
+//  ------
+//  RETURN:
+//    1. hash representing record header
+//    2. nil when AEROSPIKE_ERR_RECORD_NOT_FOUND
+//
 // @TODO options policy
 //
 static VALUE touch(int argc, VALUE * argv, VALUE self) {
@@ -417,7 +510,10 @@ static VALUE touch(int argc, VALUE * argv, VALUE self) {
 
   return header;
 }
+
+
 // ----------------------------------------------------------------------------------
+//
 // Init
 //
 void init_aerospike_c_client(VALUE AerospikeC) {
