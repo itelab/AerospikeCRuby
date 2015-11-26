@@ -621,6 +621,102 @@ static VALUE operation_obj(VALUE self) {
 
 // ----------------------------------------------------------------------------------
 //
+// def create_index(namespace, set, bin, name, data_type, options = {})
+//
+// params:
+//   namespace - string, namespace to be indexed
+//   set - string, set to be indexed
+//   bin - string, bin or complex position name to be indexed
+//   name - string, name of the index
+//   data_type = symbol, data type of index, :string or :numeric
+//
+//  ------
+//  RETURN:
+//    1. AerospikeC::IndexTask object
+//
+// @TODO options policy
+//
+static VALUE create_index(int argc, VALUE * argv, VALUE self) {
+  as_error err;
+  aerospike * as = get_client_struct(self);
+
+  VALUE ns;
+  VALUE set;
+  VALUE bin;
+  VALUE name;
+  VALUE data_type;
+  VALUE options;
+
+  rb_scan_args(argc, argv, "51", &ns, &set, &bin, &name, &data_type, &options);
+
+  // default values for optional arguments
+  if ( NIL_P(options) ) {
+    options = rb_hash_new();
+  }
+
+  int d_type;
+
+  if ( data_type == numeric_sym ) {
+    d_type = AS_INDEX_NUMERIC;
+  }
+  else if ( data_type == string_sym ) {
+    d_type = AS_INDEX_STRING;
+  }
+  else {
+    rb_raise(rb_eRuntimeError, "[AerospikeC::Client][create_index] data_type must be :string or :numeric");
+  }
+
+
+  as_index_task * task = (as_index_task *) malloc( sizeof(as_index_task) );
+
+  if ( aerospike_index_create(as, &err, task, NULL, StringValueCStr(ns), StringValueCStr(set),
+                              StringValueCStr(bin), StringValueCStr(name), d_type) != AEROSPIKE_OK ) {
+    raise_as_error(err);
+  }
+
+  VALUE index_task_struct = Data_Wrap_Struct(IndexTask, NULL, index_task_deallocate, task);
+
+  return rb_funcall(IndexTask, rb_intern("new"), 1, index_task_struct);
+}
+
+// ----------------------------------------------------------------------------------
+//
+// def drop_index(namespace, name, options = {})
+//
+// params:
+//   namespace - string, namespace to be indexed
+//   name - string, name of the index
+//
+//  ------
+//  RETURN:
+//    1. true if drop executed correctly
+//
+// @TODO options policy
+//
+static VALUE drop_index(int argc, VALUE * argv, VALUE self) {
+  as_error err;
+  aerospike * as = get_client_struct(self);
+
+  VALUE ns;
+  VALUE name;
+  VALUE options;
+
+  rb_scan_args(argc, argv, "21", &ns, &name, &options);
+
+  // default values for optional arguments
+  if ( NIL_P(options) ) {
+    options = rb_hash_new();
+  }
+
+  if ( aerospike_index_remove(as, &err, NULL, StringValueCStr(ns), StringValueCStr(name)) != AEROSPIKE_OK ) {
+    raise_as_error(err);
+  }
+
+  return Qtrue;
+}
+
+// ----------------------------------------------------------------------------------
+//
 // Init
 //
 void init_aerospike_c_client(VALUE AerospikeC) {
@@ -643,8 +739,12 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   rb_define_method(Client, "get_header", RB_FN_ANY()get_header, 1);
   rb_define_method(Client, "batch_get", RB_FN_ANY()batch_get, -1);
   rb_define_method(Client, "touch", RB_FN_ANY()touch, -1);
+
   rb_define_method(Client, "operate", RB_FN_ANY()operate, 2);
   rb_define_method(Client, "operation", RB_FN_ANY()operation_obj, 0);
+
+  rb_define_method(Client, "create_index", RB_FN_ANY()create_index, -1);
+  rb_define_method(Client, "drop_index", RB_FN_ANY()drop_index, -1);
 
   //
   // attr_reader

@@ -12,6 +12,7 @@ static VALUE operation_initialize(int argc, VALUE * argv, VALUE self) {
 
   rb_scan_args(argc, argv, "02", &operations, &options);
 
+  // default values for optional arguments
   if ( NIL_P(options) ) {
     options = rb_hash_new();
     rb_hash_aset(options, ttl_sym, rb_zero);
@@ -44,6 +45,8 @@ static VALUE set_ttl(VALUE self, VALUE ttl) {
   }
 
   rb_iv_set(self, "@ttl", ttl);
+
+  return self;
 }
 
 //
@@ -54,6 +57,8 @@ static VALUE set_operation(VALUE self, VALUE operation) {
 
   rb_ary_push(operations, operation);
   rb_iv_set(self, "@operations", operations);
+
+  return self;
 }
 
 //
@@ -90,7 +95,7 @@ static VALUE op_increment(VALUE self, VALUE bin, VALUE val) {
   rb_ary_push(operations, op);
   rb_iv_set(self, "@operations", operations);
 
-  return Qtrue;
+  return self;
 }
 
 //
@@ -105,7 +110,7 @@ static VALUE op_touch(VALUE self) {
   rb_ary_push(operations, op);
   rb_iv_set(self, "@operations", operations);
 
-  return Qtrue;
+  return self;
 }
 
 //
@@ -139,7 +144,7 @@ static VALUE op_append(VALUE self, VALUE bin, VALUE val) {
   rb_ary_push(operations, op);
   rb_iv_set(self, "@operations", operations);
 
-  return Qtrue;
+  return self;
 }
 
 //
@@ -173,7 +178,7 @@ static VALUE op_prepend(VALUE self, VALUE bin, VALUE val) {
   rb_ary_push(operations, op);
   rb_iv_set(self, "@operations", operations);
 
-  return Qtrue;
+  return self;
 }
 
 //
@@ -198,7 +203,7 @@ static VALUE op_read(VALUE self, VALUE bin) {
   rb_ary_push(operations, op);
   rb_iv_set(self, "@operations", operations);
 
-  return Qtrue;
+  return self;
 }
 
 //
@@ -224,10 +229,11 @@ static VALUE op_write(VALUE self, VALUE bin, VALUE val) {
   rb_ary_push(operations, op);
   rb_iv_set(self, "@operations", operations);
 
-  return Qtrue;
+  return self;
 }
 
 // ----------------------------------------------------------------------------------
+//
 // Init
 //
 void init_aerospike_c_operation(VALUE AerospikeC) {

@@ -51,6 +51,8 @@
 #define operation_sym   ID2SYM(rb_intern("operation"))   // :operation
 #define bin_sym         ID2SYM(rb_intern("bin"))         // :bin
 #define value_sym       ID2SYM(rb_intern("value"))       // :value
+#define numeric_sym     ID2SYM(rb_intern("numeric"))     // :numeric
+#define string_sym      ID2SYM(rb_intern("string"))      // :string
 
 #define as_val_int_2_val(val) INT2FIX( as_integer_get( as_integer_fromval(val) ) )          //(int)    as_val * -> VALUE
 #define as_val_str_2_val(val) rb_str_new2( as_string_tostring( as_string_fromval(value) ) ) //(string) as_val * -> VALUE
@@ -61,10 +63,14 @@
 // ---------------------------------------------------
 // definitions
 //
-void init_aerospike_c_client(VALUE AerospikeC);    // client.c
-void init_aerospike_c_key   (VALUE AerospikeC);    // key.c
-void init_aerospike_c_record(VALUE AerospikeC);    // record.c
-void init_aerospike_c_operation(VALUE AerospikeC); // operation.c
+void init_aerospike_c_client(VALUE AerospikeC);     // client.c
+void init_aerospike_c_key   (VALUE AerospikeC);     // key.c
+void init_aerospike_c_record(VALUE AerospikeC);     // record.c
+void init_aerospike_c_operation(VALUE AerospikeC);  // operation.c
+
+// index_task.c
+void init_aerospike_c_index_task(VALUE AerospikeC);
+void index_task_deallocate(as_index_task * task);
 
 // utils.c
 void log_debug (const char * msg);
@@ -91,6 +97,7 @@ char ** rb_array2bin_names(VALUE ary);
 void bin_names_destroy(char ** bin_names, long len);
 
 VALUE value_to_s(VALUE val);
+VALUE bool2rb_bool(bool val);
 
 // ---------------------------------------------------
 // extern variables
@@ -100,5 +107,6 @@ extern VALUE Key;
 extern VALUE Client;
 extern VALUE Operation;
 extern VALUE Logger;
+extern VALUE IndexTask;
 
 #endif // AEROSPIKE_C_RUBY_H

@@ -463,3 +463,17 @@ void bin_names_destroy(char ** bin_names, long len) {
 VALUE value_to_s(VALUE val) {
   return rb_funcall(val, rb_intern("to_s"), 0);
 }
+
+//
+// convert bool into TrueClass or FalseClass
+//
+VALUE bool2rb_bool(bool val) {
+  if ( val == true ) {
+    return Qtrue;
+  }
+  else if ( val == false ) {
+    return Qfalse;
+  }
+
+  return Qnil;
+}

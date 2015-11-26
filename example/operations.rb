@@ -12,11 +12,8 @@ bins = {
 
 ops = AerospikeC::Operation.new # eql to client.operation
 
-ops.increment!("int", 1)
-ops.append!("string", "c")
-ops.prepend!("string", "a")
-ops.write!("new_bin_int", 10)
-ops.write!("new_bin_str", "nowy")
+ops.increment!("int", 1).append!("string", "c").prepend!("string", "a")
+ops.write!("new_bin_int", 10).write!("new_bin_str", "nowy")
 
 ops.read!("int")
 ops.read!("string")

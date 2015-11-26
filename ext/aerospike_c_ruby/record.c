@@ -27,6 +27,7 @@ static void rec_initialize(int argc, VALUE * argv, VALUE self) {
 
   rb_scan_args(argc, argv, "11", &value, &options);
 
+  // default values for optional arguments
   if ( NIL_P(options) ) {
     options = rb_hash_new();
     rb_hash_aset(options, ttl_sym, rb_zero);
