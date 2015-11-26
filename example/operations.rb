@@ -10,7 +10,7 @@ bins = {
   "string" => "b"
 }
 
-ops = AerospikeC::Operation.new
+ops = AerospikeC::Operation.new # eql to client.operation
 
 ops.increment!("int", 1)
 ops.append!("string", "c")

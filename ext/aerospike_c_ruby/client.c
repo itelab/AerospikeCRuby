@@ -513,7 +513,20 @@ static VALUE touch(int argc, VALUE * argv, VALUE self) {
 
 // ----------------------------------------------------------------------------------
 //
+// perform given operations on record in one call
+//
 // def operate(key, operations)
+//
+// params:
+//   key - AeropsikeC::Key object
+//   operations - AeropsikeC::Operation object
+//
+//  ------
+//  RETURN:
+//    1. hash representing record
+//    2. nil when AEROSPIKE_ERR_RECORD_NOT_FOUND
+//
+// @TODO options policy
 //
 static VALUE operate(VALUE self, VALUE key, VALUE operations) {
   as_error err;
@@ -532,6 +545,7 @@ static VALUE operate(VALUE self, VALUE key, VALUE operations) {
 
   as_operations ops;
   as_operations_inita(&ops, ops_count);
+  ops.ttl = FIX2INT( rb_iv_get(operations, "@ttl") );
 
   for (int i = 0; i < ops_count; ++i) {
     VALUE op = rb_ary_entry(rb_ops, i);
@@ -593,6 +607,17 @@ static VALUE operate(VALUE self, VALUE key, VALUE operations) {
   return record;
 }
 
+// ----------------------------------------------------------------------------------
+//
+// def operation
+//
+//  ------
+//  RETURN:
+//    1. new AerospikeC::Operation object
+//
+static VALUE operation_obj(VALUE self) {
+  return rb_funcall(Operation, rb_intern("new"), 0);
+}
 
 // ----------------------------------------------------------------------------------
 //
@@ -619,6 +644,7 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   rb_define_method(Client, "batch_get", RB_FN_ANY()batch_get, -1);
   rb_define_method(Client, "touch", RB_FN_ANY()touch, -1);
   rb_define_method(Client, "operate", RB_FN_ANY()operate, 2);
+  rb_define_method(Client, "operation", RB_FN_ANY()operation_obj, 0);
 
   //
   // attr_reader
