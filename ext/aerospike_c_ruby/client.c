@@ -717,6 +717,41 @@ static VALUE drop_index(int argc, VALUE * argv, VALUE self) {
 
 // ----------------------------------------------------------------------------------
 //
+// execute info command
+// http://www.aerospike.com/docs/reference/info/
+//
+// def info_cmd(cmd)
+//
+// params:
+//   cmd - string, info command to execute
+//
+//  ------
+//  RETURN:
+//    1. msg from server
+//
+// @TODO options policy
+//
+static VALUE info_cmd(VALUE self, VALUE cmd) {
+  as_error err;
+  aerospike * as = get_client_struct(self);
+
+  char * res = NULL;
+
+  VALUE host = rb_iv_get(self, "@host");
+  VALUE port = rb_iv_get(self, "@port");
+
+  if ( aerospike_info_host(as, &err, NULL, StringValueCStr(host), FIX2INT(port), StringValueCStr(cmd), &res) != AEROSPIKE_OK ) {
+    raise_as_error(err);
+  }
+
+  VALUE info_res = rb_str_new2(res);
+  free(res);
+
+  return info_res;
+}
+
+// ----------------------------------------------------------------------------------
+//
 // Init
 //
 void init_aerospike_c_client(VALUE AerospikeC) {
@@ -745,6 +780,7 @@ void init_aerospike_c_client(VALUE AerospikeC) {
 
   rb_define_method(Client, "create_index", RB_FN_ANY()create_index, -1);
   rb_define_method(Client, "drop_index", RB_FN_ANY()drop_index, -1);
+  rb_define_method(Client, "info_cmd", RB_FN_ANY()info_cmd, 1);
 
   //
   // attr_reader
