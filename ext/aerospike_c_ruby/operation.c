@@ -36,8 +36,16 @@ static VALUE operation_initialize(int argc, VALUE * argv, VALUE self) {
   rb_iv_set(self, "@ttl", rb_hash_aref(options, ttl_sym));
 }
 
+// ----------------------------------------------------------------------------------
 //
 // def ttl=(seconds)
+//
+// params:
+//   ttl - integer, time to live set after operation executes
+//
+//  ------
+//  RETURN:
+//    1. self (can chain methods)
 //
 static VALUE set_ttl(VALUE self, VALUE ttl) {
   if ( TYPE(ttl) != T_FIXNUM ) {
@@ -49,8 +57,16 @@ static VALUE set_ttl(VALUE self, VALUE ttl) {
   return self;
 }
 
+// ----------------------------------------------------------------------------------
 //
 // def <<(operation)
+//
+// params:
+//   operation - value to push into @operations array
+//
+//  ------
+//  RETURN:
+//    1. self (can chain methods)
 //
 static VALUE set_operation(VALUE self, VALUE operation) {
   VALUE operations = rb_iv_get(self, "@operations");
@@ -61,15 +77,29 @@ static VALUE set_operation(VALUE self, VALUE operation) {
   return self;
 }
 
+// ----------------------------------------------------------------------------------
 //
 // def count
+//
+//  ------
+//  RETURN:
+//    1. @operations array length
 //
 static VALUE count_operations(VALUE self) {
   return rb_funcall(rb_iv_get(self, "@operations"), rb_intern("length"), 0);
 }
 
+// ----------------------------------------------------------------------------------
 //
-// def increment!(bin)
+// def increment!(bin, val)
+//
+// params:
+//   bin - name of the bin to perform the operation on
+//   val - integer, number to be used in the increment
+//
+//  ------
+//  RETURN:
+//    1. self (can chain methods)
 //
 static VALUE op_increment(VALUE self, VALUE bin, VALUE val) {
   VALUE bin_name;
@@ -98,8 +128,13 @@ static VALUE op_increment(VALUE self, VALUE bin, VALUE val) {
   return self;
 }
 
+// ----------------------------------------------------------------------------------
 //
 // def touch!
+//
+//  ------
+//  RETURN:
+//    1. self (can chain methods)
 //
 static VALUE op_touch(VALUE self) {
   VALUE operations = rb_iv_get(self, "@operations");
@@ -113,8 +148,17 @@ static VALUE op_touch(VALUE self) {
   return self;
 }
 
+// ----------------------------------------------------------------------------------
 //
 // def append!(bin, val)
+//
+// params:
+//   bin - name of the bin to perform the operation on
+//   val - value to append on bin
+//
+//  ------
+//  RETURN:
+//    1. self (can chain methods)
 //
 static VALUE op_append(VALUE self, VALUE bin, VALUE val) {
   VALUE bin_name;
@@ -147,8 +191,17 @@ static VALUE op_append(VALUE self, VALUE bin, VALUE val) {
   return self;
 }
 
+// ----------------------------------------------------------------------------------
 //
 // def prepend!(bin, val)
+//
+// params:
+//   bin - name of the bin to perform the operation on
+//   val - value to prepend on bin
+//
+//  ------
+//  RETURN:
+//    1. self (can chain methods)
 //
 static VALUE op_prepend(VALUE self, VALUE bin, VALUE val) {
   VALUE bin_name;
@@ -181,8 +234,16 @@ static VALUE op_prepend(VALUE self, VALUE bin, VALUE val) {
   return self;
 }
 
+// ----------------------------------------------------------------------------------
 //
 // def read!(bin)
+//
+// params:
+//   bin - name of the bin to perform the operation on
+//
+//  ------
+//  RETURN:
+//    1. self (can chain methods)
 //
 static VALUE op_read(VALUE self, VALUE bin) {
   VALUE bin_name;
@@ -206,8 +267,17 @@ static VALUE op_read(VALUE self, VALUE bin) {
   return self;
 }
 
+// ----------------------------------------------------------------------------------
 //
 // def write!(bin, val)
+//
+// params:
+//   bin - name of the bin to perform the operation on
+//   val - value of bin
+//
+//  ------
+//  RETURN:
+//    1. self (can chain methods)
 //
 static VALUE op_write(VALUE self, VALUE bin, VALUE val) {
   VALUE bin_name;

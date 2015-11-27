@@ -53,6 +53,7 @@
 #define value_sym       ID2SYM(rb_intern("value"))       // :value
 #define numeric_sym     ID2SYM(rb_intern("numeric"))     // :numeric
 #define string_sym      ID2SYM(rb_intern("string"))      // :string
+#define lua_sym         ID2SYM(rb_intern("lua"))         // :lua
 
 #define as_val_int_2_val(val) INT2FIX( as_integer_get( as_integer_fromval(val) ) )          //(int)    as_val * -> VALUE
 #define as_val_str_2_val(val) rb_str_new2( as_string_tostring( as_string_fromval(value) ) ) //(string) as_val * -> VALUE
@@ -67,6 +68,7 @@ void init_aerospike_c_client(VALUE AerospikeC);     // client.c
 void init_aerospike_c_key   (VALUE AerospikeC);     // key.c
 void init_aerospike_c_record(VALUE AerospikeC);     // record.c
 void init_aerospike_c_operation(VALUE AerospikeC);  // operation.c
+void init_aerospike_c_udf_task(VALUE AerospikeC);   // udf_task.c
 
 // index_task.c
 void init_aerospike_c_index_task(VALUE AerospikeC);
@@ -108,5 +110,6 @@ extern VALUE Client;
 extern VALUE Operation;
 extern VALUE Logger;
 extern VALUE IndexTask;
+extern VALUE UdfTask;
 
 #endif // AEROSPIKE_C_RUBY_H

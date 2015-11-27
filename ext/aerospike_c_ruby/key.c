@@ -10,7 +10,7 @@ static char * arg_to_cstr(VALUE key) {
 
   switch ( TYPE(key) ) {
     case T_NIL:
-      rb_raise(rb_eRuntimeError, "AerospikeC::Key][initialize] argument cannot be nil");
+      rb_raise(rb_eRuntimeError, "[AerospikeC::Key][initialize] argument cannot be nil");
       break;
 
     case T_STRING:
@@ -43,6 +43,8 @@ static void key_initialize(VALUE self, VALUE as_namespace, VALUE set, VALUE key)
   char * c_key = arg_to_cstr(key);
 
   as_key * k = (as_key *) malloc ( sizeof(as_key) );
+  if (! k) rb_raise(rb_eRuntimeError, "[AerospikeC::Key][initialize] Error while allocating memory for aerospike key");
+
   as_key_init(k, c_namespace, c_set, c_key);
 
   if ( k == NULL ) {

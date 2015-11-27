@@ -666,8 +666,9 @@ static VALUE create_index(int argc, VALUE * argv, VALUE self) {
     rb_raise(rb_eRuntimeError, "[AerospikeC::Client][create_index] data_type must be :string or :numeric");
   }
 
-
   as_index_task * task = (as_index_task *) malloc( sizeof(as_index_task) );
+  if (! task) rb_raise(rb_eRuntimeError, "[AerospikeC::Client][create_index] Error while allocating memory for aerospike task");
+
 
   if ( aerospike_index_create(as, &err, task, NULL, StringValueCStr(ns), StringValueCStr(set),
                               StringValueCStr(bin), StringValueCStr(name), d_type) != AEROSPIKE_OK ) {
@@ -752,6 +753,81 @@ static VALUE info_cmd(VALUE self, VALUE cmd) {
 
 // ----------------------------------------------------------------------------------
 //
+// register udf from file
+//
+// def register_udf(path_to_file, server_path, language = :lua, options = {})
+//
+// params:
+//   path_to_file - absolute path to udf file
+//   server_path - where to put udf on the server
+//   language - udf language (in aerospike-c-client v3.1.24, only lua language is available)
+//
+//  ------
+//  RETURN:
+//    1. AerospikeC::UdfTask object
+//
+// @TODO options policy
+//
+static VALUE register_udf(int argc, VALUE * argv, VALUE self) {
+  as_error err;
+  aerospike * as = get_client_struct(self);
+
+  VALUE path_to_file;
+  VALUE server_path;
+  VALUE language;
+  VALUE options;
+
+  rb_scan_args(argc, argv, "22", &path_to_file, &server_path, &language, &options);
+
+  // default values for optional arguments
+  if ( NIL_P(options) ) {
+    options = rb_hash_new();
+  }
+  if ( NIL_P(language) ) {
+    language = lua_sym;
+  }
+  else {
+    if ( language != lua_sym ) rb_raise(rb_eRuntimeError, "[AerospikeC::Client][register_udf] in aerospike-c-client v3.1.24, only lua language is available");
+  }
+
+  FILE* file = fopen(StringValueCStr(path_to_file), "r");
+
+  if (! file) rb_raise(rb_eRuntimeError, "[AerospikeC::Client][register_udf] Cannot read udf from given path");
+
+  uint8_t * content = (uint8_t *) malloc(1024 * 1024);
+  if (! content) rb_raise(rb_eRuntimeError, "[AerospikeC::Client][register_udf] Error while allocating memory for udf file content");
+
+  // read the file content into a local buffer
+  uint8_t * p_write = content;
+  int read = (int)fread(p_write, 1, 512, file);
+  int size = 0;
+
+  while (read) {
+    size += read;
+    p_write += read;
+    read = (int)fread(p_write, 1, 512, file);
+  }
+
+  fclose(file);
+
+  as_bytes udf_content;
+  as_bytes_init_wrap(&udf_content, content, size, true);
+
+  // register the UDF file in the database cluster
+  if ( aerospike_udf_put(as, &err, NULL, StringValueCStr(server_path), AS_UDF_TYPE_LUA, &udf_content) != AEROSPIKE_OK ) {
+    raise_as_error(err);
+  }
+
+  as_bytes_destroy(&udf_content);
+
+  log_info("[AerospikeC::Client][register_udf] success");
+
+  return rb_funcall(UdfTask, rb_intern("new"), 2, server_path, self);
+}
+
+
+// ----------------------------------------------------------------------------------
+//
 // Init
 //
 void init_aerospike_c_client(VALUE AerospikeC) {
@@ -780,7 +856,10 @@ void init_aerospike_c_client(VALUE AerospikeC) {
 
   rb_define_method(Client, "create_index", RB_FN_ANY()create_index, -1);
   rb_define_method(Client, "drop_index", RB_FN_ANY()drop_index, -1);
+
   rb_define_method(Client, "info_cmd", RB_FN_ANY()info_cmd, 1);
+
+  rb_define_method(Client, "register_udf", RB_FN_ANY()register_udf, -1);
 
   //
   // attr_reader
