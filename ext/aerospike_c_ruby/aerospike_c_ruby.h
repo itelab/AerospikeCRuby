@@ -93,7 +93,7 @@ void raise_as_err(as_error err);
 
 VALUE record2hash(as_record * rec);
 void hash2record(VALUE hash, VALUE rec);
-as_arraylist array2as_list(VALUE ary);
+as_arraylist * array2as_list(VALUE ary);
 VALUE as_list2array(as_arraylist * list);
 
 char ** rb_array2inputArray(VALUE ary);
@@ -104,6 +104,7 @@ void bin_names_destroy(char ** bin_names, long len);
 
 VALUE value_to_s(VALUE val);
 VALUE bool2rb_bool(bool val);
+VALUE as_val2rb_val(as_val * value);
 
 // ---------------------------------------------------
 // extern variables

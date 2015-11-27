@@ -922,6 +922,70 @@ static VALUE list_udf(int argc, VALUE * argv, VALUE self) {
 
 // ----------------------------------------------------------------------------------
 //
+// execute udf on record
+//
+// def execute_udf(key, module_name, func_name, udf_args = [], options = {})
+//
+// params:
+//   key - AeropsikeC::Key object
+//   module_name - string, registered module name
+//   func_name - string, function name in module to execute
+//   udf_args - arguments passed to udf
+//   options - ?
+//
+//  ------
+//  RETURN:
+//    1. data returned from udf
+//
+// @TODO options policy
+//
+static VALUE execute_udf(int argc, VALUE * argv, VALUE self) {
+  as_error err;
+  as_status status;
+  aerospike * as = get_client_struct(self);
+
+  VALUE key;
+  VALUE module_name;
+  VALUE func_name;
+  VALUE udf_args;
+  VALUE options;
+
+  rb_scan_args(argc, argv, "32", &key, &module_name, &func_name, &udf_args, &options);
+
+  // default values for optional arguments
+  if ( NIL_P(options) ) {
+    options = rb_hash_new();
+  }
+  if ( NIL_P(udf_args) ) {
+    udf_args = rb_ary_new();
+  }
+
+  as_key * k = get_key_struct(key);
+  as_arraylist * args = array2as_list(udf_args);
+
+  as_val * res = NULL;
+
+  if ( ( status = aerospike_key_apply(as, &err, NULL, k, StringValueCStr(module_name), StringValueCStr(func_name), (as_list *)args, &res) ) != AEROSPIKE_OK ) {
+    if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
+      log_warn("[AerospikeC::Client][execute_udf] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      return Qnil;
+    }
+
+    raise_as_error(err);
+  }
+
+  VALUE result = as_val2rb_val(res);
+
+  as_val_destroy(&res);
+  as_arraylist_destroy(args);
+
+  log_info("[AerospikeC::Client][execute_udf] success");
+
+  return result;
+}
+
+// ----------------------------------------------------------------------------------
+//
 // Init
 //
 void init_aerospike_c_client(VALUE AerospikeC) {
@@ -956,6 +1020,7 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   rb_define_method(Client, "register_udf", RB_FN_ANY()register_udf, -1);
   rb_define_method(Client, "drop_udf", RB_FN_ANY()drop_udf, -1);
   rb_define_method(Client, "list_udf", RB_FN_ANY()list_udf, -1);
+  rb_define_method(Client, "execute_udf", RB_FN_ANY()execute_udf, -1);
 
   //
   // attr_reader

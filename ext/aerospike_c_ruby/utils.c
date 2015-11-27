@@ -130,16 +130,15 @@ void hash2record(VALUE hash, VALUE rec) {
 //
 // convert ruby array to as_arraylist
 //
-as_arraylist array2as_list(VALUE ary) {
+as_arraylist * array2as_list(VALUE ary) {
   VALUE tmp;
-  as_arraylist tmp_list;
+  as_arraylist * tmp_list;
 
-  long len = rb_ary_len_long(ary);
+  int len = rb_ary_len_int(ary);
 
-  as_arraylist list;
-  as_arraylist_init(&list, len, 0);
+  as_arraylist * list = as_arraylist_new(len, 1);
 
-  for ( long i = 0; i < len; ++i ) {
+  for ( int i = 0; i < len; ++i ) {
     VALUE element = rb_ary_entry(ary, i);
 
     switch ( TYPE(element) ) {
@@ -151,23 +150,23 @@ as_arraylist array2as_list(VALUE ary) {
       case T_SYMBOL:
         log_debug("[Utils][array2as_list] TYPE(element) -> symbol");
         tmp = rb_funcall(element, rb_intern("to_s"), 0);
-        as_arraylist_append_str(&list, StringValueCStr( tmp ));
+        as_arraylist_append_str(list, StringValueCStr( tmp ));
         break;
 
       case T_STRING:
         log_debug("[Utils][array2as_list] TYPE(element) -> string");
-        as_arraylist_append_str(&list, StringValueCStr( element ));
+        as_arraylist_append_str(list, StringValueCStr( element ));
         break;
 
       case T_FIXNUM:
         log_debug("[Utils][array2as_list] TYPE(element) -> fixnum");
-        as_arraylist_append_int64(&list, FIX2LONG(element));
+        as_arraylist_append_int64(list, FIX2LONG(element));
         break;
 
       case T_ARRAY:
         log_debug("[Utils][array2as_list] TYPE(element) -> array");
         tmp_list = array2as_list(element);
-        as_arraylist_append_list(&list, (as_list *)&tmp_list);
+        as_arraylist_append_list(list, (as_list *)tmp_list);
         break;
 
       default:
@@ -216,7 +215,7 @@ VALUE as_list2array(as_arraylist * list) {
 //
 static int foreach_hash2record(VALUE key, VALUE val, VALUE record) {
   VALUE tmp;
-  as_arraylist tmp_list;
+  as_arraylist * tmp_list;
   as_hashmap tmp_map;
 
   as_record * rec;
@@ -476,4 +475,26 @@ VALUE bool2rb_bool(bool val) {
   }
 
   return Qnil;
+}
+
+VALUE as_val2rb_val(as_val * value) {
+  switch ( as_val_type(value) ) {
+    case AS_NIL:
+      return Qnil;
+      break;
+
+    case AS_INTEGER:
+      return as_val_int_2_val(value);
+      break;
+
+    case AS_STRING:
+      return as_val_str_2_val(value);
+      break;
+
+    case AS_LIST:
+      return as_list2array(value);
+      break;
+  }
+
+  return Qfalse;
 }
