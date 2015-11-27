@@ -4,3 +4,4 @@ module AerospikeCRuby
 end
 
 require "aerospike_c_ruby/aerospike_c_ruby"
+require "aerospike_c_ruby/client"
