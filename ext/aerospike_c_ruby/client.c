@@ -38,6 +38,7 @@ static VALUE check_with_header(VALUE bins, VALUE options, as_record * rec) {
 static void client_initialize(VALUE self, VALUE host, VALUE port) {
   rb_iv_set(self, "@host", host);
   rb_iv_set(self, "@port", port);
+  rb_iv_set(self, "@last_scan_id", rb_zero);
 
   as_config config;
   as_config_init(&config);
@@ -984,6 +985,197 @@ static VALUE execute_udf(int argc, VALUE * argv, VALUE self) {
   return result;
 }
 
+//
+// callback for scan_records
+//
+bool scan_records_callback(const as_val * val, VALUE scan_data) {
+  if ( val == NULL ) {
+    log_info("scan_records_callback end");
+    return true;
+  }
+
+  as_record * record = as_rec_fromval(val);
+
+  VALUE rec = record2hash(record);
+  // log_debug(val_inspect(rec));
+  rb_ary_push(scan_data, rec);
+
+  return true;
+}
+
+// ----------------------------------------------------------------------------------
+//
+// scan records in specified namespace and set
+// multiple threads will likely be calling the callback in parallel so return data won't be sorted
+//
+// def scan(ns, set, options = {})
+//
+// params:
+//   ns - namespace to scan
+//   set - set to scan
+//   options - ?
+//
+//  ------
+//  RETURN:
+//    1. data returned from scan
+//
+// @TODO options policy
+//
+static VALUE scan_records(int argc, VALUE * argv, VALUE self) {
+  as_error err;
+  aerospike * as = get_client_struct(self);
+
+  VALUE ns;
+  VALUE set;
+  VALUE options;
+
+  rb_scan_args(argc, argv, "21", &ns, &set, &options);
+
+  // default values for optional arguments
+  if ( NIL_P(options) ) {
+    options = rb_hash_new();
+  }
+
+  as_scan scan;
+  as_scan_init(&scan, StringValueCStr(ns), StringValueCStr(set));
+
+  VALUE scan_data = rb_ary_new();
+
+  if ( aerospike_scan_foreach(as, &err, NULL, &scan, scan_records_callback, scan_data) != AEROSPIKE_OK ) {
+    raise_as_error(err);
+  }
+
+  as_scan_destroy(&scan);
+
+  return scan_data;
+}
+
+// ----------------------------------------------------------------------------------
+//
+// execute udf on scan records in specified namespace and set
+// multiple threads will likely be calling the callback in parallel so return data won't be sorted
+//
+// def execute_udf_on_scan(ns, set, module_name, func_name, udf_args = [], options = {})
+//
+// params:
+//   ns - namespace to scan
+//   set - set to scan
+//   module_name - string, registered module name
+//   func_name - string, function name in module to execute
+//   udf_args - arguments passed to udf
+//   options - ?
+//
+//  ------
+//  RETURN:
+//    1. data returned from scan
+//
+// @TODO options policy
+//
+static VALUE execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
+  as_error err;
+  aerospike * as = get_client_struct(self);
+
+  VALUE ns;
+  VALUE set;
+  VALUE module_name;
+  VALUE func_name;
+  VALUE udf_args;
+  VALUE options;
+
+  rb_scan_args(argc, argv, "42", &ns, &set, &module_name, &func_name, &udf_args, &options);
+
+  // default values for optional arguments
+  if ( NIL_P(options) ) {
+    options = rb_hash_new();
+  }
+  if ( NIL_P(udf_args) ) {
+    udf_args = rb_ary_new();
+  }
+
+  as_arraylist * args = array2as_list(udf_args);
+
+  as_scan scan;
+  as_scan_init(&scan, StringValueCStr(ns), StringValueCStr(set));
+  as_scan_apply_each(&scan, StringValueCStr(module_name), StringValueCStr(func_name), (as_list *)args);
+
+  VALUE scan_data = rb_ary_new();
+
+  if ( aerospike_scan_foreach(as, &err, NULL, &scan, scan_records_callback, scan_data) != AEROSPIKE_OK ) {
+    raise_as_error(err);
+  }
+
+  as_scan_destroy(&scan);
+  as_arraylist_destroy(args);
+
+  return scan_data;
+}
+
+// ----------------------------------------------------------------------------------
+//
+// execute udf on scan records in specified namespace and set
+// multiple threads will likely be calling the callback in parallel so return data won't be sorted
+//
+// def background_execute_udf_on_scan(ns, set, module_name, func_name, udf_args = [], options = {})
+//
+// params:
+//   ns - namespace to scan
+//   set - set to scan
+//   module_name - string, registered module name
+//   func_name - string, function name in module to execute
+//   udf_args - arguments passed to udf
+//   options - ?
+//
+//  ------
+//  RETURN:
+//    1. AerospikeC::ScanTask object
+//
+// @TODO options policy
+//
+static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
+  as_error err;
+  aerospike * as = get_client_struct(self);
+
+  VALUE ns;
+  VALUE set;
+  VALUE module_name;
+  VALUE func_name;
+  VALUE udf_args;
+  VALUE options;
+
+  rb_scan_args(argc, argv, "42", &ns, &set, &module_name, &func_name, &udf_args, &options);
+
+  // default values for optional arguments
+  if ( NIL_P(options) ) {
+    options = rb_hash_new();
+  }
+  if ( NIL_P(udf_args) ) {
+    udf_args = rb_ary_new();
+  }
+
+  as_arraylist * args = array2as_list(udf_args);
+
+  as_scan scan;
+  as_scan_init(&scan, StringValueCStr(ns), StringValueCStr(set));
+  as_scan_apply_each(&scan, StringValueCStr(module_name), StringValueCStr(func_name), (as_list *)args);
+
+  uint64_t scanid = FIX2LONG(rb_iv_get(self, "@last_scan_id")) + 1;
+
+  if ( scanid >= LONG_MAX - 1 ) scanid = 1;
+
+  VALUE scan_id = LONG2FIX(scanid);
+
+  if ( aerospike_scan_background(as, &err, NULL, &scan, &scanid) != AEROSPIKE_OK ) {
+    raise_as_error(err);
+  }
+
+  rb_iv_set(self, "@last_scan_id", scan_id);
+
+  as_scan_destroy(&scan);
+  as_arraylist_destroy(args);
+
+  return rb_funcall(ScanTask, rb_intern("new"), 2, scan_id, self);
+}
+
 // ----------------------------------------------------------------------------------
 //
 // Init
@@ -1021,6 +1213,10 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   rb_define_method(Client, "drop_udf", RB_FN_ANY()drop_udf, -1);
   rb_define_method(Client, "list_udf", RB_FN_ANY()list_udf, -1);
   rb_define_method(Client, "execute_udf", RB_FN_ANY()execute_udf, -1);
+
+  rb_define_method(Client, "scan", RB_FN_ANY()scan_records, -1);
+  rb_define_method(Client, "execute_udf_on_scan", RB_FN_ANY()execute_udf_on_scan, -1);
+  rb_define_method(Client, "background_execute_udf_on_scan", RB_FN_ANY()background_execute_udf_on_scan, -1);
 
   //
   // attr_reader

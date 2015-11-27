@@ -15,4 +15,5 @@ void Init_aerospike_c_ruby() {
   init_aerospike_c_operation(AerospikeC);
   init_aerospike_c_index_task(AerospikeC);
   init_aerospike_c_udf_task(AerospikeC);
+  init_aerospike_c_scan_task(AerospikeC);
 }

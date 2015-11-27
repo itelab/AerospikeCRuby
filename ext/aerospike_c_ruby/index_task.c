@@ -78,6 +78,6 @@ void init_aerospike_c_index_task(VALUE AerospikeC) {
   //
   // attr_reader
   //
-  rb_define_attr(Key, "name", 1, 0);
-  rb_define_attr(Key, "done", 1, 0);
+  rb_define_attr(IndexTask, "name", 1, 0);
+  rb_define_attr(IndexTask, "done", 1, 0);
 }

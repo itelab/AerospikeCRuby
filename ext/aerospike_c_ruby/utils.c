@@ -498,3 +498,8 @@ VALUE as_val2rb_val(as_val * value) {
 
   return Qfalse;
 }
+
+char * val_inspect(VALUE val) {
+  VALUE tmp = rb_funcall(val, rb_intern("inspect"), 0);
+  return StringValueCStr(tmp);
+}

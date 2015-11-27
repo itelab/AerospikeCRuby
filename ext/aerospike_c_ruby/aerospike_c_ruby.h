@@ -31,6 +31,7 @@
 #include <aerospike/as_stringmap.h>
 #include <aerospike/as_log.h>
 #include <aerospike/aerospike_batch.h>
+#include <aerospike/aerospike_scan.h>
 
 
 // ---------------------------------------------------
@@ -73,6 +74,7 @@ void init_aerospike_c_key   (VALUE AerospikeC);     // key.c
 void init_aerospike_c_record(VALUE AerospikeC);     // record.c
 void init_aerospike_c_operation(VALUE AerospikeC);  // operation.c
 void init_aerospike_c_udf_task(VALUE AerospikeC);   // udf_task.c
+void init_aerospike_c_scan_task(VALUE AerospikeC);  // scan_task.c
 
 // index_task.c
 void init_aerospike_c_index_task(VALUE AerospikeC);
@@ -105,6 +107,7 @@ void bin_names_destroy(char ** bin_names, long len);
 VALUE value_to_s(VALUE val);
 VALUE bool2rb_bool(bool val);
 VALUE as_val2rb_val(as_val * value);
+char * val_inspect(VALUE val);
 
 // ---------------------------------------------------
 // extern variables
@@ -116,5 +119,6 @@ extern VALUE Operation;
 extern VALUE Logger;
 extern VALUE IndexTask;
 extern VALUE UdfTask;
+extern VALUE ScanTask;
 
 #endif // AEROSPIKE_C_RUBY_H
