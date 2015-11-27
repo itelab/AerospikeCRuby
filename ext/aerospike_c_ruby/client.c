@@ -825,6 +825,100 @@ static VALUE register_udf(int argc, VALUE * argv, VALUE self) {
   return rb_funcall(UdfTask, rb_intern("new"), 2, server_path, self);
 }
 
+// ----------------------------------------------------------------------------------
+//
+// drop udf for given server_path
+//
+// def register_udf(server_path, options = {})
+//
+// params:
+//   server_path - where is udf on the server (name)
+//
+//  ------
+//  RETURN:
+//    1. true if succesfull
+//
+// @TODO options policy
+//
+static VALUE drop_udf(int argc, VALUE * argv, VALUE self) {
+  as_error err;
+  aerospike * as = get_client_struct(self);
+
+  VALUE server_path;
+  VALUE options;
+
+  rb_scan_args(argc, argv, "11", &server_path, &options);
+
+  // default values for optional arguments
+  if ( NIL_P(options) ) {
+    options = rb_hash_new();
+  }
+
+  if ( aerospike_udf_remove(as, &err, NULL, StringValueCStr(server_path)) != AEROSPIKE_OK ) {
+    raise_as_error(err);
+  }
+
+  log_info("[AerospikeC::Client][drop_udf] success");
+
+  return Qtrue;
+}
+
+// ----------------------------------------------------------------------------------
+//
+// list all udfs
+//
+// def list_udf(options = {})
+//
+// params:
+//   options - ?
+//
+//  ------
+//  RETURN:
+//    1. array of hashes representing each udf
+//
+// @TODO options policy
+//
+static VALUE list_udf(int argc, VALUE * argv, VALUE self) {
+  as_error err;
+  aerospike * as = get_client_struct(self);
+
+  VALUE options;
+
+  rb_scan_args(argc, argv, "01", &options);
+
+  // default values for optional arguments
+  if ( NIL_P(options) ) {
+    options = rb_hash_new();
+  }
+
+  as_udf_files files;
+  as_udf_files_init(&files, 0);
+
+  if ( aerospike_udf_list(as, &err, NULL, &files) != AEROSPIKE_OK ) {
+    raise_as_error(err);
+  }
+
+  VALUE udfs = rb_ary_new();
+
+  for( int i = 0; i < files.size; i++ ) {
+    as_udf_file * file = &files.entries[i];
+
+    VALUE udf_file = rb_hash_new();
+    VALUE udf_type;
+
+    if ( file->type == 0 ) udf_type = lua_sym;
+
+    rb_hash_aset(udf_file, name_sym, rb_str_new2(file->name));
+    rb_hash_aset(udf_file, udf_type_sym, udf_type);
+    rb_hash_aset(udf_file, hash_sym, INT2FIX(file->hash));
+
+    rb_ary_push(udfs, udf_file);
+  }
+
+  as_udf_files_destroy(&files);
+
+  return udfs;
+}
 
 // ----------------------------------------------------------------------------------
 //
@@ -860,6 +954,8 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   rb_define_method(Client, "info_cmd", RB_FN_ANY()info_cmd, 1);
 
   rb_define_method(Client, "register_udf", RB_FN_ANY()register_udf, -1);
+  rb_define_method(Client, "drop_udf", RB_FN_ANY()drop_udf, -1);
+  rb_define_method(Client, "list_udf", RB_FN_ANY()list_udf, -1);
 
   //
   // attr_reader

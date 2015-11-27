@@ -54,6 +54,10 @@
 #define numeric_sym     ID2SYM(rb_intern("numeric"))     // :numeric
 #define string_sym      ID2SYM(rb_intern("string"))      // :string
 #define lua_sym         ID2SYM(rb_intern("lua"))         // :lua
+#define name_sym        ID2SYM(rb_intern("name"))        // :name
+#define udf_type_sym    ID2SYM(rb_intern("udf_type"))    // :udf_type
+#define hash_sym        ID2SYM(rb_intern("hash"))        // :hash
+#define size_sym        ID2SYM(rb_intern("size"))        // :size
 
 #define as_val_int_2_val(val) INT2FIX( as_integer_get( as_integer_fromval(val) ) )          //(int)    as_val * -> VALUE
 #define as_val_str_2_val(val) rb_str_new2( as_string_tostring( as_string_fromval(value) ) ) //(string) as_val * -> VALUE

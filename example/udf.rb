@@ -13,3 +13,9 @@ puts task.inspect
 task.wait_till_completed
 
 puts task.inspect
+puts "-------- after add:"
+puts client.list_udf
+
+client.drop_udf("hello.lua")
+puts "-------- after drop:"
+puts client.list_udf
