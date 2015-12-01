@@ -72,6 +72,8 @@ static VALUE check_status(VALUE self) {
   rb_hash_aset(status, rb_str_new2("status_id"), stat_id);
   rb_hash_aset(status, rb_str_new2("progress"), prog);
 
+  log_info("[AerospikeC::ScanTask][check_status] success");
+
   return status;
 }
 

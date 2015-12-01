@@ -108,6 +108,8 @@ VALUE value_to_s(VALUE val);
 VALUE bool2rb_bool(bool val);
 VALUE as_val2rb_val(as_val * value);
 char * val_inspect(VALUE val);
+const char * as_val_type_as_str(as_val * val);
+const char * rb_val_type_as_str(VALUE value);
 
 // ---------------------------------------------------
 // extern variables

@@ -585,7 +585,7 @@ static VALUE operate(VALUE self, VALUE key, VALUE operations) {
       }
     }
     else {
-      rb_raise(rb_eRuntimeError, "[AerospikeC::Client][operate] uknown operation type");
+      rb_raise(rb_eRuntimeError, "[AerospikeC::Client][operate] uknown operation type: %s", val_inspect(operation_type));
     }
   }
 
@@ -593,7 +593,7 @@ static VALUE operate(VALUE self, VALUE key, VALUE operations) {
 
   if ( ( status = aerospike_key_operate(as, &err, NULL, k, &ops, &rec) ) != AEROSPIKE_OK ) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[AerospikeC::Client][touch] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      log_warn("[AerospikeC::Client][operate] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
@@ -604,6 +604,8 @@ static VALUE operate(VALUE self, VALUE key, VALUE operations) {
 
   as_record_destroy(rec);
   as_operations_destroy(&ops);
+
+  log_info("[AerospikeC::Client][operate] success");
 
   return record;
 }
@@ -793,7 +795,7 @@ static VALUE register_udf(int argc, VALUE * argv, VALUE self) {
 
   FILE* file = fopen(StringValueCStr(path_to_file), "r");
 
-  if (! file) rb_raise(rb_eRuntimeError, "[AerospikeC::Client][register_udf] Cannot read udf from given path");
+  if (! file) rb_raise(rb_eRuntimeError, "[AerospikeC::Client][register_udf] Cannot read udf from given path: %s", StringValueCStr(path_to_file));
 
   uint8_t * content = (uint8_t *) malloc(1024 * 1024);
   if (! content) rb_raise(rb_eRuntimeError, "[AerospikeC::Client][register_udf] Error while allocating memory for udf file content");

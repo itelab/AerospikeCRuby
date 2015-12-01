@@ -111,6 +111,10 @@ VALUE record2hash(as_record * rec) {
         tmp_list = as_list_fromval(value);
         rb_hash_aset(hash, name, as_list2array(tmp_list));
         break;
+
+      default:
+        rb_raise(rb_eRuntimeError, "[Utils][record2hash] Unsupported record value type: %s", as_val_type_as_str(value));
+        break;
     }
   }
 
@@ -170,7 +174,7 @@ as_arraylist * array2as_list(VALUE ary) {
         break;
 
       default:
-        rb_raise(rb_eRuntimeError, "[array2as_list] Unsupported array value type");
+        rb_raise(rb_eRuntimeError, "[array2as_list] Unsupported array value type: %s", rb_val_type_as_str(element));
         break;
     }
   }
@@ -182,6 +186,8 @@ as_arraylist * array2as_list(VALUE ary) {
 // convert as_list to ruby array
 //
 VALUE as_list2array(as_arraylist * list) {
+  as_arraylist * tmp_list;
+
   as_arraylist_iterator it;
   as_arraylist_iterator_init(&it, list);
 
@@ -201,8 +207,14 @@ VALUE as_list2array(as_arraylist * list) {
         rb_ary_push(ary, as_val_str_2_val(value));
         break;
 
+      case AS_LIST:
+        log_debug("[Utils][as_list2array] as_val_type(value) -> list");
+        tmp_list = as_list_fromval(value);
+        rb_ary_push(ary, as_list2array(tmp_list));
+        break;
+
       default:
-        rb_raise(rb_eRuntimeError, "[as_list2array] Unsupported array value type");
+        rb_raise(rb_eRuntimeError, "[Utils][as_list2array] Unsupported array value type: %s", as_val_type_as_str(value));
         break;
     }
   }
@@ -255,7 +267,7 @@ static int foreach_hash2record(VALUE key, VALUE val, VALUE record) {
     //   break;
 
     default:
-      rb_raise(rb_eRuntimeError, "Unsupported record value type");
+      rb_raise(rb_eRuntimeError, "[Utils][foreach_hash2record] Unsupported record value type: %s", rb_val_type_as_str(val));
       break;
   }
 
@@ -287,7 +299,7 @@ static char * key2bin_name(VALUE key) {
       break;
 
     default:
-      rb_raise(rb_eRuntimeError, "Unsupported key type");
+      rb_raise(rb_eRuntimeError, "Unsupported key type: %s", rb_val_type_as_str(key));
       break;
   }
 }
@@ -477,6 +489,9 @@ VALUE bool2rb_bool(bool val) {
   return Qnil;
 }
 
+//
+// as_val -> VALUE
+//
 VALUE as_val2rb_val(as_val * value) {
   switch ( as_val_type(value) ) {
     case AS_NIL:
@@ -499,7 +514,123 @@ VALUE as_val2rb_val(as_val * value) {
   return Qfalse;
 }
 
+//
+// call ruby inspect on val, and convert it into char *
+//
 char * val_inspect(VALUE val) {
   VALUE tmp = rb_funcall(val, rb_intern("inspect"), 0);
   return StringValueCStr(tmp);
+}
+
+//
+// as_val type into char *
+//
+const char * as_val_type_as_str(as_val * value) {
+  switch ( as_val_type(value) ) {
+    case AS_UNDEF:
+      return "AS_UNDEF";
+
+    case AS_NIL:
+      return "AS_NIL";
+
+    case AS_BOOLEAN:
+      return "AS_BOOLEAN";
+
+    case AS_INTEGER:
+      return "AS_INTEGER";
+
+    case AS_STRING:
+      return "AS_STRING";
+
+    case AS_LIST:
+      return "AS_LIST";
+
+    case AS_MAP:
+      return "AS_MAP";
+
+    case AS_REC:
+      return "AS_REC";
+
+    case AS_PAIR:
+      return "AS_PAIR";
+
+    case AS_BYTES:
+      return "AS_BYTES";
+
+    case AS_DOUBLE:
+      return "AS_DOUBLE";
+
+    case AS_GEOJSON:
+      return "AS_GEOJSON";
+
+    default:
+      return itoa(as_val_type(value));
+  }
+}
+
+//
+// VALUE type into char *
+//
+const char * rb_val_type_as_str(VALUE value) {
+  switch ( TYPE(value) ) {
+    case T_NIL:
+      return "T_NIL";
+
+    case T_OBJECT:
+      return "T_OBJECT";
+
+    case T_CLASS:
+      return "T_CLASS";
+
+    case T_MODULE:
+      return "T_MODULE";
+
+    case T_FLOAT:
+      return "T_FLOAT";
+
+    case T_STRING:
+      return "T_STRING";
+
+    case T_REGEXP:
+      return "T_REGEXP";
+
+    case T_ARRAY:
+      return "T_ARRAY";
+
+    case T_HASH:
+      return "T_HASH";
+
+    case T_STRUCT:
+      return "T_STRUCT";
+
+    case T_BIGNUM:
+      return "T_BIGNUM";
+
+    case T_FIXNUM:
+      return "T_FIXNUM";
+
+    case T_COMPLEX:
+      return "T_COMPLEX";
+
+    case T_RATIONAL:
+      return "T_RATIONAL";
+
+    case T_FILE:
+      return "T_FILE";
+
+    case T_TRUE:
+      return "T_TRUE";
+
+    case T_FALSE:
+      return "T_FALSE";
+
+    case T_DATA:
+      return "T_DATA";
+
+    case T_SYMBOL:
+      return "T_SYMBOL";
+
+    default:
+      return itoa(TYPE(value));
+  }
 }

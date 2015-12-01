@@ -15,7 +15,7 @@ bins = {
   "y" => "abcd",
   "current_lat" => 12132435435,
   "current_lng" => 234324435345,
-  "tab" => [1, 2, "trzy"]
+  "tab" => [1, 2, "trzy", [1, "dwa"]]
 }
 
 puts "\n--- bins:"
