@@ -34,8 +34,14 @@ i = 0
   i += 1
 end
 
-task = client.background_execute_udf_on_scan("test", "scan_test", "scan_udf", "add_cords", [34, 56]).inspect
-puts task.inspect
-puts task.inspect
+puts "\n----------------------------"
+
+scan_task = client.background_execute_udf_on_scan("test", "scan_test", "scan_udf", "add_cords", [34, 56])
+puts scan_task.inspect
+
+scan_task.check_status
+puts scan_task.inspect
+puts "\n----------------------------"
+puts scan_task.completed?
 
 client.drop_udf("scan_udf.lua")

@@ -1158,15 +1158,13 @@ static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) 
   as_scan_init(&scan, StringValueCStr(ns), StringValueCStr(set));
   as_scan_apply_each(&scan, StringValueCStr(module_name), StringValueCStr(func_name), (as_list *)args);
 
-  uint64_t scanid = FIX2LONG(rb_iv_get(self, "@last_scan_id")) + 1;
-
-  if ( scanid >= LONG_MAX - 1 ) scanid = 1;
-
-  VALUE scan_id = LONG2FIX(scanid);
+  uint64_t scanid = 0;
 
   if ( aerospike_scan_background(as, &err, NULL, &scan, &scanid) != AEROSPIKE_OK ) {
     raise_as_error(err);
   }
+
+  VALUE scan_id = LONG2FIX(scanid);
 
   rb_iv_set(self, "@last_scan_id", scan_id);
 
@@ -1223,4 +1221,5 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   //
   rb_define_attr(Client, "host", 1, 0);
   rb_define_attr(Client, "port", 1, 0);
+  rb_define_attr(Client, "last_scan_id", 1, 0);
 }
