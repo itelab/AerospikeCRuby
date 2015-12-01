@@ -246,7 +246,7 @@ static int foreach_hash2record(VALUE key, VALUE val, VALUE record) {
     case T_ARRAY:
       log_debug("[Utils][foreach_hash2record] TYPE(val) -> array");
       tmp_list = array2as_list(val);
-      as_record_set_list(rec, key2bin_name(key), (as_list *)&tmp_list);
+      as_record_set_list(rec, key2bin_name(key), (as_list *)tmp_list);
       break;
 
     // case T_HASH:
