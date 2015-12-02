@@ -48,6 +48,7 @@ static void client_initialize(VALUE self, VALUE host, VALUE port) {
 
   as_error err;
   if (aerospike_connect(as, &err) != AEROSPIKE_OK) {
+    aerospike_destroy(as);
     raise_as_error(err);
   }
 
@@ -107,6 +108,7 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
   rec->ttl = FIX2INT( rb_hash_aref(options, ttl_sym) );
 
   if (aerospike_key_put(as, &err, NULL, k, rec) != AEROSPIKE_OK) {
+    as_record_destroy(rec);
     raise_as_error(err);
   }
 
@@ -421,6 +423,7 @@ static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
       return Qnil;
     }
 
+    as_batch_read_destroy(&records);
     raise_as_error(err);
   }
 
@@ -498,6 +501,7 @@ static VALUE touch(int argc, VALUE * argv, VALUE self) {
       return Qnil;
     }
 
+    as_operations_destroy(&ops);
     raise_as_error(err);
   }
 
@@ -597,6 +601,7 @@ static VALUE operate(VALUE self, VALUE key, VALUE operations) {
       return Qnil;
     }
 
+    as_operations_destroy(&ops);
     raise_as_error(err);
   }
 
@@ -818,6 +823,7 @@ static VALUE register_udf(int argc, VALUE * argv, VALUE self) {
 
   // register the UDF file in the database cluster
   if ( aerospike_udf_put(as, &err, NULL, StringValueCStr(server_path), AS_UDF_TYPE_LUA, &udf_content) != AEROSPIKE_OK ) {
+    as_bytes_destroy(&udf_content);
     raise_as_error(err);
   }
 
