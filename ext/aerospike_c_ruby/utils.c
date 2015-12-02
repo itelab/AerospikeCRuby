@@ -95,27 +95,33 @@ VALUE record2hash(as_record * rec) {
 
     VALUE name = rb_str_new2( as_bin_get_name(bin) );
 
-    switch ( as_val_type(value) ) {
-      case AS_INTEGER:
-        log_debug("[Utils][record2hash] as_val_type(value) -> integer");
-        rb_hash_aset(hash, name, as_val_int_2_val(value));
-        break;
+    rb_hash_aset(hash, name, as_val2rb_val(value));
 
-      case AS_STRING:
-        log_debug("[Utils][record2hash] as_val_type(value) -> string");
-        rb_hash_aset(hash, name, as_val_str_2_val(value));
-        break;
+    /*******************
+      all under this comment was replaced with as_val2rb_val
+    ********************/
 
-      case AS_LIST:
-        log_debug("[Utils][record2hash] as_val_type(value) -> list");
-        tmp_list = as_list_fromval(value);
-        rb_hash_aset(hash, name, as_list2array(tmp_list));
-        break;
+    // switch ( as_val_type(value) ) {
+    //   case AS_INTEGER:
+    //     log_debug("[Utils][record2hash] as_val_type(value) -> integer");
+    //     rb_hash_aset(hash, name, as_val_int_2_val(value));
+    //     break;
 
-      default:
-        rb_raise(rb_eRuntimeError, "[Utils][record2hash] Unsupported record value type: %s", as_val_type_as_str(value));
-        break;
-    }
+    //   case AS_STRING:
+    //     log_debug("[Utils][record2hash] as_val_type(value) -> string");
+    //     rb_hash_aset(hash, name, as_val_str_2_val(value));
+    //     break;
+
+    //   case AS_LIST:
+    //     log_debug("[Utils][record2hash] as_val_type(value) -> list");
+    //     tmp_list = as_list_fromval(value);
+    //     rb_hash_aset(hash, name, as_list2array(tmp_list));
+    //     break;
+
+    //   default:
+    //     rb_raise(rb_eRuntimeError, "[Utils][record2hash] Unsupported record value type: %s", as_val_type_as_str(value));
+    //     break;
+    // }
   }
 
   log_debug("[Utils][record2hash] success");
@@ -195,28 +201,34 @@ VALUE as_list2array(as_arraylist * list) {
 
   while (as_arraylist_iterator_has_next(&it) ) {
     as_val * value = as_arraylist_iterator_next(&it);
+    rb_ary_push(ary, as_val2rb_val(value));
 
-    switch ( as_val_type(value) ) {
-      case AS_INTEGER:
-        log_debug("[Utils][as_list2array] as_val_type(value) -> integer");
-        rb_ary_push(ary, as_val_int_2_val(value));
-        break;
+    /*******************
+      all under this comment was replaced with as_val2rb_val
+    ********************/
 
-      case AS_STRING:
-        log_debug("[Utils][as_list2array] as_val_type(value) -> string");
-        rb_ary_push(ary, as_val_str_2_val(value));
-        break;
+    // switch ( as_val_type(value) ) {
+    //   case AS_INTEGER:
+    //     log_debug("[Utils][as_list2array] as_val_type(value) -> integer");
+    //     rb_ary_push(ary, as_val_int_2_val(value));
+    //     break;
 
-      case AS_LIST:
-        log_debug("[Utils][as_list2array] as_val_type(value) -> list");
-        tmp_list = as_list_fromval(value);
-        rb_ary_push(ary, as_list2array(tmp_list));
-        break;
+    //   case AS_STRING:
+    //     log_debug("[Utils][as_list2array] as_val_type(value) -> string");
+    //     rb_ary_push(ary, as_val_str_2_val(value));
+    //     break;
 
-      default:
-        rb_raise(rb_eRuntimeError, "[Utils][as_list2array] Unsupported array value type: %s", as_val_type_as_str(value));
-        break;
-    }
+    //   case AS_LIST:
+    //     log_debug("[Utils][as_list2array] as_val_type(value) -> list");
+    //     tmp_list = as_list_fromval(value);
+    //     rb_ary_push(ary, as_list2array(tmp_list));
+    //     break;
+
+    //   default:
+    //     rb_ary_push(ary, as_val2rb_val(value));
+    //     rb_raise(rb_eRuntimeError, "[Utils][as_list2array] Unsupported array value type: %s", as_val_type_as_str(value));
+    //     break;
+    // }
   }
 
   return ary;
@@ -378,6 +390,35 @@ static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE hmap) {
 }
 **************************************************************************/
 
+
+//
+// convert as_hashmap * map into ruby hash
+//
+VALUE as_hashmap2hash(as_hashmap * map) {
+  VALUE hash = rb_hash_new();
+
+  as_hashmap_iterator it;
+  as_hashmap_iterator_init(&it, map);
+
+  while ( as_hashmap_iterator_has_next(&it) ) {
+    as_pair * val_pair = as_pair_fromval(as_hashmap_iterator_next(&it));
+
+    as_val * key = val_pair->_1;
+    as_val * value = val_pair->_2;
+
+    VALUE name = as_val2rb_val(key);
+    VALUE val  = as_val2rb_val(value);
+
+    // rb_raise(rb_eRuntimeError, "key: %s, val: %s", val_inspect(name), val_inspect(val));
+
+    rb_hash_aset(hash, name, val);
+  }
+
+  as_hashmap_iterator_destroy(&it);
+
+  return hash;
+}
+
 //
 // ruby array to char ** with last element NULL
 // remember to destroy allocated memory with inputArray_destroy(inputArray)
@@ -511,9 +552,13 @@ VALUE as_val2rb_val(as_val * value) {
     case AS_LIST:
       return as_list2array(value);
       break;
+
+    case AS_MAP:
+      return as_hashmap2hash(value);
+      break;
   }
 
-  return Qfalse;
+  rb_raise(rb_eRuntimeError, "[Utils][as_val2rb_val] Unsupported array value type: %s", as_val_type_as_str(value));
 }
 
 //
@@ -638,7 +683,7 @@ const char * rb_val_type_as_str(VALUE value) {
 }
 
 //
-// AerospikeC::Query to as_query
+// AerospikeC::Query to as_query *
 // need to free after usage: destroy_query(query);
 //
 as_query * query_obj2as_query(VALUE query_obj) {
@@ -710,7 +755,6 @@ as_query * query_obj2as_query(VALUE query_obj) {
 
     as_query_orderby(query, StringValueCStr(order_bin), FIX2INT(order_type));
   }
-
 
   return query;
 }

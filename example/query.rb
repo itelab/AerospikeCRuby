@@ -77,7 +77,7 @@ puts "registering aggregate_udf.lua done."
 rs = client.execute_udf_on_query(q_range, "aggregate_udf", "mycount")
 puts rs.inspect
 
-rs = client.execute_udf_on_query(q_eql, "aggregate_udf", "other_bin_min", [10])
+rs = client.execute_udf_on_query(q_eql, "aggregate_udf", "other_bin_min", [50])
 puts rs.inspect
 
 #
@@ -91,6 +91,6 @@ i = 0
   i += 1
 end
 
-# client.drop_index("test", "test_query_test_int_bin_idx")
-# client.drop_index("test", "test_query_test_string_bin_idx")
-# client.drop_udf("aggregate_udf.lua")
+client.drop_index("test", "test_query_test_int_bin_idx")
+client.drop_index("test", "test_query_test_string_bin_idx")
+client.drop_udf("aggregate_udf.lua")

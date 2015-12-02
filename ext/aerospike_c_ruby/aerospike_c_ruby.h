@@ -28,6 +28,7 @@
 #include <aerospike/as_list_iterator.h>
 #include <aerospike/as_map.h>
 #include <aerospike/as_hashmap.h>
+#include <aerospike/as_hashmap_iterator.h>
 #include <aerospike/as_stringmap.h>
 #include <aerospike/as_log.h>
 #include <aerospike/aerospike_batch.h>
@@ -127,6 +128,8 @@ const char * as_val_type_as_str(as_val * val);
 const char * rb_val_type_as_str(VALUE value);
 
 as_query * query_obj2as_query(VALUE query_obj);
+
+VALUE as_hashmap2hash(as_hashmap * map);
 
 // ---------------------------------------------------
 // extern variables

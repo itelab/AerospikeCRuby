@@ -27,7 +27,8 @@ puts "\n--- get key:"
 puts client.get(key).inspect
 
 bins["y"]   = ["A", "B"]
-bins["x"]   = nil
+bins[:x]   = nil
+bins["current_lng"] = nil
 
 puts "\n--- bins:"
 puts bins.inspect

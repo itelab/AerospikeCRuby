@@ -7,14 +7,19 @@ local function add(a, b)
 end
 
 local function map_rec(rec)
-  return rec["other_bin"]
+  local out = map()
+
+  out["other_bin"] = rec["other_bin"]
+  out["int_bin"]   = rec["int_bin"]
+
+  return out
 end
 
 function other_bin_min(stream, min)
   local function other_bin_filter(record)
     info("---------min: %s", min)
     info("---------other_bin: %s", record["other_bin"])
-    if record["int_bin"] > 10 then
+    if record["int_bin"] > min then
       return true
     else
       return false
