@@ -33,9 +33,17 @@ static VALUE check_with_header(VALUE bins, VALUE options, as_record * rec) {
 }
 
 //
-// def initialize(host, port)
+// def initialize(host, port, options = {})
 //
-static void client_initialize(VALUE self, VALUE host, VALUE port) {
+static void client_initialize(int argc, VALUE * argv, VALUE self) {
+  VALUE host;
+  VALUE port;
+  VALUE options;
+
+  rb_scan_args(argc, argv, "21", &host, &port, &options);
+
+  if ( NIL_P(options) ) options = rb_hash_new();
+
   rb_iv_set(self, "@host", host);
   rb_iv_set(self, "@port", port);
   rb_iv_set(self, "@last_scan_id", rb_zero);
@@ -43,6 +51,16 @@ static void client_initialize(VALUE self, VALUE host, VALUE port) {
   as_config config;
   as_config_init(&config);
   as_config_add_host(&config, StringValueCStr(host), FIX2INT(port));
+
+  VALUE option_tmp = rb_hash_aref(options, lua_path_sym);
+  if ( option_tmp != Qnil ) {
+    strcpy(config.lua.user_path, StringValueCStr(option_tmp));
+  }
+
+  option_tmp = rb_hash_aref(options, password_sym);
+  if ( option_tmp != Qnil ) {
+    strcpy(config.password, StringValueCStr(option_tmp));
+  }
 
   aerospike * as = aerospike_new(&config);
 
@@ -1213,7 +1231,7 @@ bool execute_query_callback(as_val * val, VALUE query_data) {
 //  RETURN:
 //    1. data returned from query
 //
-// @TODO options policy
+// @TODO options policy in AeropsikeC::Query
 //
 static VALUE execute_query(VALUE self, VALUE query_obj) {
   as_error err;
@@ -1229,11 +1247,99 @@ static VALUE execute_query(VALUE self, VALUE query_obj) {
   VALUE query_data = rb_ary_new();
 
   if ( aerospike_query_foreach(as, &err, NULL, query, execute_query_callback, query_data) != AEROSPIKE_OK ) {
+    destroy_query(query);
     raise_as_error(err);
   }
 
-  as_query_destroy(query);
-  free(query);
+  destroy_query(query);
+
+  return query_data;
+}
+
+//
+// callback method for execute_udf_on_query
+//
+bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
+  if ( val == NULL ) {
+    log_info("scan_records_callback end");
+    return true;
+  }
+
+  VALUE tmp;
+  as_record * record;
+
+  switch ( as_val_type(val) ) {
+    case AS_REC:
+      record = as_rec_fromval(val);
+      tmp = record2hash(record);
+      break;
+
+    case AS_UNDEF:
+      rb_raise(rb_eRuntimeError, "[AerospikeC::Client][execute_udf_on_query_callback] undef");
+      break;
+
+    default:
+      tmp = as_val2rb_val(val);
+      break;
+  }
+
+  rb_ary_push(query_data, tmp);
+
+  return true;
+}
+
+// ----------------------------------------------------------------------------------
+//
+// execute udf on query
+// multiple threads will likely be calling the callback in parallel so return data won't be sorted
+//
+// def execute_udf_on_query(query_obj, module_name, func_name, udf_args = [])
+//
+// params:
+//   query_obj - AeropsikeC::Query object
+//   module_name - string, registered module name
+//   func_name - string, function name in module to execute
+//   udf_args - arguments passed to udf
+//
+//  ------
+//  RETURN:
+//    1. data returned from query
+//
+// @TODO options policy in AeropsikeC::Query
+//
+static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
+  as_error err;
+  aerospike * as = get_client_struct(self);
+
+  VALUE query_obj;
+  VALUE module_name;
+  VALUE func_name;
+  VALUE udf_args;
+
+  rb_scan_args(argc, argv, "31", &query_obj, &module_name, &func_name, &udf_args);
+
+  VALUE is_aerospike_c_query_obj = rb_funcall(query_obj, rb_intern("is_a?"), 1, Query);
+  if ( is_aerospike_c_query_obj != Qtrue ) {
+    rb_raise(rb_eRuntimeError, "[AerospikeC::Client][execute_udf_on_query] use AerospikeC::Query class to perform queries");
+  }
+
+  if ( NIL_P(udf_args) ) udf_args = rb_ary_new();
+
+  as_arraylist * args = array2as_list(udf_args);
+  as_query * query    = query_obj2as_query(query_obj);
+
+  as_query_apply(query, StringValueCStr(module_name), StringValueCStr(func_name), (as_list*)args);
+
+  VALUE query_data = rb_ary_new();
+
+  if ( aerospike_query_foreach(as, &err, NULL, query, execute_udf_on_query_callback, query_data) != AEROSPIKE_OK ) {
+    destroy_query(query);
+    as_arraylist_destroy(args);
+    raise_as_error(err);
+  }
+
+  destroy_query(query);
+  as_arraylist_destroy(args);
 
   return query_data;
 }
@@ -1251,36 +1357,45 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   //
   // methods
   //
-  rb_define_method(Client, "initialize", RB_FN_ANY()client_initialize, 2);
+  rb_define_method(Client, "initialize", RB_FN_ANY()client_initialize, -1);
 
+  // crud
   rb_define_method(Client, "put", RB_FN_ANY()put, -1);
   rb_define_method(Client, "get", RB_FN_ANY()get, -1);
   rb_define_method(Client, "delete", RB_FN_ANY()delete_record, 1);
 
+  // utils
   rb_define_method(Client, "logger=", RB_FN_ANY()set_logger, 1);
   rb_define_method(Client, "exists?", RB_FN_ANY()key_exists, 1);
   rb_define_method(Client, "get_header", RB_FN_ANY()get_header, 1);
   rb_define_method(Client, "batch_get", RB_FN_ANY()batch_get, -1);
   rb_define_method(Client, "touch", RB_FN_ANY()touch, -1);
 
+  // operations
   rb_define_method(Client, "operate", RB_FN_ANY()operate, 2);
   rb_define_method(Client, "operation", RB_FN_ANY()operation_obj, 0);
 
+  // indexes
   rb_define_method(Client, "create_index", RB_FN_ANY()create_index, -1);
   rb_define_method(Client, "drop_index", RB_FN_ANY()drop_index, -1);
 
+  // info
   rb_define_method(Client, "info_cmd", RB_FN_ANY()info_cmd, 1);
 
+  // udfs
   rb_define_method(Client, "register_udf", RB_FN_ANY()register_udf, -1);
   rb_define_method(Client, "drop_udf", RB_FN_ANY()drop_udf, -1);
   rb_define_method(Client, "list_udf", RB_FN_ANY()list_udf, -1);
   rb_define_method(Client, "execute_udf", RB_FN_ANY()execute_udf, -1);
 
+  // scans
   rb_define_method(Client, "scan", RB_FN_ANY()scan_records, -1);
   rb_define_method(Client, "execute_udf_on_scan", RB_FN_ANY()execute_udf_on_scan, -1);
   rb_define_method(Client, "background_execute_udf_on_scan", RB_FN_ANY()background_execute_udf_on_scan, -1);
 
+  // queries
   rb_define_method(Client, "query", RB_FN_ANY()execute_query, 1);
+  rb_define_method(Client, "execute_udf_on_query", RB_FN_ANY()execute_udf_on_query, -1);
 
   //
   // attr_reader

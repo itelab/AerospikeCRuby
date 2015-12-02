@@ -1,6 +1,7 @@
 require "aerospike_c_ruby"
 
-client = AerospikeC::Client.new("127.0.0.1", 3000)
+lua_path = File.expand_path(File.join(File.dirname(__FILE__), "lua"))
+client = AerospikeC::Client.new("127.0.0.1", 3000, {lua_path: lua_path})
 
 #
 # eql
@@ -22,6 +23,9 @@ puts q_range.inspect
 client.drop_index("test", "test_query_test_int_bin_idx")
 client.drop_index("test", "test_query_test_string_bin_idx")
 
+#
+# need indexes
+#
 tasks = []
 tasks << client.create_index("test", "query_test", "int_bin", "test_query_test_int_bin_idx", :numeric)
 tasks << client.create_index("test", "query_test", "string_bin", "test_query_test_string_bin_idx", :string)
@@ -31,13 +35,16 @@ tasks.each do |task|
   task.wait_till_completed
 end
 
+#
+# build data to operate on
+#
 i = 0
 100.times do
   key = AerospikeC::Key.new("test", "query_test", "query#{i}")
   bins = {
     int_bin: i,
     string_bin: "string#{(i%10) == 0 ? 21 : i }",
-    other_bin: 123,
+    other_bin: i+5,
     other_bin2: [1, 2, "three"]
   }
 
@@ -45,6 +52,9 @@ i = 0
   i += 1
 end
 
+#
+# query
+#
 puts "\nquery range int_bin 1,5:"
 recs = client.query(q_range)
 puts recs.inspect
@@ -52,6 +62,23 @@ puts recs.inspect
 puts "\nquery eql string_bin string21:"
 recs2 = client.query(q_eql)
 puts recs2.inspect
+puts "\n-----------------------------\n"
+
+#
+# udf
+#
+aggregate_udf = File.expand_path(File.join(File.dirname(__FILE__), "lua/aggregate_udf.lua"))
+
+puts "registering aggregate_udf.lua"
+task = client.register_udf(aggregate_udf, "aggregate_udf.lua")
+task.wait_till_completed
+puts "registering aggregate_udf.lua done."
+
+rs = client.execute_udf_on_query(q_range, "aggregate_udf", "mycount")
+puts rs.inspect
+
+rs = client.execute_udf_on_query(q_eql, "aggregate_udf", "other_bin_min", [10])
+puts rs.inspect
 
 #
 # cleanup
@@ -64,5 +91,6 @@ i = 0
   i += 1
 end
 
-client.drop_index("test", "test_query_test_int_bin_idx")
-client.drop_index("test", "test_query_test_string_bin_idx")
+# client.drop_index("test", "test_query_test_int_bin_idx")
+# client.drop_index("test", "test_query_test_string_bin_idx")
+# client.drop_udf("aggregate_udf.lua")

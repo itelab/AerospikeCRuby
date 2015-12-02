@@ -4,6 +4,7 @@ VALUE Query;
 
 //
 // def initialize(namespace, set, bins = [])
+// @TODO options policy
 //
 static VALUE query_initialize(int argc, VALUE * argv, VALUE self) {
   VALUE ns;

@@ -639,7 +639,7 @@ const char * rb_val_type_as_str(VALUE value) {
 
 //
 // AerospikeC::Query to as_query
-// need to free after usage
+// need to free after usage: destroy_query(query);
 //
 as_query * query_obj2as_query(VALUE query_obj) {
   VALUE ns   = rb_funcall(query_obj, rb_intern("namespace"), 0);
