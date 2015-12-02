@@ -472,6 +472,8 @@ void bin_names_destroy(char ** bin_names, long len) {
 // call to_s on val
 //
 VALUE value_to_s(VALUE val) {
+  if ( TYPE(val) == T_STRING ) return val;
+
   return rb_funcall(val, rb_intern("to_s"), 0);
 }
 
@@ -633,4 +635,78 @@ const char * rb_val_type_as_str(VALUE value) {
     default:
       return itoa(TYPE(value));
   }
+}
+
+//
+// AerospikeC::Query to as_query
+// need to free after usage
+//
+as_query * query_obj2as_query(VALUE query_obj) {
+  VALUE ns   = rb_funcall(query_obj, rb_intern("namespace"), 0);
+  VALUE set  = rb_funcall(query_obj, rb_intern("set"), 0);
+  VALUE bins = rb_funcall(query_obj, rb_intern("bins"), 0);
+
+  as_query * query = (as_query *) malloc ( sizeof(as_query) ) ;
+  as_query_init(query, StringValueCStr(ns), StringValueCStr(set));
+  as_query_where_init(query, 1);
+
+  int len = rb_ary_len_int(bins);
+  as_query_select_init(query, len);
+
+  // ----------------
+  // select
+  for (int i = 0; i < len; ++i) {
+    VALUE bin = rb_ary_entry(bins, i);
+    as_query_select(query, StringValueCStr(bin));
+  }
+
+  VALUE filter      = rb_funcall(query_obj, rb_intern("filter"), 0);
+  VALUE filter_type = rb_hash_aref(filter, filter_type_sym);
+  VALUE query_bin   = rb_hash_aref(filter, bin_sym);
+
+  // ----------------
+  // where
+  if ( filter_type == eql_sym ) { // eql
+    VALUE val        = rb_hash_aref(filter, value_sym);
+    VALUE where_type = rb_hash_aref(filter, type_sym);
+
+    if ( where_type == numeric_sym ) {
+      as_query_where(query, StringValueCStr(query_bin), as_integer_equals(FIX2LONG(val)) );
+    }
+    else if ( where_type == string_sym ) {
+      as_query_where(query, StringValueCStr(query_bin), as_string_equals(StringValueCStr(val)) );
+    }
+    else {
+      rb_raise(rb_eRuntimeError, "[Utils][query_obj2as_query] Unsupported eql value type: %s", val_inspect(val));
+    }
+  }
+  else if ( filter_type == range_sym ) { // range
+    VALUE min = rb_hash_aref(filter, min_sym);
+    VALUE max = rb_hash_aref(filter, max_sym);
+
+    as_query_where(query, StringValueCStr(query_bin), as_integer_range( FIX2LONG(min), FIX2LONG(max) ) );
+  }
+  else {
+    VALUE tmp = rb_hash_aref(filter, filter_type_sym);
+    rb_raise(rb_eRuntimeError, "[Utils][query_obj2as_query] Unsupported filter type: %s", val_inspect(tmp));
+  }
+
+  VALUE order_by = rb_funcall(query_obj, rb_intern("order"), 0);
+
+  len = rb_ary_len_int(order_by);
+  as_query_orderby_inita(query, len);
+
+  // ----------------
+  // order
+  for (int i = 0; i < len; ++i) {
+    VALUE order = rb_ary_entry(order_by, i);
+
+    VALUE order_bin  = rb_hash_aref(order, bin_sym);
+    VALUE order_type = rb_hash_aref(order, order_sym);
+
+    as_query_orderby(query, StringValueCStr(order_bin), FIX2INT(order_type));
+  }
+
+
+  return query;
 }

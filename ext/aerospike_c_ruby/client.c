@@ -1176,6 +1176,62 @@ static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) 
   return rb_funcall(ScanTask, rb_intern("new"), 2, scan_id, self);
 }
 
+//
+// callback method for execute_query
+//
+bool execute_query_callback(as_val * val, VALUE query_data) {
+  if ( val == NULL ) {
+    log_info("scan_records_callback end");
+    return true;
+  }
+
+  as_record * record = as_rec_fromval(val);
+
+  VALUE rec = record2hash(record);
+  rb_ary_push(query_data, rec);
+
+  return true;
+}
+
+// ----------------------------------------------------------------------------------
+//
+// execute query
+// multiple threads will likely be calling the callback in parallel so return data won't be sorted
+//
+// def query(query_obj)
+//
+// params:
+//   query_obj - AeropsikeC::Query object
+//
+//  ------
+//  RETURN:
+//    1. data returned from query
+//
+// @TODO options policy
+//
+static VALUE execute_query(VALUE self, VALUE query_obj) {
+  as_error err;
+  aerospike * as = get_client_struct(self);
+
+  VALUE is_aerospike_c_query_obj = rb_funcall(query_obj, rb_intern("is_a?"), 1, Query);
+  if ( is_aerospike_c_query_obj != Qtrue ) {
+    rb_raise(rb_eRuntimeError, "[AerospikeC::Client][query] use AerospikeC::Query class to perform queries");
+  }
+
+  as_query * query = query_obj2as_query(query_obj);
+
+  VALUE query_data = rb_ary_new();
+
+  if ( aerospike_query_foreach(as, &err, NULL, query, execute_query_callback, query_data) != AEROSPIKE_OK ) {
+    raise_as_error(err);
+  }
+
+  as_query_destroy(query);
+  free(query);
+
+  return query_data;
+}
+
 // ----------------------------------------------------------------------------------
 //
 // Init
@@ -1217,6 +1273,8 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   rb_define_method(Client, "scan", RB_FN_ANY()scan_records, -1);
   rb_define_method(Client, "execute_udf_on_scan", RB_FN_ANY()execute_udf_on_scan, -1);
   rb_define_method(Client, "background_execute_udf_on_scan", RB_FN_ANY()background_execute_udf_on_scan, -1);
+
+  rb_define_method(Client, "query", RB_FN_ANY()execute_query, 1);
 
   //
   // attr_reader

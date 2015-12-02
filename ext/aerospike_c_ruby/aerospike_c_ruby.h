@@ -32,6 +32,7 @@
 #include <aerospike/as_log.h>
 #include <aerospike/aerospike_batch.h>
 #include <aerospike/aerospike_scan.h>
+#include <aerospike/aerospike_query.h>
 
 
 // ---------------------------------------------------
@@ -59,6 +60,15 @@
 #define udf_type_sym    ID2SYM(rb_intern("udf_type"))    // :udf_type
 #define hash_sym        ID2SYM(rb_intern("hash"))        // :hash
 #define size_sym        ID2SYM(rb_intern("size"))        // :size
+#define type_sym        ID2SYM(rb_intern("type"))        // :type
+#define filter_type_sym ID2SYM(rb_intern("filter_type")) // :filter_type
+#define eql_sym         ID2SYM(rb_intern("eql"))         // :eql
+#define range_sym       ID2SYM(rb_intern("range"))       // :range
+#define min_sym         ID2SYM(rb_intern("min"))         // :min
+#define max_sym         ID2SYM(rb_intern("max"))         // :max
+#define asc_sym         ID2SYM(rb_intern("asc"))         // :asc
+#define desc_sym        ID2SYM(rb_intern("desc"))        // :desc
+#define order_sym       ID2SYM(rb_intern("order"))       // :order
 
 #define as_val_int_2_val(val) INT2FIX( as_integer_get( as_integer_fromval(val) ) )          //(int)    as_val * -> VALUE
 #define as_val_str_2_val(val) rb_str_new2( as_string_tostring( as_string_fromval(value) ) ) //(string) as_val * -> VALUE
@@ -75,6 +85,7 @@ void init_aerospike_c_record(VALUE AerospikeC);     // record.c
 void init_aerospike_c_operation(VALUE AerospikeC);  // operation.c
 void init_aerospike_c_udf_task(VALUE AerospikeC);   // udf_task.c
 void init_aerospike_c_scan_task(VALUE AerospikeC);  // scan_task.c
+void init_aerospike_c_query(VALUE AerospikeC);      // query.c
 
 // index_task.c
 void init_aerospike_c_index_task(VALUE AerospikeC);
@@ -111,6 +122,8 @@ char * val_inspect(VALUE val);
 const char * as_val_type_as_str(as_val * val);
 const char * rb_val_type_as_str(VALUE value);
 
+as_query * query_obj2as_query(VALUE query_obj);
+
 // ---------------------------------------------------
 // extern variables
 //
@@ -122,5 +135,6 @@ extern VALUE Logger;
 extern VALUE IndexTask;
 extern VALUE UdfTask;
 extern VALUE ScanTask;
+extern VALUE Query;
 
 #endif // AEROSPIKE_C_RUBY_H
