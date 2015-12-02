@@ -687,9 +687,9 @@ const char * rb_val_type_as_str(VALUE value) {
 // need to free after usage: destroy_query(query);
 //
 as_query * query_obj2as_query(VALUE query_obj) {
-  VALUE ns   = rb_funcall(query_obj, rb_intern("namespace"), 0);
-  VALUE set  = rb_funcall(query_obj, rb_intern("set"), 0);
-  VALUE bins = rb_funcall(query_obj, rb_intern("bins"), 0);
+  VALUE ns   = rb_iv_get(query_obj, "@namespace");
+  VALUE set  = rb_iv_get(query_obj, "@set");
+  VALUE bins = rb_iv_get(query_obj, "@bins");
 
   as_query * query = (as_query *) malloc ( sizeof(as_query) ) ;
   as_query_init(query, StringValueCStr(ns), StringValueCStr(set));
@@ -707,7 +707,7 @@ as_query * query_obj2as_query(VALUE query_obj) {
     as_query_select(query, StringValueCStr(bin));
   }
 
-  VALUE filter      = rb_funcall(query_obj, rb_intern("filter"), 0);
+  VALUE filter      = rb_iv_get(query_obj, "@filter");
   VALUE filter_type = rb_hash_aref(filter, filter_type_sym);
   VALUE query_bin   = rb_hash_aref(filter, bin_sym);
 
@@ -740,7 +740,7 @@ as_query * query_obj2as_query(VALUE query_obj) {
     rb_raise(rb_eRuntimeError, "[Utils][query_obj2as_query] Unsupported filter type: %s", val_inspect(tmp));
   }
 
-  VALUE order_by = rb_funcall(query_obj, rb_intern("order"), 0);
+  VALUE order_by = rb_iv_get(query_obj, "@order");
 
   len = rb_ary_len_int(order_by);
   as_query_orderby_inita(query, len);
