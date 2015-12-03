@@ -67,6 +67,6 @@ void init_aerospike_c_udf_task(VALUE AerospikeC) {
   //
   // attr_reader
   //
-  rb_define_attr(Key, "name", 1, 0);
-  rb_define_attr(Key, "done", 1, 0);
+  rb_define_attr(UdfTask, "name", 1, 0);
+  rb_define_attr(UdfTask, "done", 1, 0);
 }
