@@ -46,7 +46,8 @@ static void client_initialize(int argc, VALUE * argv, VALUE self) {
 
   rb_iv_set(self, "@host", host);
   rb_iv_set(self, "@port", port);
-  rb_iv_set(self, "@last_scan_id", rb_zero);
+  rb_iv_set(self, "@last_scan_id", Qnil);
+  rb_iv_set(self, "@last_query_id", Qnil);
 
   as_config config;
   as_config_init(&config);
