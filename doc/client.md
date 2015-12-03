@@ -24,6 +24,12 @@ With a new client, you can use any of the methods specified below:
   - [#touch](#touch)
   - [#operate](#operate)
   - [#operation](#operation)
+  - [#create_index](#create_index)
+  - [#drop_index](#drop_index)
+  - [#info_cmd](#info_cmd)
+  - [#list_indexes](#list_indexes)
+  - [#statistics](#statistics)
+  - [#namespaces](#namespaces)
 
 
 <a name="methods"></a>
@@ -427,3 +433,134 @@ Example:
 ```ruby
 client.operation # => #<AerospikeC::Operation:0x00000000cec368 @operations=[], @ttl=0>
 ```
+
+<!--===============================================================================-->
+<hr/>
+<!-- create_index -->
+<a name="create_index"></a>
+
+### create_index(namespace, set, bin, name, data_type, options = {})
+
+Creates index on `bin`, within `namespace` and `set`, and names it as `name`.
+Aerospike reference: http://www.aerospike.com/docs/architecture/secondary-index.html
+
+Parameters:
+
+- `namespace` - string, namespace to be indexed
+- `set`       - string, set to be indexed
+- `bin`       - string, bin or complex position name to be indexed
+- `name`      - string, name of the index
+- `data_type` - symbol, data type of index, `:string` or `:numeric`
+- `options`:
+
+  - @TODO options policy
+
+Returns:
+- [AerospikeC::IndexTask](index_task.md) object
+
+Example:
+
+```ruby
+tasks = []
+tasks << client.create_index("test", "test", "test_bin", "test_test_test_bin_idx", :numeric)
+tasks << client.create_index("test", "test", "test_bin2", "test_test_test_bin2_idx", :string)
+
+tasks.each do |task|
+  puts task.inspect
+end
+
+tasks.each do |task|
+  task.wait_till_completed
+end
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- drop_index -->
+<a name="drop_index"></a>
+
+### drop_index(namespace, name, options = {})
+
+Drops index with `name` in given `namespace`
+
+Parameters:
+- `namespace` - string, index namespace
+- `name`      - string, index name
+- `options`:
+
+  - @TODO options policy
+
+Returns:
+
+- `true` if drop executed correctly
+
+Example:
+
+```ruby
+client.drop_index("test", "test_test_test_bin_idx") # => true
+client.drop_index("test", "test_test_test_bin2_idx") # => true
+```
+
+
+<!--===============================================================================-->
+<hr/>
+<!-- info_cmd -->
+<a name="info_cmd"></a>
+
+### info_cmd(cmd)
+
+Execute asinfo command on server.
+Aerospike reference: http://www.aerospike.com/docs/reference/info/
+
+Parameters:
+
+- `cmd` - string, command to execute
+
+Returns:
+- `string` - response from server
+
+Example:
+
+```ruby
+client.info_cmd("logs") # => "logs  0:/var/log/aerospike/aerospike.log"
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- list_indexes -->
+<a name="list_indexes"></a>
+
+### list_indexes
+
+Execute `info_cmd("sindex")` and parse response
+
+Retruns:
+
+- `array` of hashes, each for index info
+
+
+<!--===============================================================================-->
+<hr/>
+<!-- statistics -->
+<a name="statistics"></a>
+
+### statistics
+
+Execute `info_cmd("statistics")` and parse response
+
+Retruns:
+
+- `hash` of informations
+
+<!--===============================================================================-->
+<hr/>
+<!-- namespaces -->
+<a name="namespaces"></a>
+
+### namespaces
+
+Execute `info_cmd("namespaces")` and parse response
+
+Retruns:
+
+- `array` of namespaces names
