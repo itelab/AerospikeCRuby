@@ -727,7 +727,7 @@ as_query * query_obj2as_query(VALUE query_obj) {
       as_query_where(query, StringValueCStr(query_bin), as_string_equals(StringValueCStr(val)) );
     }
     else {
-      free(query);
+      destroy_query(query);
       rb_raise(rb_eRuntimeError, "[Utils][query_obj2as_query] Unsupported eql value type: %s", val_inspect(val));
     }
   }
@@ -739,7 +739,7 @@ as_query * query_obj2as_query(VALUE query_obj) {
   }
   else {
     VALUE tmp = rb_hash_aref(filter, filter_type_sym);
-    free(query);
+    destroy_query(query);
     rb_raise(rb_eRuntimeError, "[Utils][query_obj2as_query] Unsupported filter type: %s", val_inspect(tmp));
   }
 
