@@ -76,9 +76,24 @@ puts "registering aggregate_udf.lua done."
 
 rs = client.execute_udf_on_query(q_range, "aggregate_udf", "mycount")
 puts rs.inspect
+puts "alias:"
+rs = client.aggregate(q_range, "aggregate_udf", "mycount")
+puts rs.inspect
 
 rs = client.execute_udf_on_query(q_eql, "aggregate_udf", "other_bin_min", [50])
 puts rs.inspect
+
+puts "------------- background_execute_udf_on_query:"
+query_task = client.background_execute_udf_on_query(q_range, "aggregate_udf", "mycount")
+puts query_task.inspect
+query_task.wait_till_completed
+puts query_task.done?
+
+puts "alias:"
+query_task = client.bg_aggregate(q_range, "aggregate_udf", "mycount")
+puts query_task.inspect
+query_task.wait_till_completed
+puts query_task.done?
 
 #
 # cleanup

@@ -30,7 +30,7 @@ static VALUE scan_initialize(VALUE self, VALUE scan_id, VALUE client) {
   as_error err;
   aerospike * as = get_client_struct(client);
 
-  uint64_t scanid = FIX2LONG(scan_id);
+  uint64_t scanid = NUM2ULONG(scan_id);
   as_scan_info scan_info;
 
   if ( aerospike_scan_info(as, &err, NULL, scanid, &scan_info) != AEROSPIKE_OK ) {
@@ -51,7 +51,7 @@ static VALUE check_status(VALUE self) {
   as_error err;
   aerospike * as = get_client_struct(client);
 
-  uint64_t scan_id = FIX2LONG(scan_id);
+  uint64_t scan_id = NUM2ULONG( rb_iv_get(self, "@scan_id") );
   as_scan_info scan_info;
 
   if ( aerospike_scan_info(as, &err, NULL, scan_id, &scan_info) != AEROSPIKE_OK ) {

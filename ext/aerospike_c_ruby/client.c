@@ -1190,7 +1190,7 @@ static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) 
     raise_as_error(err);
   }
 
-  VALUE scan_id = LONG2FIX(scanid);
+  VALUE scan_id = ULONG2NUM(scanid);
 
   rb_iv_set(self, "@last_scan_id", scan_id);
 
@@ -1346,6 +1346,65 @@ static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
 
 // ----------------------------------------------------------------------------------
 //
+// background execute udf on query
+//
+// def background_execute_udf_on_query(query_obj, module_name, func_name, udf_args = [])
+//
+// params:
+//   query_obj - AeropsikeC::Query object
+//   module_name - string, registered module name
+//   func_name - string, function name in module to execute
+//   udf_args - arguments passed to udf
+//
+//  ------
+//  RETURN:
+//    1. AerospikeC::QueryTask object
+//
+// @TODO options policy in AeropsikeC::Query
+//
+static VALUE background_execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
+  as_error err;
+  aerospike * as = get_client_struct(self);
+
+  VALUE query_obj;
+  VALUE module_name;
+  VALUE func_name;
+  VALUE udf_args;
+
+  rb_scan_args(argc, argv, "31", &query_obj, &module_name, &func_name, &udf_args);
+
+  VALUE is_aerospike_c_query_obj = rb_funcall(query_obj, rb_intern("is_a?"), 1, Query);
+  if ( is_aerospike_c_query_obj != Qtrue ) {
+    rb_raise(rb_eRuntimeError, "[AerospikeC::Client][background_execute_udf_on_query] use AerospikeC::Query class to perform queries");
+  }
+
+  if ( NIL_P(udf_args) ) udf_args = rb_ary_new();
+
+  as_arraylist * args = array2as_list(udf_args);
+  as_query * query    = query_obj2as_query(query_obj);
+
+  as_query_apply(query, StringValueCStr(module_name), StringValueCStr(func_name), (as_list*)args);
+
+  uint64_t query_id = 0;
+
+  if (aerospike_query_background(as, &err, NULL, query, &query_id) != AEROSPIKE_OK) {
+    destroy_query(query);
+    as_arraylist_destroy(args);
+    raise_as_error(err);
+  }
+
+  as_arraylist_destroy(args);
+
+  VALUE queryid  = ULONG2NUM(query_id);
+  VALUE rb_query = Data_Wrap_Struct(Query, NULL, query_task_deallocate, query);
+
+  rb_iv_set(self, "@last_query_id", queryid);
+
+  return rb_funcall(QueryTask, rb_intern("new"), 3, queryid, rb_query, self);
+}
+
+// ----------------------------------------------------------------------------------
+//
 // Init
 //
 void init_aerospike_c_client(VALUE AerospikeC) {
@@ -1396,6 +1455,15 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   // queries
   rb_define_method(Client, "query", RB_FN_ANY()execute_query, 1);
   rb_define_method(Client, "execute_udf_on_query", RB_FN_ANY()execute_udf_on_query, -1);
+  rb_define_method(Client, "background_execute_udf_on_query", RB_FN_ANY()background_execute_udf_on_query, -1);
+
+  //
+  // aliases
+  //
+  rb_define_alias(Client, "aggregate",    "execute_udf_on_query"           );
+  rb_define_alias(Client, "bg_aggregate", "background_execute_udf_on_query");
+  rb_define_alias(Client, "scan_udf",     "execute_udf_on_scan"            );
+  rb_define_alias(Client, "bg_scan_udf",  "background_execute_udf_on_scan" );
 
   //
   // attr_reader
@@ -1403,4 +1471,5 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   rb_define_attr(Client, "host", 1, 0);
   rb_define_attr(Client, "port", 1, 0);
   rb_define_attr(Client, "last_scan_id", 1, 0);
+  rb_define_attr(Client, "last_query_id", 1, 0);
 }

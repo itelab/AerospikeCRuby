@@ -92,6 +92,10 @@ void init_aerospike_c_udf_task(VALUE AerospikeC);   // udf_task.c
 void init_aerospike_c_scan_task(VALUE AerospikeC);  // scan_task.c
 void init_aerospike_c_query(VALUE AerospikeC);      // query.c
 
+// query_task.c
+void init_aerospike_c_query_task(VALUE AerospikeC);
+void query_task_deallocate(as_query * query);
+
 // index_task.c
 void init_aerospike_c_index_task(VALUE AerospikeC);
 void index_task_deallocate(as_index_task * task);
@@ -144,5 +148,6 @@ extern VALUE IndexTask;
 extern VALUE UdfTask;
 extern VALUE ScanTask;
 extern VALUE Query;
+extern VALUE QueryTask;
 
 #endif // AEROSPIKE_C_RUBY_H
