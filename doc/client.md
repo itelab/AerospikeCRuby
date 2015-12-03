@@ -30,6 +30,7 @@ With a new client, you can use any of the methods specified below:
   - [#list_indexes](#list_indexes)
   - [#statistics](#statistics)
   - [#namespaces](#namespaces)
+  - [#register_udf](#register_udf)
 
 
 <a name="methods"></a>
@@ -564,3 +565,35 @@ Execute `info_cmd("namespaces")` and parse response
 Retruns:
 
 - `array` of namespaces names
+
+
+<!--===============================================================================-->
+<hr/>
+<!-- register_udf -->
+<a name="register_udf"></a>
+
+### register_udf(path_to_file, server_path, language = :lua, options = {})
+
+Register udf on server
+
+Parameters:
+
+- `path_to_file` - absolute path to udf file
+- `server_path`  - where to put udf on the server
+- `language`     - udf language (in aerospike-c-client v3.1.24, only lua language is available)
+- `options`:
+
+  - @TODO options policy
+
+Return:
+
+- [AerospikeC::Udftask](udf_task.md) object
+
+Example:
+
+```ruby
+hello_world_udf = File.expand_path(File.join(File.dirname(__FILE__), "lua/hello_world.lua")
+
+task = client.register_udf(hello_world_udf, "hello.lua")
+task.wait_till_completed
+```
