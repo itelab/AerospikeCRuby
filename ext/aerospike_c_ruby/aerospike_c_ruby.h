@@ -130,6 +130,7 @@ const char * rb_val_type_as_str(VALUE value);
 as_query * query_obj2as_query(VALUE query_obj);
 
 VALUE as_hashmap2hash(as_hashmap * map);
+as_hashmap * hash2as_hashmap(VALUE hash);
 
 // ---------------------------------------------------
 // extern variables

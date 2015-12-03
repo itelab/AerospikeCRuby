@@ -15,7 +15,13 @@ bins = {
   "y" => "abcd",
   "current_lat" => 12132435435,
   "current_lng" => 234324435345,
-  "tab" => [1, 2, "trzy", [1, "dwa"]]
+
+  "tab" => [1, 2, "trzy", [1, "dwa"]],
+
+  "hash" => {
+    "x" => 1,
+    "y" => "two"
+  }
 }
 
 puts "\n--- bins:"
@@ -29,6 +35,16 @@ puts client.get(key).inspect
 bins["y"]   = ["A", "B"]
 bins[:x]   = nil
 bins["current_lng"] = nil
+bins["tab"] = [[1,1], {"X" => 2}]
+bins["hash"] = {
+  "x" => 2,
+  "y" => "three",
+  "tab" => [1, "two"],
+  "hash" => {
+    "nested_hash_int" => 55,
+    "nested_hash_string" => "string"
+  }
+}
 
 puts "\n--- bins:"
 puts bins.inspect

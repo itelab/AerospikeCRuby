@@ -143,6 +143,7 @@ void hash2record(VALUE hash, VALUE rec) {
 as_arraylist * array2as_list(VALUE ary) {
   VALUE tmp;
   as_arraylist * tmp_list;
+  as_hashmap * tmp_map;
 
   int len = rb_ary_len_int(ary);
 
@@ -177,6 +178,11 @@ as_arraylist * array2as_list(VALUE ary) {
         log_debug("[Utils][array2as_list] TYPE(element) -> array");
         tmp_list = array2as_list(element);
         as_arraylist_append_list(list, (as_list *)tmp_list);
+        break;
+
+      case T_HASH:
+        tmp_map = hash2as_hashmap(element);
+        as_arraylist_append_map(list, (as_map *)tmp_map);
         break;
 
       default:
@@ -240,7 +246,7 @@ VALUE as_list2array(as_arraylist * list) {
 static int foreach_hash2record(VALUE key, VALUE val, VALUE record) {
   VALUE tmp;
   as_arraylist * tmp_list;
-  as_hashmap tmp_map;
+  as_hashmap * tmp_map;
 
   as_record * rec;
   Data_Get_Struct(record, as_record, rec);
@@ -273,10 +279,10 @@ static int foreach_hash2record(VALUE key, VALUE val, VALUE record) {
       as_record_set_list(rec, key2bin_name(key), (as_list *)tmp_list);
       break;
 
-    // case T_HASH:
-    //   tmp_map = hash2as_hashmap(val);
-    //   as_record_set_map(rec, bin_name, (as_map *) &tmp_map  );
-    //   break;
+    case T_HASH:
+      tmp_map = hash2as_hashmap(val);
+      as_record_set_map(rec, key2bin_name(key), (as_map *)tmp_map );
+      break;
 
     default:
       rb_raise(rb_eRuntimeError, "[Utils][foreach_hash2record] Unsupported record value type: %s", rb_val_type_as_str(val));
@@ -316,25 +322,17 @@ static char * key2bin_name(VALUE key) {
   }
 }
 
-/**************************************************************************
-    @TODO
-    problem z mapami, głównie z pamiecia
-    segfault praktycznie zawsze
-    na pozniej bo nie jest to takie bardzo istotne w projekcie
-
-
 //
 // free memory method
 //
-void map_deallocate(as_hashmap * map) {
-  log_debug("[Utils][map_deallocate] start");
+static void map_deallocate(as_hashmap * map) {
   as_hashmap_destroy(map);
 }
 
 //
 // convert ruby hash to as_hashmap
 //
-as_hashmap hash2as_hashmap(VALUE hash) {
+as_hashmap * hash2as_hashmap(VALUE hash) {
   long len = rb_ary_len_long(hash);
 
   as_hashmap * map = as_hashmap_new(len);
@@ -342,6 +340,8 @@ as_hashmap hash2as_hashmap(VALUE hash) {
   VALUE hmap = Data_Wrap_Struct(Record, NULL, map_deallocate, map);
 
   rb_hash_foreach(hash, foreach_hash2as_hashmap, hmap);
+
+  return map;
 }
 
 //
@@ -349,8 +349,8 @@ as_hashmap hash2as_hashmap(VALUE hash) {
 //
 static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE hmap) {
   VALUE tmp;
-  as_arraylist tmp_list;
-  as_hashmap tmp_map;
+  as_arraylist * tmp_list;
+  as_hashmap * tmp_map;
 
   char * bin_name = key2bin_name(key);
 
@@ -377,19 +377,22 @@ static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE hmap) {
 
     case T_ARRAY:
       tmp_list = array2as_list(val);
-      as_stringmap_set_list(map, bin_name, tmp_list);
+      as_stringmap_set_list(map, bin_name, (as_list *)tmp_list);
+      break;
+
+    case T_HASH:
+      tmp_map = hash2as_hashmap(val);
+      as_stringmap_set_map(map, bin_name, (as_map *)tmp_map);
       break;
 
     default:
-      rb_raise(rb_eRuntimeError, "Unsupported record value type");
+      rb_raise(rb_eRuntimeError, "Unsupported record value type: %s", rb_val_type_as_str(val));
       break;
   }
 
   return ST_CONTINUE;
 
 }
-**************************************************************************/
-
 
 //
 // convert as_hashmap * map into ruby hash
