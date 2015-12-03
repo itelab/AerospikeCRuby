@@ -13,6 +13,7 @@ With a new client, you can use any of the methods specified below:
 
 - [Methods](#methods)
   - [#initialize](#initialize)
+  - [#close](#close)
   - [#put](#put)
   - [#get](#get)
   - [#delete](#delete)
@@ -58,6 +59,37 @@ options = {
 }
 
 client = AerospikeC::Client.new("127.0.0.1", 3000, options)
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- close -->
+<a name="close"></a>
+
+### close
+
+Close connections to the cluster.
+
+Return `self`
+
+Example:
+
+```ruby
+client = AerospikeC::Client.new("127.0.0.1", 3000)
+
+key = AerospikeC::Key.new("test", "test", "test")
+
+bins = {
+  "bin1" => 1,
+  "bin2" => "two"
+  "bin3" => 3
+}
+
+client.put(key, bins)
+
+# (...) other operations
+
+client.close
 ```
 
 <!--===============================================================================-->

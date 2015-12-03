@@ -1412,6 +1412,28 @@ static VALUE background_execute_udf_on_query(int argc, VALUE * argv, VALUE self)
   return rb_funcall(QueryTask, rb_intern("new"), 3, queryid, rb_query, self);
 }
 
+
+// ----------------------------------------------------------------------------------
+//
+// closes connection to the cluster
+//
+// def close
+//
+//  ------
+//  RETURN:
+//    1. self
+//
+static VALUE close_connection(VALUE self) {
+  as_error err;
+  aerospike * as = get_client_struct(self);
+
+  if ( aerospike_close(as, &err) != AEROSPIKE_OK )  {
+    raise_as_error(err);
+  }
+
+  return self;
+}
+
 // ----------------------------------------------------------------------------------
 //
 // Init
@@ -1426,6 +1448,7 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   // methods
   //
   rb_define_method(Client, "initialize", RB_FN_ANY()client_initialize, -1);
+  rb_define_method(Client, "close", RB_FN_ANY()close_connection, 0);
 
   // crud
   rb_define_method(Client, "put", RB_FN_ANY()put, -1);
