@@ -19,6 +19,10 @@ With a new client, you can use any of the methods specified below:
   - [#logger=](#logger=)
   - [#exists?](#exists?)
   - [#get_header](#get_header)
+  - [#batch_get](#batch_get)
+  - [#touch](#touch)
+  - [#operate](#operate)
+  - [#operation](#operation)
 
 
 <a name="methods"></a>
@@ -63,7 +67,7 @@ client = AerospikeC::Client.new("127.0.0.1", 3000, options)
 
 ### put(key, bins, options = {})
 
-Adding record to the cluster.
+Adding record to the cluster. Creates [AerospikeC::Record](record.md) object, inside c-api if bins parameter is hash
 
 Parameters:
 
@@ -180,7 +184,7 @@ Sets logger for the AerospikeC classes operations.
 
 Parameters:
 
-- `logger` - to be honest any class that responds to `debug`, `info`, `warn`, `error`, `fatal` methods
+- `logger` - to be honest any object that responds to `debug`, `info`, `warn`, `error`, `fatal` methods
 
 Retrun:
 
@@ -249,4 +253,145 @@ bins = {"bin" => "value"}
 client.put(key, bins, ttl: 60)
 
 client.get_header(key) # => {"gen" => 1, "expire_in" => 60}
+client.delete(key)
+client.get_header(key) # => nil
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- batch_get -->
+<a name="batch_get"></a>
+
+### batch_get(keys, specific_bins = nil, options = {})
+
+Getting batch of records in one call. Batch size is limited on aerospike server (default: 5000)
+
+Parameters:
+
+- `keys` - array of [AerospikeC::Key](key.md) objects
+- `specific_bins` - array of strings representing bin names
+- `options`:
+
+  - `with_header` - returns also generation and expire_in field (default: false)
+
+  - @TODO options policy
+
+Return:
+
+- `array of hashes` where each hash represents record bins
+
+Example:
+
+```ruby
+keys = []
+i    = 0
+
+5.times do
+  bins = {"index" => i, "message" => "message_#{i}"}
+  key = AerospikeC::Key.new("test", "test", "batch_get_#{i}")
+
+  client.put(key, bins, ttl: 60)
+
+  keys << key
+  i += 1
+end
+
+client.batch_get(keys)
+# [{"index"=>0, "message"=>"message_0"}, {"index"=>1, "message"=>"message_1"}, {"index"=>2, "message"=>"message_2"}, {"index"=>3, "message"=>"message_3"}, {"index"=>4, "message"=>"message_4"}]
+
+client.batch_get(keys, ["index"], with_header: true)
+# [{"index"=>0, "header"=>{"gen"=>1, "expire_in"=>60}}, {"index"=>1, "header"=>{"gen"=>1, "expire_in"=>60}}, {"index"=>2, "header"=>{"gen"=>1, "expire_in"=>60}}, {"index"=>3, "header"=>{"gen"=>1, "expire_in"=>60}}, {"index"=>4, "header"=>{"gen"=>1, "expire_in"=>60}}]
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- touch -->
+<a name="touch"></a>
+
+### touch(key, options = {})
+
+Refresh expiration time of record and increment generation
+
+Parameters:
+
+- `key`  - [AerospikeC::Key](key.md) object
+- `options:`
+
+  - `:ttl` - time to live record (default: 0, which means server will use namespace default)
+
+  - @TODO options policy
+
+Return:
+- `hash` representing record header
+- `nil` when AEROSPIKE_ERR_RECORD_NOT_FOUND
+
+Example:
+
+```ruby
+
+key = AerospikeC::Key.new("test", "test", "test")
+
+bins = {"bin" => "value"}
+client.put(key, bins, ttl: 60)
+
+sleep 5
+client.get_header(key) # => {"gen" => 1, "expire_in" => 55}
+client.touch(key, ttl: 70) # => {"gen" => 2, "expire_in" => 70}
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- operate -->
+<a name="operate"></a>
+
+### operate(key, operations)
+
+Perform many operations on record in single server call.
+
+Parameters:
+
+- `key`        - [AerospikeC::Key](key.md) object
+- `operations` - [AerospikeC::Operation](operation.md) object
+
+Return:
+
+- `hash` representing record if succeds
+- `nil` when AEROSPIKE_ERR_RECORD_NOT_FOUND
+
+Example:
+
+```ruby
+key = AerospikeC::Key.new("test", "test", "operate")
+
+bins = {
+  "int" => 1,
+  "string" => "b"
+}
+
+ops = AerospikeC::Operation.new # eql to client.operation
+
+ops.increment!("int", 1).append!("string", "c").prepend!("string", "a").touch!
+ops.write!("new_bin_int", 10).write!("new_bin_str", "new")
+
+ops.read!("int")
+ops.read!("string")
+ops.read!("new_bin_int")
+ops.read!("new_bin_str")
+
+client.operate(key, ops) # => {"int"=>2, "string"=>"abc", "new_bin_int"=>10, "new_bin_str"=>"new"}
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- operation -->
+<a name="operation"></a>
+
+### operation
+
+Returns new [AerospikeC::Operation](operation.md) object
+
+Example:
+
+```ruby
+client.operation # => #<AerospikeC::Operation:0x00000000cec368 @operations=[], @ttl=0>
 ```

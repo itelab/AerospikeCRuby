@@ -82,6 +82,8 @@ static VALUE set_bins(VALUE self, VALUE value) {
   hash2record(value, record);
 
   rb_iv_set(self, "rec", record);
+
+  return self;
 }
 
 //
@@ -93,6 +95,8 @@ static VALUE set_ttl(VALUE self, VALUE ttl) {
   }
 
   rb_iv_set(self, "@ttl", ttl);
+
+  return self;
 }
 
 

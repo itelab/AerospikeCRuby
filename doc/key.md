@@ -40,7 +40,7 @@ key = AerospikeC::Key.new("test", "test", "test")
 
 ### namespace
 
-Retruns instance namespace
+Retruns instance `namespace`
 
 Example:
 
@@ -55,7 +55,7 @@ AerospikeC::Key.new("testnamespace", "test", "test") # => "testnamespace"
 
 ### set
 
-Retruns instance set
+Retruns instance `set`
 
 Example:
 
@@ -70,7 +70,7 @@ AerospikeC::Key.new("test", "testset", "test") # => "testset"
 
 ### key
 
-Retruns instance key
+Retruns instance `key`
 
 Example:
 
