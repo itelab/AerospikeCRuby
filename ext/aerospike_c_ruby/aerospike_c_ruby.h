@@ -72,6 +72,7 @@
 #define order_sym       ID2SYM(rb_intern("order"))       // :order
 #define lua_path_sym    ID2SYM(rb_intern("lua_path"))    // :lua_path
 #define password_sym    ID2SYM(rb_intern("password"))    // :password
+#define logger_sym      ID2SYM(rb_intern("logger"))      // :logger
 
 #define as_val_int_2_val(val) INT2FIX( as_integer_get( as_integer_fromval(val) ) )          //(int)    as_val * -> VALUE
 #define as_val_str_2_val(val) rb_str_new2( as_string_tostring( as_string_fromval(value) ) ) //(string) as_val * -> VALUE

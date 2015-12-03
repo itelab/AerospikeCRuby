@@ -63,6 +63,11 @@ static void client_initialize(int argc, VALUE * argv, VALUE self) {
     strcpy(config.password, StringValueCStr(option_tmp));
   }
 
+  option_tmp = rb_hash_aref(options, logger_sym);
+  if ( option_tmp != Qnil ) {
+    Logger = option_tmp;
+  }
+
   aerospike * as = aerospike_new(&config);
 
   as_error err;
@@ -283,6 +288,9 @@ static VALUE set_logger(VALUE self, VALUE logger) {
   return Qtrue;
 }
 
+// ----------------------------------------------------------------------------------
+//
+// check if key exist in cluster
 //
 // def exists?(key)
 //
