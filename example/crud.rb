@@ -4,7 +4,7 @@ require "logger"
 client = AerospikeC::Client.new("127.0.0.1", 3000)
 client.logger = Logger.new("log/crud.log")
 
-key = AerospikeC::Key.new("giligili_dev", "test", "crud")
+key = AerospikeC::Key.new("test", "test", "crud")
 client.delete(key)
 
 puts "\n--- key:"
@@ -16,11 +16,12 @@ bins = {
   "current_lat" => 12132435435,
   "current_lng" => 234324435345,
 
-  "tab" => [1, 2, "trzy", [1, "dwa"]],
+  "tab" => [1, 2, "trzy", [1, "two"]],
 
   "hash" => {
     "x" => 1,
     "y" => "two",
+    "hash_tab" => [1, "two"]
   }
 }
 

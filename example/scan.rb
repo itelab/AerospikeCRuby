@@ -7,7 +7,7 @@ client.logger = Logger.new("log/scan.log")
 i = 0
 10.times do
   key = AerospikeC::Key.new("test", "scan_test", "scan_test-#{i}")
-  bins = {"x" => i, "y" => "dwa#{i}"}
+  bins = {"x" => i, "y" => "two#{i}"}
 
   client.delete(key)
   client.put(key, bins)

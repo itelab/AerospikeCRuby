@@ -20,8 +20,8 @@ tasks.each do |task|
   puts task.inspect
 end
 
-#
-# uncomment to drop
-#
-# client.drop_index("test", "test_test_test_bin_idx")
-# client.drop_index("test", "test_test_test_bin2_idx")
+
+uncomment to drop
+
+client.drop_index("test", "test_test_test_bin_idx")
+client.drop_index("test", "test_test_test_bin2_idx")

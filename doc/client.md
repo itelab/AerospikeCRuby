@@ -11,39 +11,48 @@ database cluster. In order to get an instance of the Client class, you need to i
 
 With a new client, you can use any of the methods specified below:
 
-- [Methods](#methods)
-  - [#initialize](#initialize)
-  - [#close](#close)
+[Methods](#methods):
+  - Core:
+    - [#initialize](#initialize)
+    - [#close](#close)
+    - [#put](#put)
+    - [#get](#get)
+    - [#delete](#delete)
+    - [#logger=](#logger=)
+    - [#exists?](#exists?)
+    - [#get_header](#get_header)
+    - [#batch_get](#batch_get)
+    - [#touch](#touch)
 
-  - [#put](#put)
-  - [#get](#get)
-  - [#delete](#delete)
+  - Operations:
+    - [#operate](#operate)
+    - [#operation](#operation)
 
-  - [#logger=](#logger=)
-  - [#exists?](#exists?)
-  - [#get_header](#get_header)
-  - [#batch_get](#batch_get)
-  - [#touch](#touch)
+  - Indexes:
+    - [#create_index](#create_index)
+    - [#drop_index](#drop_index)
 
-  - [#operate](#operate)
-  - [#operation](#operation)
+  - Info:
+    - [#info_cmd](#info_cmd)
+    - [#list_indexes](#list_indexes)
+    - [#statistics](#statistics)
+    - [#namespaces](#namespaces)
 
-  - [#create_index](#create_index)
-  - [#drop_index](#drop_index)
+  - Udf:
+    - [#register_udf](#register_udf)
+    - [#drop_udf](#drop_udf)
+    - [#list_udf](#list_udf)
+    - [#execute_udf](#execute_udf)
 
-  - [#info_cmd](#info_cmd)
-  - [#list_indexes](#list_indexes)
-  - [#statistics](#statistics)
-  - [#namespaces](#namespaces)
+  - Scan:
+    - [#scan](#scan)
+    - [#execute_udf_on_scan](#execute_udf_on_scan)
+    - [#background_execute_udf_on_scan](#background_execute_udf_on_scan)
 
-  - [#register_udf](#register_udf)
-  - [#drop_udf](#drop_udf)
-  - [#list_udf](#list_udf)
-  - [#execute_udf](#execute_udf)
-
-  - [#scan](#scan)
-  - [#execute_udf_on_scan](#execute_udf_on_scan)
-  - [#background_execute_udf_on_scan](#background_execute_udf_on_scan)
+  - Query & Aggregation:
+    - [#query](#query)
+    - [#execute_udf_on_query](#execute_udf_on_query)
+    - [#background_execute_udf_on_query](#background_execute_udf_on_query)
 
 
 <a name="methods"></a>
@@ -830,3 +839,224 @@ end
 
 ```
 
+<!--===============================================================================-->
+<hr/>
+<!-- query -->
+<a name="query"></a>
+
+### query(query_obj)
+
+Simple query execution.
+Multiple threads will likely be calling the callback in parallel so return data won't be sorted.
+
+Parameters:
+
+- `query_obj` - [AerospikeC::Query](query.md) object
+
+Return:
+
+- `data` returned from query
+
+Example:
+
+```ruby
+#
+# query need indexes
+#
+task = client.create_index("test", "query_test", "int_bin", "test_query_test_int_bin_idx", :numeric)
+task.wait_till_completed
+
+#
+# build data to operate on
+#
+i = 0
+100.times do
+  key = AerospikeC::Key.new("test", "query_test", "query#{i}")
+  bins = {
+    int_bin: i,
+  }
+
+  client.put(key, bins)
+  i += 1
+end
+
+q_range = AerospikeC::Query.new("test", "query_test")
+q_range.range!("int_bin", 8, 10)
+
+client.query(q_range) # => [{"int_bin" => 8}, {"int_bin" => 9}, {"int_bin" => 10}]
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- execute_udf_on_query -->
+<a name="execute_udf_on_query"></a>
+
+### execute_udf_on_query(query_obj, module_name, func_name, udf_args = []))
+`alias: aggregate`
+
+Execute udf on query (aka aggregation).
+Multiple threads will likely be calling the callback in parallel so return data won't be sorted.
+Aerospike reference:
+- http://www.aerospike.com/docs/guide/aggregation.html
+- http://www.aerospike.com/docs/udf/developing_stream_udfs.html
+
+Aggragations need knowlage of indexes and udf, see:
+- [creating index](#create_index)
+- [registering udf](#register_udf)
+
+Parameters:
+
+- `query_obj` - [AerospikeC::Query](query.md) object
+- `module_name` - registered module name
+- `func_name`   - function name in module to execute
+- `udf_args`    - arguments passed to udf
+
+Return:
+
+- `Array` - data returned from query
+
+Example:
+
+```lua
+-- lua/aggregate_udf.lua
+
+local function one(rec)
+  return 1
+end
+
+local function add(a, b)
+  return a + b
+end
+
+function mycount(stream)
+  return stream : map(one) : reduce(add);
+end
+```
+
+```ruby
+#
+# aggregations are performed both on server and client
+# http://www.aerospike.com/docs/udf/developing_stream_udfs.html
+#
+lua_path = File.expand_path(File.join(File.dirname(__FILE__), "lua"))
+client = AerospikeC::Client.new("127.0.0.1", 3000, {lua_path: lua_path})
+
+#
+# register stream udf
+#
+aggregate_udf = File.expand_path(File.join(File.dirname(__FILE__), "lua/aggregate_udf.lua"))
+task = client.register_udf(aggregate_udf, "aggregate_udf.lua")
+task.wait_till_completed
+
+#
+# query need indexes
+#
+task = client.create_index("test", "query_test", "int_bin", "test_query_test_int_bin_idx", :numeric)
+task.wait_till_completed
+
+#
+# build data to operate on
+#
+i = 0
+100.times do
+  key = AerospikeC::Key.new("test", "query_test", "query#{i}")
+  bins = {
+    int_bin: i,
+  }
+
+  client.put(key, bins)
+  i += 1
+end
+
+q_range = AerospikeC::Query.new("test", "query_test")
+q_range.range!("int_bin", 8, 10)
+
+client.execute_udf_on_query(q_range, "aggregate_udf", "mycount") # => [3]
+# alias:
+client.aggregate(q_range, "aggregate_udf", "mycount") # => [3]
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- background_execute_udf_on_query -->
+<a name="background_execute_udf_on_query"></a>
+
+### background_execute_udf_on_query(query_obj, module_name, func_name, udf_args = []))
+`alias: bg_aggregate`
+
+Execute udf on query in background.
+Multiple threads will likely be calling the callback in parallel so return data won't be sorted.
+Aerospike reference:
+- http://www.aerospike.com/docs/guide/aggregation.html
+- http://www.aerospike.com/docs/udf/developing_stream_udfs.html
+
+Aggragations need knowlage of indexes and udf, see:
+- [creating index](#create_index)
+- [registering udf](#register_udf)
+
+`Records are not returned to the client.`
+
+Parameters:
+
+- `query_obj` - [AerospikeC::Query](query.md) object
+- `module_name` - registered module name
+- `func_name`   - function name in module to execute
+- `udf_args`    - arguments passed to udf
+
+Return:
+
+- [AerospikeC::QueryTask](query_task.md) object
+
+Example:
+
+```lua
+-- lua/aggregate_udf.lua
+
+local function one(rec)
+  return 1
+end
+
+local function add(a, b)
+  return a + b
+end
+
+function mycount(stream)
+  return stream : map(one) : reduce(add);
+end
+```
+
+```ruby
+#
+# register stream udf
+#
+aggregate_udf = File.expand_path(File.join(File.dirname(__FILE__), "lua/aggregate_udf.lua"))
+task = client.register_udf(aggregate_udf, "aggregate_udf.lua")
+task.wait_till_completed
+
+#
+# query need indexes
+#
+task = client.create_index("test", "query_test", "int_bin", "test_query_test_int_bin_idx", :numeric)
+task.wait_till_completed
+
+#
+# build data to operate on
+#
+i = 0
+100.times do
+  key = AerospikeC::Key.new("test", "query_test", "query#{i}")
+  bins = {
+    int_bin: i,
+  }
+
+  client.put(key, bins)
+  i += 1
+end
+
+q_range = AerospikeC::Query.new("test", "query_test")
+q_range.range!("int_bin", 8, 10)
+
+query_task = client.background_execute_udf_on_query(q_range, "aggregate_udf", "mycount")
+query_task.wait_till_completed
+query_task.done? # => true
+```

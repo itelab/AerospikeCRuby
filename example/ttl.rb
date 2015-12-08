@@ -10,7 +10,7 @@ client.delete(key)
 bins = {
   "a" => 1,
   "b" => 2,
-  "c" => "trzy",
+  "c" => "three",
 }
 
 ttl = 2

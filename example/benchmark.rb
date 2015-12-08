@@ -13,7 +13,7 @@ bin = AerospikeC::Record.new(bins)
 
 i = 0
 100000.times do
-  keys << AerospikeC::Key.new("giligili_dev", "test", "key-#{i}")
+  keys << AerospikeC::Key.new("test", "test", "key-#{i}")
   i += 1
 end
 

@@ -124,8 +124,6 @@ VALUE record2hash(as_record * rec) {
     // }
   }
 
-  log_debug("[Utils][record2hash] success");
-
   return hash;
 }
 

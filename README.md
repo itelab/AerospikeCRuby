@@ -1,39 +1,157 @@
 # AerospikeCRuby
+### master version - 0.1.0
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/aerospike_c_ruby`. To experiment with that code, run `bin/console` for an interactive prompt.
+AerospikeCRuby is an aerospike library using aerospike-c-client wrapped into ruby. Responses does not build any objects and return pure ruby hashes for speed.
 
-TODO: Delete this and the text above, and describe your gem
+### AerospikeC::Client class provides support for:
+- reads, writes, deletes
+- batch reads
+- asinfo
+- operations
+- indexes
+- udfs
+- scans (including background tasks)
+- queries (aka aggregations, including background tasks)
 
-## Installation
+### Major TODOs:
+- Policies
+- Float support
+- Bytes support
+- Large Data Types
+- Multiple instance support
+- Response types (hashes or expanded objects)
 
-Add this line to your application's Gemfile:
+### Usage:
+1. [Installation](#instalation)
+2. [Basic usage](#basic_usage)
+3. [Build information](#build_info)
+4. [Api documentation](doc)
+5. [Examples](example)
+6. [License](#license)
+
+
+
+<!--===============================================================================-->
+<br/><hr/>
+<a name="instalation"></a>
+
+### Installation:
+
+Build aerospike-c-client from source:
+
+https://github.com/aerospike/aerospike-client-c
+
+extension is looking for:
+- `/usr/local/lib/libaerospike.so` shared lib
+- `/usr/local/include/aerospike` headers folder
+
+Add to your Gemfile:
 
 ```ruby
 gem 'aerospike_c_ruby'
 ```
 
-And then execute:
 
-    $ bundle
 
-Or install it yourself as:
+<!--===============================================================================-->
+<br/><hr/>
+<a name="basic_usage"></a>
 
-    $ gem install aerospike_c_ruby
+### Basic usage:
 
-## Usage
+```ruby
+require "aerospike_c_ruby"
 
-TODO: Write usage instructions here
+#
+# Create client object for conneting:
+#
+client = AerospikeC::Client.new("127.0.0.1", 3000)
 
-## Development
+#
+# create key
+#
+key = AerospikeC::Key.new("test", "test", "test")
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `bin/console` for an interactive prompt that will allow you to experiment.
+#
+# chose bins to save
+#
+bins = {
+  :bin_int => 15, # symbol bin names also supported
+  "bin_string" => "string",
+  "bin_tab" => [1, 2, "three", [1, "nested_tab"]],
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release` to create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+  "bin_hash" => {
+    "hash_int" => 1,
+    "hash_string" => "two",
+    "hash_nested" => {
+      "hash_nested_int" => 5,
+      "hash_nested_sting" => "hash_nested_string"
+    }
+  }
+}
 
-## Contributing
+#
+# save bins, with given key in cluster
+#
+client.put(key, bins)
 
-1. Fork it ( https://github.com/[my-github-username]/aerospike_c_ruby/fork )
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create a new Pull Request
+#
+# get bins from the cluster
+#
+rec_bins = client.get(key)
+
+#
+# update
+#
+rec_bins["bin_int"] = nil # bin names returned as string so you can change them freely
+rec_bins["bin_string"] = "new_string"
+client.put(key, rec_bins)
+
+#
+# remove key in the cluster
+#
+client.delete(key)
+```
+
+
+
+<!--===============================================================================-->
+<br/><hr/>
+<a name="build_info"></a>
+
+### Build information:
+
+* aerospike          - 3.6.2
+* aerospike-c-client - 3.1.24
+* ruby version       - 2.2.2
+
+
+
+<!--===============================================================================-->
+<br/><hr/>
+<a name="license"></a>
+
+```
+Copyright (c) 2015 Itelab (www.itelab.eu)
+
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+```

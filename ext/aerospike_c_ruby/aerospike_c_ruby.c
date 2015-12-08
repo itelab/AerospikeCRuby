@@ -1,3 +1,16 @@
+/*******************************************************************
+
+  Adam Stomski, for Itelab (http://www.itelab.eu/)
+  Aerospike ruby client, using aerospike-c-client
+
+  Written and tested with:
+    * aerospike          - 3.6.2
+    * aerospike-c-client - 3.1.24
+    * ruby version       - 2.2.2
+    * Ubuntu             - 15.04
+
+********************************************************************/
+
 #include <aerospike_c_ruby.h>
 
 // ----------------------------------------------------------------------------------
