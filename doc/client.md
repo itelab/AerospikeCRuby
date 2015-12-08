@@ -985,7 +985,7 @@ client.aggregate(q_range, "aggregate_udf", "mycount") # => [3]
 `alias: bg_aggregate`
 
 Execute udf on query in background.
-Multiple threads will likely be calling the callback in parallel so return data won't be sorted.
+
 Aerospike reference:
 - http://www.aerospike.com/docs/guide/aggregation.html
 - http://www.aerospike.com/docs/udf/developing_stream_udfs.html
