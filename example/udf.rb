@@ -15,14 +15,6 @@ puts task.inspect
 
 task.wait_till_completed
 
-puts task.inspect
-puts "-------- after add:"
-puts client.list_udf
-
-client.drop_udf("hello.lua")
-puts "-------- after drop:"
-puts client.list_udf
-
 puts "\n----------------------------"
 key = AerospikeC::Key.new("test", "test", "udf_example")
 
@@ -32,6 +24,18 @@ bins = {
 
 client.delete(key)
 client.put(key, bins)
+
+puts task.inspect
+puts "-------- after add:"
+puts client.list_udf
+
+puts client.execute_udf(key, "hello", "hello_world")
+
+client.drop_udf("hello.lua")
+puts "-------- after drop:"
+puts client.list_udf
+
+
 puts client.get(key)
 
 puts "adding math_udf.lua"

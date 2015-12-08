@@ -14,23 +14,36 @@ With a new client, you can use any of the methods specified below:
 - [Methods](#methods)
   - [#initialize](#initialize)
   - [#close](#close)
+
   - [#put](#put)
   - [#get](#get)
   - [#delete](#delete)
+
   - [#logger=](#logger=)
   - [#exists?](#exists?)
   - [#get_header](#get_header)
   - [#batch_get](#batch_get)
   - [#touch](#touch)
+
   - [#operate](#operate)
   - [#operation](#operation)
+
   - [#create_index](#create_index)
   - [#drop_index](#drop_index)
+
   - [#info_cmd](#info_cmd)
   - [#list_indexes](#list_indexes)
   - [#statistics](#statistics)
   - [#namespaces](#namespaces)
+
   - [#register_udf](#register_udf)
+  - [#drop_udf](#drop_udf)
+  - [#list_udf](#list_udf)
+  - [#execute_udf](#execute_udf)
+
+  - [#scan](#scan)
+  - [#execute_udf_on_scan](#execute_udf_on_scan)
+  - [#background_execute_udf_on_scan](#background_execute_udf_on_scan)
 
 
 <a name="methods"></a>
@@ -533,7 +546,7 @@ client.info_cmd("logs") # => "logs  0:/var/log/aerospike/aerospike.log"
 
 ### list_indexes
 
-Execute `info_cmd("sindex")` and parse response
+Execute `info_cmd("sindex")` and parse response.
 
 Retruns:
 
@@ -547,7 +560,7 @@ Retruns:
 
 ### statistics
 
-Execute `info_cmd("statistics")` and parse response
+Execute `info_cmd("statistics")` and parse response.
 
 Retruns:
 
@@ -560,7 +573,7 @@ Retruns:
 
 ### namespaces
 
-Execute `info_cmd("namespaces")` and parse response
+Execute `info_cmd("namespaces")` and parse response.
 
 Retruns:
 
@@ -574,7 +587,7 @@ Retruns:
 
 ### register_udf(path_to_file, server_path, language = :lua, options = {})
 
-Register udf on server
+Register udf on server.
 
 Parameters:
 
@@ -587,7 +600,7 @@ Parameters:
 
 Return:
 
-- [AerospikeC::Udftask](udf_task.md) object
+- [AerospikeC::UdfTask](udf_task.md) object
 
 Example:
 
@@ -597,3 +610,223 @@ hello_world_udf = File.expand_path(File.join(File.dirname(__FILE__), "lua/hello_
 task = client.register_udf(hello_world_udf, "hello.lua")
 task.wait_till_completed
 ```
+
+<!--===============================================================================-->
+<hr/>
+<!-- drop_udf -->
+<a name="drop_udf"></a>
+
+### drop_udf(server_path, options = {})
+
+Drops udf on server.
+
+Parameters:
+
+- `server_path`  - path to udf in server
+- `options`:
+
+  - @TODO options policy
+
+Return:
+
+- `true` if dropped succesfuly
+
+Example:
+
+```ruby
+client.drop_udf("hello.lua") # => true
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- list_udf -->
+<a name="list_udf"></a>
+
+### list_udf(options = {})
+`alias: list_udfs`
+
+List all udf registered on server.
+
+Parameters:
+
+- `options`:
+
+  - @TODO options policy
+
+Return:
+
+- `array` of hashes representing each udf
+
+Example:
+
+```ruby
+client.list_udf # => [{:name => "hello.lua", :udf_type => :lua, :hash => 32154001}]
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- execute_udf -->
+<a name="execute_udf"></a>
+
+### execute_udf(key, module_name, func_name, udf_args = [], options = {})
+
+Execute udf on record.
+Aerospike reference: http://www.aerospike.com/docs/udf/developing_record_udfs.html
+
+Parameters:
+
+- `key`         - [AerospikeC::Key](key.md) object
+- `module_name` - registered module name
+- `func_name`   - function name in module to execute
+- `udf_args`    - arguments passed to udf
+- `options`:
+
+  - @TODO options policy
+
+Return:
+
+-  `data` returned from udf
+
+Example:
+```lua
+-- lua/hello_world.lua:
+function hello_world(rec)
+  return "hello_world"
+end
+```
+
+```ruby
+hello_world_udf = File.expand_path(File.join(File.dirname(__FILE__), "lua/hello_world.lua")
+
+task = client.register_udf(hello_world_udf, "hello.lua")
+task.wait_till_completed
+
+key = AerospikeC::Key.new("test", "test", "udf_example")
+client.execute_udf(key, "hello", "hello_world") # => "hello_world"
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- scan -->
+<a name="scan"></a>
+
+### scan(ns, set, options = {})
+
+Scan records in specified namespace and set.
+Multiple threads will likely be calling the callback in parallel so return data won't be sorted.
+Aerospike reference: http://www.aerospike.com/docs/guide/scan.html
+
+Parameters:
+
+- `ns`  - namespace to scan
+- `set` - set to scan
+- `options`:
+
+  - @TODO options policy
+
+Return:
+
+- `data` returned from scan
+
+Example:
+
+```ruby
+i = 0
+5.times do
+  key = AerospikeC::Key.new("test", "scan_test", "scan_test_#{i}")
+  bins = {"x" => i, "lat" => 34, "lng" => 56#{i}"}
+
+  client.put(key, bins)
+
+  i += 1
+end
+
+client.scan("test", "scan_test")
+# => [{"x"=>1, "lat" => 34, "lng" => 56}, {"x"=>3, "y"=>"str3"}, {"x"=>2, "y"=>"str2"}, {"x"=>0, "y"=>"str0"}, {"x"=>4, "y"=>"str4"}]
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- execute_udf_on_scan -->
+<a name="execute_udf_on_scan"></a>
+
+### execute_udf_on_scan(ns, set, module_name, func_name, udf_args = [], options = {})
+`alias: scan_udf`
+
+Scan records in specified namespace and set and apply udf on each record scanned.
+Multiple threads will likely be calling the callback in parallel so return data won't be sorted.
+Aerospike reference: http://www.aerospike.com/docs/guide/scan.html
+
+Parameters:
+
+- `ns`          - namespace to scan
+- `set`         - set to scan
+- `module_name` - registered module name
+- `func_name`   - function name in module to execute
+- `udf_args`    - arguments passed to udf
+- `options`:
+
+  - @TODO options policy
+
+Return:
+
+- `data` returned from scan
+
+Example:
+
+```ruby
+i = 0
+5.times do
+  key = AerospikeC::Key.new("test", "scan_test", "scan_test_#{i}")
+  bins = {"x" => i}
+
+  client.put(key, bins)
+
+  i += 1
+end
+
+client.execute_udf_on_scan("test", "scan_test", "scan_udf", "add_cords", [34, 56])
+# => [{"x"=>1, "lat" => 34, "lng" => 56}, {"x"=>3, "lat" => 34, "lng" => 56}, {"x"=>2, "lat" => 34, "lng" => 56}, {"x"=>0, "lat" => 34, "lng" => 56}, {"x"=>4, "lat" => 34, "lng" => 56}]
+```
+
+
+<!--===============================================================================-->
+<hr/>
+<!-- background_execute_udf_on_scan -->
+<a name="background_execute_udf_on_scan"></a>
+
+### background_execute_udf_on_scan(ns, set, module_name, func_name, udf_args = [], options = {})
+`alias: bg_scan_udf`
+
+Execute udf on scan records in specified namespace and set in background.
+Aerospike reference: http://www.aerospike.com/docs/guide/scan.html
+
+Parameters:
+
+- `ns`          - namespace to scan
+- `set`         - set to scan
+- `module_name` - registered module name
+- `func_name`   - function name in module to execute
+- `udf_args`    - arguments passed to udf
+- `options`:
+
+  - @TODO options policy
+
+Return:
+
+- [AerospikeC::ScanTask](scan_task.md) object
+
+Example:
+```ruby
+scan_task = client.background_execute_udf_on_scan("test", "scan_test", "scan_udf", "add_cords", [34, 56])
+
+loop do
+  scan_task.check_status
+
+  # (...)
+
+  break if scan_task.completed?
+end
+
+```
+

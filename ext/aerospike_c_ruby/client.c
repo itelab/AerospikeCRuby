@@ -1147,8 +1147,7 @@ static VALUE execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
 
 // ----------------------------------------------------------------------------------
 //
-// execute udf on scan records in specified namespace and set
-// multiple threads will likely be calling the callback in parallel so return data won't be sorted
+// execute udf on scan records in specified namespace and set in background
 //
 // def background_execute_udf_on_scan(ns, set, module_name, func_name, udf_args = [], options = {})
 //
@@ -1496,6 +1495,7 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   rb_define_alias(Client, "bg_aggregate", "background_execute_udf_on_query");
   rb_define_alias(Client, "scan_udf",     "execute_udf_on_scan"            );
   rb_define_alias(Client, "bg_scan_udf",  "background_execute_udf_on_scan" );
+  rb_define_alias(Client, "list_udfs",    "list_udf"                       );
 
   //
   // attr_reader
