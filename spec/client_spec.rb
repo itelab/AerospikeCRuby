@@ -13,9 +13,11 @@ describe AerospikeC::Client do
 
     @bins = {
       "bin_int" => @bin_int,
+      "bin_int_minus" => rand(-1000..-20),
       "bin_string" => @bin_string,
       "bin_tab" => [rand(1..100), rand(1..100), rand_string(100), [rand(1..200), rand_string(25)], rand(1.2...276.9)],
       "bin_float" => rand(-123.2...123.2),
+      "bin_float_minus" => rand(-523.2...-123.2),
 
       "bin_hash" => {
         "hash_int" => rand(1..100),
@@ -305,6 +307,24 @@ describe AerospikeC::Client do
       }
     end
 
+    it "must use AerospikeC::Operation" do
+      [
+        1,
+        "str",
+        [1, "arry"],
+        {"hash" => 1},
+        AerospikeC::Record.new({"x" => 1}),
+        AerospikeC::Key.new("test", "query_test", "test"),
+        AerospikeC::Query.new("test", "test")
+      ].each do |val|
+        begin
+          @client.operate(@key, val)
+        rescue => e
+          expect(e.inspect).to eq("#<RuntimeError: [AerospikeC::Client][operate] use AerospikeC::Operation class to perform operations>")
+        end
+      end
+    end
+
     it "nil when not found record" do
       ops = AerospikeC::Operation.new
       ops.read!("int")
@@ -365,6 +385,12 @@ describe AerospikeC::Client do
   context "asinfo" do
     it "can use commands" do
       expect(@client.info_cmd("logs")).to include("logs")
+      expect(@client.info_cmd("namespaces")).to include("namespaces")
+      expect(@client.info_cmd("build")).to include("build")
+      expect(@client.info_cmd("node")).to include("node")
+      expect(@client.info_cmd("services")).to include("services")
+      expect(@client.info_cmd("sindex")).to include("sindex")
+      expect(@client.info_cmd("status")).to include("status")
     end
 
     it "namespaces" do
@@ -423,15 +449,29 @@ describe AerospikeC::Client do
     end
 
     it "need AerospikeC::Query", slow: true do
-      begin
-        @client.query(@bins)
-      rescue => e
-        expect(e.inspect).to eq("#<RuntimeError: [AerospikeC::Client][query] use AerospikeC::Query class to perform queries>")
+      [
+        1,
+        "str",
+        [1, "arry"],
+        {"hash" => 1},
+        AerospikeC::Record.new({"x" => 1}),
+        AerospikeC::Key.new("test", "query_test", "test"),
+        AerospikeC::Operation.new
+      ].each do |val|
+        begin
+          @client.query(val)
+        rescue => e
+          expect(e.inspect).to eq("#<RuntimeError: [AerospikeC::Client][query] use AerospikeC::Query class to perform queries>")
+        end
       end
     end
 
     it "queries int", slow: true do
-      searched = [{"int_bin"=>8, "string_bin"=>"str8", "float_bin"=>3.2}, {"int_bin"=>9, "string_bin"=>"str9", "float_bin"=>3.6}, {"int_bin"=>10, "string_bin"=>"str10", "float_bin"=>4.0}]
+      searched = [
+        {"int_bin"=>8, "string_bin"=>"str8", "float_bin"=>3.2},
+        {"int_bin"=>9, "string_bin"=>"str9", "float_bin"=>3.6},
+        {"int_bin"=>10, "string_bin"=>"str10", "float_bin"=>4.0}
+      ]
 
       q_range = AerospikeC::Query.new("test", "query_test")
       q_range.range!("int_bin", 8, 10)
