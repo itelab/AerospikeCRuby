@@ -17,8 +17,11 @@ describe AerospikeC::Client do
     (0...len).map { (65 + rand(26)).chr }.join
   end
 
-  before(:each) do
+  before(:all) do
     @client = AerospikeC::Client.new("127.0.0.1", 3000)
+  end
+
+  before(:each) do
     @key    = AerospikeC::Key.new("test", "test", "test")
 
     @bin_int = rand(1..100)
@@ -389,6 +392,75 @@ describe AerospikeC::Client do
       expect(@client.statistics).to include("rw_err_dup_cluster_key")
       expect(@client.statistics).to include("total-bytes-disk")
       expect(@client.statistics).to include("udf_read_success")
+    end
+  end
+
+  #
+  # query
+  #
+  context "query" do
+    before(:each) do
+      @query_keys = []
+      i = 0
+      100.times do
+        key = AerospikeC::Key.new("test", "query_test", "query#{i}")
+        bins = {
+          int_bin: i,
+          string_bin: "str#{i}",
+          float_bin: i/2.5
+        }
+
+        @query_keys << key
+
+        @client.put(key, bins)
+        i += 1
+      end
+    end
+
+    before(:all) do
+      tasks = []
+      tasks << @client.create_index("test", "query_test", "int_bin", "test_query_test_int_bin_idx", :numeric)
+      tasks << @client.create_index("test", "query_test", "float_bin", "test_query_test_float_bin_idx", :numeric)
+      tasks << @client.create_index("test", "query_test", "string_bin", "test_query_test_string_bin_idx", :string)
+
+      tasks.each do |task|
+        task.wait_till_completed
+      end
+    end
+
+    after(:each) do
+      @query_keys.each {|k| @client.delete(k) }
+    end
+
+    after(:all) do
+      @client.drop_index("test", "test_query_test_int_bin_idx")
+      @client.drop_index("test", "test_query_test_float_bin_idx")
+      @client.drop_index("test", "test_query_test_string_bin_idx")
+    end
+
+    it "need AerospikeC::Query", slow: true do
+      begin
+        @client.query(@bins)
+      rescue => e
+        expect(e.inspect).to eq("#<RuntimeError: [AerospikeC::Client][query] use AerospikeC::Query class to perform queries>")
+      end
+    end
+
+    it "queries int", slow: true do
+      searched = [{"int_bin"=>8, "string_bin"=>"str8", "float_bin"=>3.2}, {"int_bin"=>9, "string_bin"=>"str9", "float_bin"=>3.6}, {"int_bin"=>10, "string_bin"=>"str10", "float_bin"=>4.0}]
+
+      q_range = AerospikeC::Query.new("test", "query_test")
+      q_range.range!("int_bin", 8, 10)
+
+      expect(@client.query(q_range)).to eq(searched)
+    end
+
+
+    it "queries string", slow: true do
+      q_eql = AerospikeC::Query.new("test", "query_test")
+      q_eql.eql!("string_bin", "str8")
+
+      expect(@client.query(q_eql)).to eq([{"int_bin"=>8, "string_bin"=>"str8", "float_bin"=>3.2}])
     end
   end
 end
