@@ -2,7 +2,8 @@ require 'spec_helper'
 
 describe AerospikeC::Client do
   before(:all) do
-    @client = AerospikeC::Client.new("127.0.0.1", 3000)
+    lua_path = File.expand_path(File.join(File.dirname(__FILE__), "../example/lua"))
+    @client = AerospikeC::Client.new("127.0.0.1", 3000, {lua_path: lua_path})
   end
 
   before(:each) do
@@ -350,7 +351,7 @@ describe AerospikeC::Client do
     end
 
     after(:each) do
-      @task.wait_till_completed
+      @task.wait_till_completed(100)
       @client.drop_index("test", "test_test_test_bin_idx")
     end
 
@@ -363,12 +364,12 @@ describe AerospikeC::Client do
     end
 
     it "can wait for done", slow: true do
-      expect(@task.wait_till_completed).to eq(true)
+      expect(@task.wait_till_completed(100)).to eq(true)
       expect(@task.done?).to eq(true)
     end
 
     it "creates index", slow: true do
-      expect(@task.wait_till_completed).to eq(true)
+      expect(@task.wait_till_completed(100)).to eq(true)
       expect(@client.list_indexes.last).to include("indexname"=>"test_test_test_bin_idx")
     end
 
@@ -406,6 +407,47 @@ describe AerospikeC::Client do
   end
 
   #
+  # udf
+  #
+  context "udf" do
+    before(:each) do
+      @hello_world_lua = File.expand_path(File.join(File.dirname(__FILE__), "../example/lua/hello_world.lua"))
+    end
+
+    after(:each) do
+      @client.drop_udf("hello.lua")
+    end
+
+    it "register udf returns AerospikeC::UdfTask" do
+      expect( @client.register_udf(@hello_world_lua, "hello.lua") ).to be_kind_of(AerospikeC::UdfTask)
+    end
+
+    it "registers udf", slow: true do
+      task = @client.register_udf(@hello_world_lua, "hello.lua")
+      task.wait_till_completed(100)
+
+      has_lua = false
+
+      @client.list_udf.each do |udf|
+        if udf[:name] == "hello.lua"
+          expect( udf ).to include(:name => "hello.lua")
+          expect( udf ).to include(:udf_type => :lua)
+          has_lua = true
+        end
+      end
+
+      expect(has_lua).to eq(true)
+    end
+
+    it "can execute udf", slow: true do
+      task = @client.register_udf(@hello_world_lua, "hello.lua")
+      task.wait_till_completed(100)
+
+      expect( @client.execute_udf(@key, "hello", "hello_world") ).to eq("hello_world")
+    end
+  end
+
+  #
   # query
   #
   context "query" do
@@ -428,13 +470,16 @@ describe AerospikeC::Client do
     end
 
     before(:all) do
+      aggregate_udf = File.expand_path(File.join(File.dirname(__FILE__), "../example/lua/aggregate_udf.lua"))
+
       tasks = []
+      tasks << @client.register_udf(aggregate_udf, "aggregate_udf.lua")
       tasks << @client.create_index("test", "query_test", "int_bin", "test_query_test_int_bin_idx", :numeric)
       tasks << @client.create_index("test", "query_test", "float_bin", "test_query_test_float_bin_idx", :numeric)
       tasks << @client.create_index("test", "query_test", "string_bin", "test_query_test_string_bin_idx", :string)
 
       tasks.each do |task|
-        task.wait_till_completed
+        task.wait_till_completed(100)
       end
     end
 
@@ -446,6 +491,8 @@ describe AerospikeC::Client do
       @client.drop_index("test", "test_query_test_int_bin_idx")
       @client.drop_index("test", "test_query_test_float_bin_idx")
       @client.drop_index("test", "test_query_test_string_bin_idx")
+
+      @client.drop_udf("aggregate_udf.lua")
     end
 
     it "need AerospikeC::Query", slow: true do
@@ -485,6 +532,44 @@ describe AerospikeC::Client do
       q_eql.eql!("string_bin", "str8")
 
       expect(@client.query(q_eql)).to eq([{"int_bin"=>8, "string_bin"=>"str8", "float_bin"=>3.2}])
+    end
+
+    it "can aggregate", slow: true do
+      q_range = AerospikeC::Query.new("test", "query_test")
+      q_range.range!("int_bin", 5, 15)
+
+      expect(@client.execute_udf_on_query(q_range, "aggregate_udf", "mycount")).to eq([11])
+      # alias:
+      expect(@client.aggregate(q_range, "aggregate_udf", "mycount")).to eq([11])
+
+      @client.drop_udf("aggregate_udf.lua")
+    end
+
+    it "background query returns AerospikeC::QueryTask" do
+      q_range = AerospikeC::Query.new("test", "query_test")
+      q_range.range!("int_bin", 5, 15)
+      expect(@client.bg_aggregate(q_range, "aggregate_udf", "mycount")).to be_kind_of(AerospikeC::QueryTask)
+    end
+
+    it "can wait for for bg query to complete", slow: true do
+      q_range = AerospikeC::Query.new("test", "query_test")
+      q_range.range!("int_bin", 5, 15)
+
+      task = @client.bg_aggregate(q_range, "aggregate_udf", "mycount")
+      expect(task.done?).to eq(false)
+
+      task.wait_till_completed(100)
+      expect(task.done?).to eq(true)
+    end
+
+    it "has last_query_id" do
+      q_range = AerospikeC::Query.new("test", "query_test")
+      q_range.range!("int_bin", 5, 15)
+
+      task = @client.bg_aggregate(q_range, "aggregate_udf", "mycount")
+
+      expect(@client.last_query_id).to eq(task.query_id)
+      task.wait_till_completed(100)
     end
   end
 end

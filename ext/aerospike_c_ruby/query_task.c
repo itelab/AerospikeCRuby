@@ -75,6 +75,7 @@ void init_aerospike_c_query_task(VALUE AerospikeC) {
   //
   // attr_reader
   //
-  rb_define_attr(Key, "name", 1, 0);
-  rb_define_attr(Key, "done", 1, 0);
+  rb_define_attr(QueryTask, "name", 1, 0);
+  rb_define_attr(QueryTask, "done", 1, 0);
+  rb_define_attr(QueryTask, "query_id", 1, 0);
 }
