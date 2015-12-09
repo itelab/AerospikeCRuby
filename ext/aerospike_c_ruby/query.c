@@ -126,6 +126,26 @@ static VALUE order_by(VALUE self, VALUE bin, VALUE order) {
 }
 
 // ----------------------------------------------------------------------------------
+//
+// bins<<(bin)
+//
+// params:
+//   bin - bin to add
+//
+//  ------
+//  RETURN:
+//    1. bins
+//
+static VALUE add_bin(VALUE self, VALUE bin) {
+  VALUE bins = rb_iv_get(self, "@bins");
+
+  rb_ary_push(bins, bin);
+  rb_iv_set(self, "@bins", bins);
+
+  return bins;
+}
+
+// ----------------------------------------------------------------------------------
 // Init
 //
 void init_aerospike_c_query(VALUE AerospikeC) {
@@ -141,6 +161,7 @@ void init_aerospike_c_query(VALUE AerospikeC) {
   rb_define_method(Query, "eql!", RB_FN_ANY()eql, 2);
   rb_define_method(Query, "range!", RB_FN_ANY()range, 3);
   rb_define_method(Query, "order_by!", RB_FN_ANY()order_by, 2);
+  rb_define_method(Query, "bins<<", RB_FN_ANY()add_bin, 1);
 
   //
   // attr_accessor
