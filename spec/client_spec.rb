@@ -5,6 +5,10 @@ describe AerospikeC::Client do
     @client.put(@key, @bins)
   end
 
+  def put_default_ttl(ttl)
+    @client.put(@key, @bins, ttl: ttl)
+  end
+
   def ttl_default
     4294967295
   end
@@ -23,15 +27,18 @@ describe AerospikeC::Client do
     @bins = {
       "bin_int" => @bin_int,
       "bin_string" => @bin_string,
-      "bin_tab" => [rand(1..100), rand(1..100), rand_string(100), [rand(1..200), rand_string(25)]],
+      "bin_tab" => [rand(1..100), rand(1..100), rand_string(100), [rand(1..200), rand_string(25)], rand(1.2...276.9)],
+      "bin_float" => rand(-123.2...123.2),
 
       "bin_hash" => {
         "hash_int" => rand(1..100),
         "hash_string" => rand_string(1),
+        "hash_float" => rand(1.2..ttl_default),
         "hash_nested" => {
           "hash_nested_int" => rand(1..500),
           "hash_nested_sting" => rand_string(rand(1..1000)),
-          "hash_nested_tab" => [rand(1..100), rand_string(rand(8..256))]
+          "hash_nested_tab" => [rand(1..100), rand_string(rand(8..256))],
+          "hash_nested_float" => rand(1.2...276.9)
         }
       }
     }
@@ -41,6 +48,9 @@ describe AerospikeC::Client do
     @client.delete(@key)
   end
 
+  #
+  # delete
+  #
   context "#delete" do
     it "with nil" do
       put_default
@@ -59,6 +69,9 @@ describe AerospikeC::Client do
     end
   end
 
+  #
+  # get
+  #
   context "#get" do
     it "return nil if record not found" do
       key = AerospikeC::Key.new("test", "test", "somekey")
@@ -76,6 +89,9 @@ describe AerospikeC::Client do
     end
   end
 
+  #
+  # put
+  #
   context "#put" do
     before(:each) do
       @test_put_key = AerospikeC::Key.new("test", "test", "test_put")
@@ -105,7 +121,7 @@ describe AerospikeC::Client do
       expect( @client.get(@test_put_key) ).to eq({"intbin" => intbin})
     end
 
-    it "cant put string" do
+    it "can put string" do
       string_bin = rand_string
       expect( @client.put(@test_put_key, {"string_bin" => string_bin}) ).to eq(true)
       expect( @client.get(@test_put_key) ).to eq({"string_bin" => string_bin})
@@ -145,9 +161,22 @@ describe AerospikeC::Client do
     end
 
     it "can put float" do
-      float_bin = 3.14
+      float_bin = rand(1.23..543.12)
       expect( @client.put(@test_put_key, {"float_bin" => float_bin}) ).to eq(true)
       expect( @client.get(@test_put_key) ).to eq({"float_bin" => float_bin})
+
+      float_bin = rand(543.12..ttl_default)
+      expect( @client.put(@test_put_key, {"float_bin" => float_bin}) ).to eq(true)
+      expect( @client.get(@test_put_key) ).to eq({"float_bin" => float_bin})
+
+      float_bin = rand(-543.12..-143.12)
+      expect( @client.put(@test_put_key, {"float_bin" => float_bin}) ).to eq(true)
+      expect( @client.get(@test_put_key) ).to eq({"float_bin" => float_bin})
+    end
+
+    it "can set ttl" do
+      expect( @client.put(@test_put_key, @bins, ttl: 5) ).to eq(true)
+      expect( @client.get(@test_put_key, [], with_header: true)["header"]["expire_in"] ).to eq(5)
     end
 
     it "update" do
@@ -162,22 +191,204 @@ describe AerospikeC::Client do
     end
   end
 
-  it "batch_read" do
-    keys = []
-    bins = []
-
-    i = 0
-    10.times do
-      key = AerospikeC::Key.new("test", "test", "test#{i}")
-      key_bins = { "msg" => "message#{i}" }
-
-      bins << key_bins
-      keys << key
-
-      @client.put(key, key_bins)
-      i += 1
+  #
+  # exists?
+  #
+  context "#exists?" do
+    it "true if exists" do
+      put_default
+      expect( @client.exists?(@key) ).to eq(true)
     end
 
-    expect(@client.batch_get(keys)).to eq(bins)
+    it "false if not exists" do
+      expect( @client.exists?(@key) ).to eq(false)
+    end
+  end
+
+  #
+  # get_header
+  #
+  context "#get_header" do
+    it "returns header" do
+      put_default_ttl(5)
+      expect( @client.get_header(@key) ).to eq({"gen" => 1, "expire_in" => 5})
+    end
+
+    it "nil when not exists" do
+      expect( @client.get_header(@key) ).to eq(nil)
+    end
+  end
+
+  #
+  # batch_get
+  #
+  context "#batch_get" do
+    before(:each) do
+      @keys = []
+      @batch_bins = []
+
+      i = 0
+      10.times do
+        key = AerospikeC::Key.new("test", "test", "test#{i}")
+        key_bins = {
+          "msg" => "message#{i}",
+          "int" => rand(1..ttl_default),
+          "float" => rand(-128.128..128.128)
+        }
+
+        @batch_bins << key_bins
+        @keys << key
+
+        @client.put(key, key_bins, ttl: 60)
+        i += 1
+      end
+    end
+
+    after(:each) do
+      @keys.each do |k|
+        @client.delete(k)
+      end
+    end
+
+    it "can read" do
+      expect(@client.batch_get(@keys)).to eq(@batch_bins)
+    end
+
+    it "specific bins" do
+      bins = []
+      @batch_bins.each do |b|
+        bins << {"msg" => b["msg"]}
+      end
+
+      expect(@client.batch_get(@keys, ["msg"])).to eq(bins)
+    end
+
+    it "retruns header, with_header: true" do
+      bins = []
+      @batch_bins.each do |b|
+        bins << {"msg" => b["msg"], "header" => {"gen" => 1, "expire_in" => 60}}
+      end
+
+      expect(@client.batch_get(@keys, ["msg"], with_header: true)).to eq(bins)
+    end
+  end
+
+  #
+  # touch
+  #
+  context "#touch" do
+    it "nil when not found record" do
+      expect(@client.touch(@key)).to eq(nil)
+    end
+
+    it "refresh ttl", slow: true do
+      put_default_ttl(10)
+      sleep 1
+      expect( @client.get_header(@key)["expire_in"] ).to eq(9)
+      @client.touch(@key, ttl: 70)
+      expect( @client.get_header(@key)["expire_in"] ).to eq(70)
+    end
+
+    it "increment generation" do
+      put_default
+      expect( @client.get_header(@key)["gen"] ).to eq(1)
+      @client.touch(@key)
+      expect( @client.get_header(@key)["gen"] ).to eq(2)
+    end
+  end
+
+  #
+  # operate
+  #
+  context "#operate" do
+    before(:each) do
+      @operations = AerospikeC::Operation.new
+
+      @operations.increment!("int", 1).append!("string", "c").prepend!("string", "a")
+      @operations.write!("new_bin_int", 10).write!("new_bin_str", "new")
+
+      @operations.read!("int")
+      @operations.read!("string")
+      @operations.read!("new_bin_int")
+      @operations.read!("new_bin_str")
+
+      @operations_bins = {
+        "int" => 1,
+        "string" => "b"
+      }
+    end
+
+    it "nil when not found record" do
+      ops = AerospikeC::Operation.new
+      ops.read!("int")
+      expect(@client.operate(@key, ops)).to eq(nil)
+    end
+
+    it "perform operations" do
+      @client.put(@key, @operations_bins)
+      expect(@client.operate(@key, @operations)).to eq({"int"=>2, "string"=>"abc", "new_bin_int"=>10, "new_bin_str"=>"new"})
+    end
+
+    it "client.operation retruns new AerospikeC::Operation" do
+      expect(@client.operation).to be_kind_of(AerospikeC::Operation)
+    end
+  end
+
+  #
+  # indexes
+  #
+  context "indexes" do
+    before(:each) do
+      @task = @client.create_index("test", "test", "test_bin", "test_test_test_bin_idx", :numeric)
+    end
+
+    after(:each) do
+      @task.wait_till_completed
+      @client.drop_index("test", "test_test_test_bin_idx")
+    end
+
+    it "returns IndexTask", slow: true do
+      expect(@task).to be_kind_of(AerospikeC::IndexTask)
+    end
+
+    it "is not done without wait", slow: true do
+      expect(@task.done?).to eq(false)
+    end
+
+    it "can wait for done", slow: true do
+      expect(@task.wait_till_completed).to eq(true)
+      expect(@task.done?).to eq(true)
+    end
+
+    it "creates index", slow: true do
+      expect(@task.wait_till_completed).to eq(true)
+      expect(@client.list_indexes.last).to include("indexname"=>"test_test_test_bin_idx")
+    end
+
+    it "drops_index", slow: true do
+      expect(@client.drop_index("test", "test_test_test_bin_idx")).to eq(true)
+      sleep 5
+      expect(@client.list_indexes.last).to eq(nil)
+    end
+  end
+
+  #
+  # asinfo
+  #
+  context "asinfo" do
+    it "can use commands" do
+      expect(@client.info_cmd("logs")).to include("logs")
+    end
+
+    it "namespaces" do
+      expect(@client.namespaces).to include("test")
+    end
+
+    it "statistic" do
+      expect(@client.statistics).to include("aggr_scans_failed")
+      expect(@client.statistics).to include("rw_err_dup_cluster_key")
+      expect(@client.statistics).to include("total-bytes-disk")
+      expect(@client.statistics).to include("udf_read_success")
+    end
   end
 end
