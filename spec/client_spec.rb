@@ -541,11 +541,9 @@ describe AerospikeC::Client do
       expect(@client.execute_udf_on_query(q_range, "aggregate_udf", "mycount")).to eq([11])
       # alias:
       expect(@client.aggregate(q_range, "aggregate_udf", "mycount")).to eq([11])
-
-      @client.drop_udf("aggregate_udf.lua")
     end
 
-    it "background query returns AerospikeC::QueryTask" do
+    it "background query returns AerospikeC::QueryTask", slow: true do
       q_range = AerospikeC::Query.new("test", "query_test")
       q_range.range!("int_bin", 5, 15)
       expect(@client.bg_aggregate(q_range, "aggregate_udf", "mycount")).to be_kind_of(AerospikeC::QueryTask)
@@ -562,7 +560,7 @@ describe AerospikeC::Client do
       expect(task.done?).to eq(true)
     end
 
-    it "has last_query_id" do
+    it "has last_query_id", slow: true do
       q_range = AerospikeC::Query.new("test", "query_test")
       q_range.range!("int_bin", 5, 15)
 
