@@ -34,9 +34,17 @@ describe AerospikeC::Query do
     expect(@query.filter).to eq({:filter_type=>:eql, :bin=>"string_bin", :value=>"string", :type=>:string})
   end
 
+  it "#eql! returns self" do
+    expect(@query.eql!("string_bin", "string")).to eq(@query)
+  end
+
   it "#range! add range filter" do
     @query.range!("int_bin", 5, 10)
     expect(@query.filter).to eq({:filter_type=>:range, :bin=>"int_bin", :min=>5, :max=>10})
+  end
+
+  it "#range! returns self" do
+    expect(@query.range!("int_bin", 5, 10)).to eq(@query)
   end
 
   it "can have only one filter" do
@@ -55,6 +63,10 @@ describe AerospikeC::Query do
   it "#order_by! add :desc order" do
     @query.order_by!("string_bin", :desc)
     expect(@query.order).to eq([{:order=>1, :bin=>"string_bin"}])
+  end
+
+  it "#order_by! returns self" do
+    expect(@query.order_by!("string_bin", :desc)).to eq(@query)
   end
 
   it "can have multiple orders" do

@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe AerospikeC::Key do
+describe AerospikeC::Record do
   before(:all) do
     @client = AerospikeC::Client.new("127.0.0.1", 3000)
   end
