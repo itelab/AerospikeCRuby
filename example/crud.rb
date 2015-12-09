@@ -15,6 +15,7 @@ bins = {
   "y" => "abcd",
   "current_lat" => 12132435435,
   "current_lng" => 234324435345,
+  "float_bin" => 3.15,
 
   "tab" => [1, 2, "trzy", [1, "two"]],
 

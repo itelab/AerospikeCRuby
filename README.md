@@ -3,7 +3,21 @@
 
 AerospikeCRuby is an aerospike library using aerospike-c-client wrapped into ruby. Responses does not build any objects and return pure ruby hashes for speed.
 
-### AerospikeC::Client class provides support for:
+1. [Overwiew](#overwiew)
+2. [Installation](#instalation)
+3. [Basic usage](#basic_usage)
+4. [Build information](#build_info)
+5. [Api documentation](doc)
+6. [Examples](example)
+7. [License](#license)
+
+<!--===============================================================================-->
+<br/><hr/>
+<a name="overwiew"></a>
+
+### Overwiew:
+
+#### AerospikeC::Client class provides support for:
 - reads, writes, deletes
 - batch reads
 - asinfo
@@ -13,21 +27,23 @@ AerospikeCRuby is an aerospike library using aerospike-c-client wrapped into rub
 - scans (including background tasks)
 - queries (aka aggregations, including background tasks)
 
-### Major TODOs:
+#### Bin info:
+- Bin names can be anything that responds to `to_s`, except `nil`
+- Values:
+  - Integers
+  - Floats
+  - Strings
+  - Arrays
+  - Hashes
+  - Symbols (mapped to string)
+- Nested values like `[[1, 2], {"h1" => {"h2" => 2}}]` possible
+
+#### Major TODOs:
 - Policies
-- Float support
-- Bytes support
+- Bytes support (and object values mapping)
 - Large Data Types
 - Multiple instance support
 - Response types (hashes or expanded objects)
-
-### Usage:
-1. [Installation](#instalation)
-2. [Basic usage](#basic_usage)
-3. [Build information](#build_info)
-4. [Api documentation](doc)
-5. [Examples](example)
-6. [License](#license)
 
 
 

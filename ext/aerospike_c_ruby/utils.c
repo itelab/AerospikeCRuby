@@ -183,6 +183,10 @@ as_arraylist * array2as_list(VALUE ary) {
         as_arraylist_append_map(list, (as_map *)tmp_map);
         break;
 
+      case T_FLOAT:
+        as_arraylist_append_double(list, NUM2DBL(element));
+        break;
+
       default:
         rb_raise(rb_eRuntimeError, "[array2as_list] Unsupported array value type: %s", rb_val_type_as_str(element));
         break;
@@ -278,8 +282,14 @@ static int foreach_hash2record(VALUE key, VALUE val, VALUE record) {
       break;
 
     case T_HASH:
+      log_debug("[Utils][foreach_hash2record] TYPE(val) -> hash");
       tmp_map = hash2as_hashmap(val);
       as_record_set_map(rec, key2bin_name(key), (as_map *)tmp_map );
+      break;
+
+    case T_FLOAT:
+      log_debug("[Utils][foreach_hash2record] TYPE(val) -> float");
+      as_record_set_double(rec, key2bin_name(key), NUM2DBL(val));
       break;
 
     default:
@@ -299,23 +309,16 @@ static char * key2bin_name(VALUE key) {
 
   switch ( TYPE(key) ) { // get bin name from key
     case T_NIL:
-      log_debug("[Utils][key2bin_name] TYPE(val) nil");
       rb_raise(rb_eRuntimeError, "Record key cannot be nil");
       break;
 
-    case T_SYMBOL:
-      log_debug("[Utils][key2bin_name] TYPE(val) symbol");
-      tmp = rb_funcall(key, rb_intern("to_s"), 0);
-      return StringValueCStr( tmp );
-      break;
-
     case T_STRING:
-      log_debug("[Utils][key2bin_name] TYPE(val) string");
       return StringValueCStr(key);
       break;
 
     default:
-      rb_raise(rb_eRuntimeError, "Unsupported key type: %s", rb_val_type_as_str(key));
+      tmp = rb_funcall(key, rb_intern("to_s"), 0);
+      return StringValueCStr( tmp );
       break;
   }
 }
@@ -381,6 +384,10 @@ static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE hmap) {
     case T_HASH:
       tmp_map = hash2as_hashmap(val);
       as_stringmap_set_map(map, bin_name, (as_map *)tmp_map);
+      break;
+
+    case T_FLOAT:
+      as_stringmap_set_double(map, bin_name, NUM2DBL(val));
       break;
 
     default:
@@ -556,6 +563,10 @@ VALUE as_val2rb_val(as_val * value) {
 
     case AS_MAP:
       return as_hashmap2hash(value);
+      break;
+
+    case AS_DOUBLE:
+      return as_val_dbl_2_val(value);
       break;
   }
 
