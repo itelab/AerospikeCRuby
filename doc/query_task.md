@@ -26,7 +26,7 @@ With a new query task, you can use any of the methods specified below:
 - [Methods](#methods)
   - [#done?](#done?)
   - [#wait_till_completed](#wait_till_completed)
-  - [#name](#name)
+  - [#query_id](#query_id)
 
 <a name="methods"></a>
 ## Methods
@@ -56,11 +56,12 @@ Returns
 
 - `true` after task completed
 
+
 <!--===============================================================================-->
 <hr/>
-<!-- name -->
-<a name="name"></a>
+<!-- query_id -->
+<a query_id="query_id"></a>
 
-### name
+### query_id
 
-Returns udf `name` that task is performing operation on
+Returns `query id` performed asynchronusly on server
