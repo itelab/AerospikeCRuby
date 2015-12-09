@@ -32,6 +32,36 @@ static VALUE check_with_header(VALUE bins, VALUE options, as_record * rec) {
   return bins;
 }
 
+// ----------------------------------------------------------------------------------
+//
+// init config with options
+//
+static void options2config(as_config * config, VALUE options) {
+  VALUE option_tmp = rb_hash_aref(options, hosts_sym);
+  if ( option_tmp != Qnil ) {
+    if ( TYPE(option_tmp) != T_ARRAY ) rb_raise(rb_eRuntimeError, "[AerospikeC::Client][initialize] options :hosts must be an array");
+
+    rb_foreach_ary_int(option_tmp) {
+      VALUE host_info = rb_ary_entry(option_tmp, i);
+
+      VALUE host = rb_hash_aref(host_info, host_sym);
+      VALUE port = rb_hash_aref(host_info, port_sym);
+
+      as_config_add_host(config, StringValueCStr(host), FIX2INT(port));
+    }
+  }
+
+  option_tmp = rb_hash_aref(options, lua_path_sym);
+  if ( option_tmp != Qnil ) {
+    strcpy(config->lua.user_path, StringValueCStr(option_tmp));
+  }
+
+  option_tmp = rb_hash_aref(options, password_sym);
+  if ( option_tmp != Qnil ) {
+    strcpy(config->password, StringValueCStr(option_tmp));
+  }
+}
+
 //
 // def initialize(host, port, options = {})
 //
@@ -53,17 +83,24 @@ static void client_initialize(int argc, VALUE * argv, VALUE self) {
   as_config_init(&config);
   as_config_add_host(&config, StringValueCStr(host), FIX2INT(port));
 
-  VALUE option_tmp = rb_hash_aref(options, lua_path_sym);
-  if ( option_tmp != Qnil ) {
-    strcpy(config.lua.user_path, StringValueCStr(option_tmp));
-  }
+  options2config(&config, options);
 
-  option_tmp = rb_hash_aref(options, password_sym);
-  if ( option_tmp != Qnil ) {
-    strcpy(config.password, StringValueCStr(option_tmp));
-  }
+  // VALUE option_tmp = rb_hash_aref(options, hosts_sym);
+  // if ( option_tmp != Qnil ) {
+  //   if ( TYPE(option_tmp) != T_ARRAY ) rb_raise(rb_eRuntimeError, "[AerospikeC::Client][initialize] options :hosts must be an array");
+  // }
 
-  option_tmp = rb_hash_aref(options, logger_sym);
+  // option_tmp = rb_hash_aref(options, lua_path_sym);
+  // if ( option_tmp != Qnil ) {
+  //   strcpy(config.lua.user_path, StringValueCStr(option_tmp));
+  // }
+
+  // option_tmp = rb_hash_aref(options, password_sym);
+  // if ( option_tmp != Qnil ) {
+  //   strcpy(config.password, StringValueCStr(option_tmp));
+  // }
+
+  VALUE option_tmp = rb_hash_aref(options, logger_sym);
   if ( option_tmp != Qnil ) {
     Logger = option_tmp;
   }

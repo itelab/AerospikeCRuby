@@ -73,6 +73,9 @@
 #define lua_path_sym    ID2SYM(rb_intern("lua_path"))    // :lua_path
 #define password_sym    ID2SYM(rb_intern("password"))    // :password
 #define logger_sym      ID2SYM(rb_intern("logger"))      // :logger
+#define hosts_sym       ID2SYM(rb_intern("hosts"))       // :hosts
+#define host_sym        ID2SYM(rb_intern("host"))        // :host
+#define port_sym        ID2SYM(rb_intern("port"))        // :port
 
 #define as_val_int_2_val(val) INT2FIX( as_integer_get( as_integer_fromval(val) ) )          //(int)    as_val * -> VALUE
 #define as_val_str_2_val(val) rb_str_new2( as_string_tostring( as_string_fromval(val) ) )   //(string) as_val * -> VALUE
@@ -81,6 +84,9 @@
 #define rb_ary_len_long(ary) FIX2LONG( rb_funcall(ary, rb_intern("length"), 0) )            //(long)   VALUE -> long
 
 #define destroy_query(query) as_query_destroy(query); free(query)
+
+#define rb_foreach_ary_int(ary) for(int i = 0; i < rb_ary_len_int(ary); ++i)
+#define rb_foreach_ary_long(ary) for(long i = 0; i < rb_ary_len_long(ary); ++i)
 
 
 // ---------------------------------------------------

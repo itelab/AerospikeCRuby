@@ -76,6 +76,8 @@ Parameters:
 
   - `:logger` - sets logger for the AerospikeC classes operations, see also [#logger=](#logger=)
 
+  - `:hosts` - array of hashes {host: 'hostip', port: someport}. You can define up to 256 hosts for the seed. The client will iterate over the list until it connects with one of the hosts.
+
 Example:
 
 ```ruby

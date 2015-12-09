@@ -42,7 +42,6 @@ AerospikeCRuby is an aerospike library using aerospike-c-client wrapped into rub
 - Policies
 - Bytes support (and object values mapping)
 - Large Data Types
-- Multiple instance support
 - Response types (hashes or expanded objects)
 
 
