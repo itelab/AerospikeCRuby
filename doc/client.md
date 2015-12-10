@@ -72,11 +72,25 @@ Parameters:
 - `port`    - Aerospike server port
 - `options:`
 
-  - `:lua_path` - if you are using using user-defined functions (UDF) for processing query results (i.e aggregations), then you will find it useful to set the :lua_path settings. Of particular importance is the :lua_path, which allows you to define a path to where the client library will look for Lua files for processing
+  - `:lua_path` - if you are using using user-defined functions (UDF) for processing query results (i.e aggregations), then you will find it useful to set the :lua_path settings. Of particular importance is the :lua_path, which allows you to define a path to where the client library will look for Lua files for processing, `default: nil`
 
-  - `:logger` - sets logger for the AerospikeC classes operations, see also [#logger=](#logger=)
+  - `:conn_timeout` - initial host connection timeout in milliseconds. The timeout when opening a connection to the server host for the first time, `default: 1000`
 
-  - `:hosts` - array of hashes {host: 'hostip', port: someport}. You can define up to 256 hosts for the seed. The client will iterate over the list until it connects with one of the hosts.
+  - `:fail_not_connected` - if fail_not_connected is true, the cluster creation will fail when all seed hosts are not reachable. If fail_not_connected is false, an empty cluster will be created and the client will automatically connect when Aerospike server becomes available, `default: true`
+
+  - `:logger` - sets logger for the AerospikeC classes operations, see also [#logger=](#logger=), `default: nil`
+
+  - `:hosts` - array of hashes {host: 'hostip', port: someportint}. You can define up to 256 hosts for the seed. The client will iterate over the list until it connects with one of the hosts, `default: nil`
+
+  - `:user` - user authentication to cluster, `default: nil`
+
+  - `:password` - password authentication to cluster. The hashed value of password will be stored by the client and sent to server in same format, `default: nil`
+
+  - `:interval` - polling interval in milliseconds for cluster tender, `default: 1000`
+
+  - `:thread_pool_size` - number of threads stored in underlying thread pool that is used in batch/scan/query commands. These commands are often sent to multiple server nodes in parallel threads. A thread pool improves performance because threads do not have to be created/destroyed for each command. Calculate your value using the following formula: <b>thread_pool_size = (concurrent batch/scan/query commands) * (server nodes)</b>, `default: 16`
+
+  - `:max_threads` - estimate of incoming threads concurrently using synchronous methods in the client instance. This field is used to size the synchronous connection pool for each server node, `default: 300`
 
 Example:
 

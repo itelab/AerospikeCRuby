@@ -43,39 +43,45 @@
 
 #define rb_zero INT2FIX(0)
 
-#define with_header_sym ID2SYM(rb_intern("with_header")) // :with_header
-#define ttl_sym         ID2SYM(rb_intern("ttl"))         // :ttl
-#define write_sym       ID2SYM(rb_intern("write"))       // :write
-#define read_sym        ID2SYM(rb_intern("read"))        // :read
-#define increment_sym   ID2SYM(rb_intern("increment"))   // :increment
-#define append_sym      ID2SYM(rb_intern("append"))      // :append
-#define prepend_sym     ID2SYM(rb_intern("prepend"))     // :prepend
-#define touch_sym       ID2SYM(rb_intern("touch"))       // :touch
-#define operation_sym   ID2SYM(rb_intern("operation"))   // :operation
-#define bin_sym         ID2SYM(rb_intern("bin"))         // :bin
-#define value_sym       ID2SYM(rb_intern("value"))       // :value
-#define numeric_sym     ID2SYM(rb_intern("numeric"))     // :numeric
-#define string_sym      ID2SYM(rb_intern("string"))      // :string
-#define lua_sym         ID2SYM(rb_intern("lua"))         // :lua
-#define name_sym        ID2SYM(rb_intern("name"))        // :name
-#define udf_type_sym    ID2SYM(rb_intern("udf_type"))    // :udf_type
-#define hash_sym        ID2SYM(rb_intern("hash"))        // :hash
-#define size_sym        ID2SYM(rb_intern("size"))        // :size
-#define type_sym        ID2SYM(rb_intern("type"))        // :type
-#define filter_type_sym ID2SYM(rb_intern("filter_type")) // :filter_type
-#define eql_sym         ID2SYM(rb_intern("eql"))         // :eql
-#define range_sym       ID2SYM(rb_intern("range"))       // :range
-#define min_sym         ID2SYM(rb_intern("min"))         // :min
-#define max_sym         ID2SYM(rb_intern("max"))         // :max
-#define asc_sym         ID2SYM(rb_intern("asc"))         // :asc
-#define desc_sym        ID2SYM(rb_intern("desc"))        // :desc
-#define order_sym       ID2SYM(rb_intern("order"))       // :order
-#define lua_path_sym    ID2SYM(rb_intern("lua_path"))    // :lua_path
-#define password_sym    ID2SYM(rb_intern("password"))    // :password
-#define logger_sym      ID2SYM(rb_intern("logger"))      // :logger
-#define hosts_sym       ID2SYM(rb_intern("hosts"))       // :hosts
-#define host_sym        ID2SYM(rb_intern("host"))        // :host
-#define port_sym        ID2SYM(rb_intern("port"))        // :port
+#define with_header_sym         ID2SYM(rb_intern("with_header"))        // :with_header
+#define ttl_sym                 ID2SYM(rb_intern("ttl"))                // :ttl
+#define write_sym               ID2SYM(rb_intern("write"))              // :write
+#define read_sym                ID2SYM(rb_intern("read"))               // :read
+#define increment_sym           ID2SYM(rb_intern("increment"))          // :increment
+#define append_sym              ID2SYM(rb_intern("append"))             // :append
+#define prepend_sym             ID2SYM(rb_intern("prepend"))            // :prepend
+#define touch_sym               ID2SYM(rb_intern("touch"))              // :touch
+#define operation_sym           ID2SYM(rb_intern("operation"))          // :operation
+#define bin_sym                 ID2SYM(rb_intern("bin"))                // :bin
+#define value_sym               ID2SYM(rb_intern("value"))              // :value
+#define numeric_sym             ID2SYM(rb_intern("numeric"))            // :numeric
+#define string_sym              ID2SYM(rb_intern("string"))             // :string
+#define lua_sym                 ID2SYM(rb_intern("lua"))                // :lua
+#define name_sym                ID2SYM(rb_intern("name"))               // :name
+#define udf_type_sym            ID2SYM(rb_intern("udf_type"))           // :udf_type
+#define hash_sym                ID2SYM(rb_intern("hash"))               // :hash
+#define size_sym                ID2SYM(rb_intern("size"))               // :size
+#define type_sym                ID2SYM(rb_intern("type"))               // :type
+#define filter_type_sym         ID2SYM(rb_intern("filter_type"))        // :filter_type
+#define eql_sym                 ID2SYM(rb_intern("eql"))                // :eql
+#define range_sym               ID2SYM(rb_intern("range"))              // :range
+#define min_sym                 ID2SYM(rb_intern("min"))                // :min
+#define max_sym                 ID2SYM(rb_intern("max"))                // :max
+#define asc_sym                 ID2SYM(rb_intern("asc"))                // :asc
+#define desc_sym                ID2SYM(rb_intern("desc"))               // :desc
+#define order_sym               ID2SYM(rb_intern("order"))              // :order
+#define lua_path_sym            ID2SYM(rb_intern("lua_path"))           // :lua_path
+#define password_sym            ID2SYM(rb_intern("password"))           // :password
+#define logger_sym              ID2SYM(rb_intern("logger"))             // :logger
+#define hosts_sym               ID2SYM(rb_intern("hosts"))              // :hosts
+#define host_sym                ID2SYM(rb_intern("host"))               // :host
+#define port_sym                ID2SYM(rb_intern("port"))               // :port
+#define interval_sym            ID2SYM(rb_intern("interval"))           // :interval
+#define user_sym                ID2SYM(rb_intern("user"))               // :user
+#define thread_pool_size_sym    ID2SYM(rb_intern("thread_pool_size"))   // :thread_pool_size
+#define max_threads_sym         ID2SYM(rb_intern("max_threads"))        // :max_threads
+#define conn_timeout_sym        ID2SYM(rb_intern("conn_timeout"))       // :conn_timeout
+#define fail_not_connected_sym  ID2SYM(rb_intern("fail_not_connected")) // :fail_not_connected
 
 #define as_val_int_2_val(val) INT2FIX( as_integer_get( as_integer_fromval(val) ) )          //(int)    as_val * -> VALUE
 #define as_val_str_2_val(val) rb_str_new2( as_string_tostring( as_string_fromval(val) ) )   //(string) as_val * -> VALUE
@@ -134,6 +140,7 @@ void bin_names_destroy(char ** bin_names, long len);
 
 VALUE value_to_s(VALUE val);
 VALUE bool2rb_bool(bool val);
+bool rb_bool2bool(VALUE val);
 VALUE as_val2rb_val(as_val * value);
 char * val_inspect(VALUE val);
 const char * as_val_type_as_str(as_val * val);

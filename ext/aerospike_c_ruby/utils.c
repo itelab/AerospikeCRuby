@@ -541,6 +541,15 @@ VALUE bool2rb_bool(bool val) {
 }
 
 //
+// convert TrueClass or FalseClass into bool
+//
+bool rb_bool2bool(VALUE val) {
+  if ( val == Qtrue ) { return true; }
+  else if ( val == Qfalse ) { return false; }
+  else { rb_raise(rb_eRuntimeError, "[Utils][rb_bool2bool] Cannot convert %s into bool", rb_val_type_as_str(val)); }
+}
+
+//
 // as_val -> VALUE
 //
 VALUE as_val2rb_val(as_val * value) {
