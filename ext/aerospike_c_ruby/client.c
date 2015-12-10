@@ -111,7 +111,7 @@ static void options2config(as_config * config, VALUE options) {
   option_tmp = rb_hash_aref(options, fail_not_connected_sym);
   if ( option_tmp != Qnil ) { // fail_not_connected
     if ( TYPE(option_tmp) != T_TRUE && TYPE(option_tmp) != T_FALSE )
-      rb_raise(rb_eRuntimeError, "[AerospikeC::Client][initialize] options :fail_not_connected must be an true/false");
+      rb_raise(rb_eRuntimeError, "[AerospikeC::Client][initialize] options :fail_not_connected must be true/false");
 
     config->fail_if_not_connected = rb_bool2bool(option_tmp);
   }

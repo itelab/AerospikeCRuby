@@ -82,6 +82,14 @@
 #define max_threads_sym         ID2SYM(rb_intern("max_threads"))        // :max_threads
 #define conn_timeout_sym        ID2SYM(rb_intern("conn_timeout"))       // :conn_timeout
 #define fail_not_connected_sym  ID2SYM(rb_intern("fail_not_connected")) // :fail_not_connected
+#define commit_level_sym        ID2SYM(rb_intern("commit_level"))       // :commit_level
+#define exists_sym              ID2SYM(rb_intern("exists"))             // :exists
+#define gen_sym                 ID2SYM(rb_intern("gen"))                // :gen
+#define key_sym                 ID2SYM(rb_intern("key"))                // :key
+#define retry_sym               ID2SYM(rb_intern("retry"))              // :retry
+#define timeout_sym             ID2SYM(rb_intern("timeout"))            // :timeout
+#define consistency_level_sym   ID2SYM(rb_intern("consistency_level"))  // :consistency_level
+#define replica_sym             ID2SYM(rb_intern("replica"))            // :replica
 
 #define as_val_int_2_val(val) INT2FIX( as_integer_get( as_integer_fromval(val) ) )          //(int)    as_val * -> VALUE
 #define as_val_str_2_val(val) rb_str_new2( as_string_tostring( as_string_fromval(val) ) )   //(string) as_val * -> VALUE
@@ -105,6 +113,7 @@ void init_aerospike_c_operation(VALUE AerospikeC);  // operation.c
 void init_aerospike_c_udf_task(VALUE AerospikeC);   // udf_task.c
 void init_aerospike_c_scan_task(VALUE AerospikeC);  // scan_task.c
 void init_aerospike_c_query(VALUE AerospikeC);      // query.c
+void init_aerospike_c_policy(VALUE AerospikeC);     // policy.c
 
 // query_task.c
 void init_aerospike_c_query_task(VALUE AerospikeC);
@@ -164,5 +173,6 @@ extern VALUE UdfTask;
 extern VALUE ScanTask;
 extern VALUE Query;
 extern VALUE QueryTask;
+extern VALUE Policy;
 
 #endif // AEROSPIKE_C_RUBY_H
