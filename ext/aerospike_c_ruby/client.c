@@ -111,7 +111,7 @@ static void options2config(as_config * config, VALUE options) {
   option_tmp = rb_hash_aref(options, fail_not_connected_sym);
   if ( option_tmp != Qnil ) { // fail_not_connected
     if ( TYPE(option_tmp) != T_TRUE && TYPE(option_tmp) != T_FALSE )
-      rb_raise(rb_eRuntimeError, "[AerospikeC::Client][initialize] options :fail_not_connected must be an integer");
+      rb_raise(rb_eRuntimeError, "[AerospikeC::Client][initialize] options :fail_not_connected must be an true/false");
 
     config->fail_if_not_connected = rb_bool2bool(option_tmp);
   }
@@ -143,23 +143,6 @@ static void client_initialize(int argc, VALUE * argv, VALUE self) {
   as_config_add_host(&config, StringValueCStr(host), FIX2INT(port));
 
   options2config(&config, options);
-
-  // VALUE option_tmp = rb_hash_aref(options, hosts_sym);
-  // if ( option_tmp != Qnil ) {
-  //   if ( TYPE(option_tmp) != T_ARRAY ) rb_raise(rb_eRuntimeError, "[AerospikeC::Client][initialize] options :hosts must be an array");
-  // }
-
-  // option_tmp = rb_hash_aref(options, lua_path_sym);
-  // if ( option_tmp != Qnil ) {
-  //   strcpy(config.lua.user_path, StringValueCStr(option_tmp));
-  // }
-
-  // option_tmp = rb_hash_aref(options, password_sym);
-  // if ( option_tmp != Qnil ) {
-  //   strcpy(config.password, StringValueCStr(option_tmp));
-  // }
-
-
 
   aerospike * as = aerospike_new(&config);
 
