@@ -285,13 +285,16 @@ client.logger = Logger.new("log/aerospike_c.log")
 <!-- exists? -->
 <a name="exists?"></a>
 
-### exists?(key)
+### exists?(key, options = {})
 
 Check if key exist in cluster.
 
 Parameters:
 
 - `key` - [AerospikeC::Key](key.md) object
+- `options`:
+
+  - `:policy` - [AerospikeC::ReadPolicy](policy.md#read_policy) object
 
 Retrun:
 - `true` if exists
@@ -312,13 +315,16 @@ client.exists?(key) # => false
 <!-- get_header -->
 <a name="get_header"></a>
 
-### get_header(key)
+### get_header(key, options = {})
 
 Get header of record.
 
 Parameters:
 
 - `key` - [AerospikeC::Key](key.md) object
+- `options`:
+
+  - `:policy` - [AerospikeC::ReadPolicy](policy.md#read_policy) object
 
 Return:
 - `hash` representing record header

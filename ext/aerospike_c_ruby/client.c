@@ -412,24 +412,37 @@ static VALUE set_logger(VALUE self, VALUE logger) {
 //
 // check if key exist in cluster
 //
-// def exists?(key)
+// def exists?(key, options = {})
 //
 // params:
 //   key - AerospikeC::Key object
+//   options - hash of options:
+//     policy: AerospikeC::Policy for read
 //
 //  ------
 //  RETURN:
 //    1. true if exist
 //    2. false otherwise
 //
-static VALUE key_exists(VALUE self, VALUE key) {
+static VALUE key_exists(int argc, VALUE * argv, VALUE self) {
   as_error err;
   as_status status;
   aerospike * as  = get_client_struct(self);
-  as_key * k      = get_key_struct(key);
   as_record * rec = NULL;
 
-  if ( ( status = aerospike_key_exists(as, &err, NULL, k, &rec) ) != AEROSPIKE_OK ) {
+  VALUE key;
+  VALUE options;
+
+  rb_scan_args(argc, argv, "11", &key, &options);
+
+  if ( NIL_P(options) ) {
+    options = rb_hash_new();
+  }
+
+  as_key * k = get_key_struct(key);
+  as_policy_read * policy = get_policy(options);
+
+  if ( ( status = aerospike_key_exists(as, &err, policy, k, &rec) ) != AEROSPIKE_OK ) {
     as_record_destroy(rec);
 
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
@@ -446,28 +459,42 @@ static VALUE key_exists(VALUE self, VALUE key) {
 
 // ----------------------------------------------------------------------------------
 //
-// def get_header(key)
+// def get_header(key, options = {})
 //
 // params:
 //   key - AerospikeC::Key object
+//   options - hash of options:
+//     policy: AerospikeC::Policy for read
 //
 //  ------
 //  RETURN:
 //    1. hash representing record header
 //    2. nil when AEROSPIKE_ERR_RECORD_NOT_FOUND
 //
-static VALUE get_header(VALUE self, VALUE key) {
+static VALUE get_header(int argc, VALUE * argv, VALUE self) {
   as_error err;
   as_status status;
   aerospike * as  = get_client_struct(self);
-  as_key * k      = get_key_struct(key);
   as_record * rec = NULL;
+
+  VALUE key;
+  VALUE options;
+
+  rb_scan_args(argc, argv, "11", &key, &options);
+
+  if ( NIL_P(options) ) {
+    options = rb_hash_new();
+  }
+
+  as_key * k = get_key_struct(key);
+  as_policy_read * policy = get_policy(options);
+
 
   VALUE header = rb_hash_new();
 
   const char * inputArray[] = { NULL };
 
-  if ( ( status = aerospike_key_select(as, &err, NULL, k, inputArray, &rec) ) != AEROSPIKE_OK) {
+  if ( ( status = aerospike_key_select(as, &err, policy, k, inputArray, &rec) ) != AEROSPIKE_OK) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
       log_warn("[AerospikeC::Client][get_header] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
@@ -1576,8 +1603,8 @@ void init_aerospike_c_client(VALUE AerospikeC) {
 
   // utils
   rb_define_method(Client, "logger=", RB_FN_ANY()set_logger, 1);
-  rb_define_method(Client, "exists?", RB_FN_ANY()key_exists, 1);
-  rb_define_method(Client, "get_header", RB_FN_ANY()get_header, 1);
+  rb_define_method(Client, "exists?", RB_FN_ANY()key_exists, -1);
+  rb_define_method(Client, "get_header", RB_FN_ANY()get_header, -1);
   rb_define_method(Client, "batch_get", RB_FN_ANY()batch_get, -1);
   rb_define_method(Client, "touch", RB_FN_ANY()touch, -1);
 
