@@ -262,13 +262,12 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
 //   specific bins - Array of strings representing bin names
 //   options - hash of options:
 //     with_header: returns also generation and expire_in field (default: false)
+//     policy: AerospikeC::Policy for read
 //
 //  ------
 //  RETURN:
 //    1. hash representing record
 //    2. nil when AEROSPIKE_ERR_RECORD_NOT_FOUND
-//
-// @TODO options policy
 //
 static VALUE get(int argc, VALUE * argv, VALUE self) {
   as_error err;
@@ -352,6 +351,8 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
 //
 // params:
 //   key - AerospikeC::Key object
+//   options:
+//    policy:  AerospikeC::Policy for remove
 //
 //  ------
 //  RETURN:

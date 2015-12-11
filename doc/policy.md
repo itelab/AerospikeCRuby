@@ -7,7 +7,7 @@ Aerospike reference: http://www.aerospike.com/docs/client/c/best_practices/polic
 ```ruby
 write_policy  = AerospikeC::Policy.new(:write, exists: AerospikeC::Policy::AS_POLICY_EXISTS_UPDATE)
 write_policy2 = AerospikeC::WritePolicy.new(exists: AerospikeC::Policy::AS_POLICY_EXISTS_UPDATE)
-remove_policy = RemovePolicy.new(gen: AerospikeC::Policy::AS_POLICY_GEN_GT, generation: 2)
+remove_policy = AerospikeC::RemovePolicy.new(gen: AerospikeC::Policy::AS_POLICY_GEN_GT, generation: 2)
 ```
 
 Policy classes:
