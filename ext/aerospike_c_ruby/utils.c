@@ -779,3 +779,27 @@ as_query * query_obj2as_query(VALUE query_obj) {
 
   return query;
 }
+
+//
+// unwrap AerospikeC::Policy to as_policy and return its pointer
+//
+void * rb_policy2as_policy(VALUE rb_policy) {
+  void * policy;
+
+  VALUE type = rb_iv_get(rb_policy, "@type");
+
+  if ( type == write_sym ) {
+    Data_Get_Struct(rb_iv_get(rb_policy, "policy"), as_policy_write, policy);
+  }
+  else if ( type == read_sym ) {
+    Data_Get_Struct(rb_iv_get(rb_policy, "policy"), as_policy_read, policy);
+  }
+  else if ( type == remove_sym ) {
+    Data_Get_Struct(rb_iv_get(rb_policy, "policy"), as_policy_remove, policy);
+  }
+  else {
+    rb_raise(rb_eRuntimeError, "[Utils][rb_policy2as_policy] unknown policy type: %s", val_inspect(type));
+  }
+
+  return policy;
+}

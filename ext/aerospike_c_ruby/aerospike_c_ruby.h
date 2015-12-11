@@ -90,6 +90,9 @@
 #define timeout_sym             ID2SYM(rb_intern("timeout"))            // :timeout
 #define consistency_level_sym   ID2SYM(rb_intern("consistency_level"))  // :consistency_level
 #define replica_sym             ID2SYM(rb_intern("replica"))            // :replica
+#define remove_sym              ID2SYM(rb_intern("remove"))             // :remove
+#define generation_sym          ID2SYM(rb_intern("generation"))         // :generation
+#define policy_sym              ID2SYM(rb_intern("policy"))             // :policy
 
 #define as_val_int_2_val(val) INT2FIX( as_integer_get( as_integer_fromval(val) ) )          //(int)    as_val * -> VALUE
 #define as_val_str_2_val(val) rb_str_new2( as_string_tostring( as_string_fromval(val) ) )   //(string) as_val * -> VALUE
@@ -160,6 +163,8 @@ as_query * query_obj2as_query(VALUE query_obj);
 VALUE as_hashmap2hash(as_hashmap * map);
 as_hashmap * hash2as_hashmap(VALUE hash);
 
+void * rb_policy2as_policy(VALUE rb_policy);
+
 // ---------------------------------------------------
 // extern variables
 //
@@ -174,5 +179,8 @@ extern VALUE ScanTask;
 extern VALUE Query;
 extern VALUE QueryTask;
 extern VALUE Policy;
+extern VALUE WritePolicy;
+extern VALUE ReadPolicy;
+extern VALUE RemovePolicy;
 
 #endif // AEROSPIKE_C_RUBY_H

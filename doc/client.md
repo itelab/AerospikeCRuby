@@ -154,7 +154,7 @@ Parameters:
 
   - `:ttl` - time to live record (default: 0, which means server will use namespace default)
 
-  - @TODO options policy
+  - `:policy` - [AerospikeC::WritePolicy](policy.md#write_policy) object
 
 Retrun:
 - `true` if added succesfuly
@@ -201,7 +201,7 @@ Parameters:
 
   - `with_header` - returns also generation and expire_in field (default: false)
 
-  - @TODO options policy
+  - `:policy` - [AerospikeC::ReadPolicy](policy.md#read_policy) object
 
 Retrun:
 - `hash` representing record if operation succeds
@@ -237,6 +237,9 @@ Removing record from the cluster.
 Parameters:
 
 - `key` - [AerospikeC::Key](key.md) object
+- `options`:
+
+  - `:policy` - [AerospikeC::RemovePolicy](policy.md#remove_policy) object
 
 Retrun:
 - `true` if removed succesfuly

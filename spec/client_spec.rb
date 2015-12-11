@@ -18,7 +18,6 @@ describe AerospikeC::Client do
       "bin_string" => @bin_string,
       "bin_tab" => [rand(1..100), rand(1..100), rand_string(100), [rand(1..200), rand_string(25)], rand(1.2...276.9)],
       "bin_float" => rand(-123.2...123.2),
-      "bin_float_minus" => rand(-523.2...-123.2),
 
       "bin_hash" => {
         "hash_int" => rand(1..100),
@@ -68,14 +67,24 @@ describe AerospikeC::Client do
       expect( @client.get(key) ).to eq(nil)
     end
 
+    it "reads all bins" do
+      put_default
+      expect( @client.get(@key)).to eq(@bins)
+    end
+
     it "read specific bins" do
       put_default
       expect( @client.get(@key, ["bin_int", "bin_string"]) ).to eq({"bin_int" => @bin_int, "bin_string" => @bin_string})
     end
 
+    it "read all with specific_bins empty array" do
+      put_default
+      expect( @client.get(@key, [])).to eq(@bins)
+    end
+
     it "with_header" do
       put_default
-      expect( @client.get(@key, [], with_header: true) ).to eq({"header"=>{"gen"=>1, "expire_in"=>ttl_default}})
+      expect( @client.get(@key, [], with_header: true)["header"] ).to eq({"gen"=>1, "expire_in"=>ttl_default})
     end
   end
 
