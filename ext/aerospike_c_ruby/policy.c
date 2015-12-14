@@ -4,6 +4,7 @@ VALUE Policy;
 VALUE ReadPolicy;
 VALUE WritePolicy;
 VALUE RemovePolicy;
+VALUE ApplyPolicy;
 
 // ----------------------------------------------------------------------------------
 //
@@ -236,6 +237,45 @@ static VALUE remove_policy_initialize(int argc, VALUE * argv, VALUE self) {
 
 // ----------------------------------------------------------------------------------
 //
+// AerospikeC::ApplyPolicy
+//
+//  * init,
+//  * free,
+//  * ruby initialize
+//
+static void free_policy_apply(as_policy_apply * policy) {
+  free(policy);
+}
+
+static void init_policy_apply(VALUE self, VALUE options) {
+  as_policy_apply * policy = (as_policy_apply *) malloc (sizeof(as_policy_apply));
+  if (! policy) rb_raise(rb_eRuntimeError, err_memory_info());
+  as_policy_apply_init(policy);
+
+  options_buffer buffer;
+  options2buffer(self, options, &buffer);
+
+  policy->commit_level = buffer.commit_level;
+  policy->key          = buffer.key;
+  policy->timeout      = buffer.timeout;
+
+  VALUE policy_struct = Data_Wrap_Struct(Policy, NULL, free_policy_apply, policy);
+
+  rb_iv_set(self, "policy", policy_struct);
+}
+
+static VALUE apply_policy_initialize(int argc, VALUE * argv, VALUE self) {
+  VALUE options;
+
+  rb_scan_args(argc, argv, "01", &options);
+
+  VALUE super_args[2] = { apply_sym, options };
+
+  rb_call_super(2, super_args);
+}
+
+// ----------------------------------------------------------------------------------
+//
 // AerospikeC::Policy
 //
 // initialize(type, options = {})
@@ -260,6 +300,9 @@ static VALUE policy_initialize(int argc, VALUE * argv, VALUE self) {
   }
   else if ( type == remove_sym ) {
     init_policy_remove(self, options);
+  }
+  else if ( type == apply_sym ) {
+    init_policy_apply(self, options);
   }
   else {
     rb_raise(rb_eRuntimeError, "[AerospikeC::Policy][initialize] unknown policy type");
@@ -337,4 +380,7 @@ void init_aerospike_c_policy(VALUE AerospikeC) {
 
   RemovePolicy = rb_define_class_under(AerospikeC, "RemovePolicy", Policy);
   rb_define_method(RemovePolicy, "initialize", RB_FN_ANY()remove_policy_initialize, -1);
+
+  ApplyPolicy = rb_define_class_under(AerospikeC, "ApplyPolicy", Policy);
+  rb_define_method(ApplyPolicy, "initialize", RB_FN_ANY()apply_policy_initialize, -1);
 }

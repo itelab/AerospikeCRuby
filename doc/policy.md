@@ -70,6 +70,18 @@ Uses options:
 - [:retry](#retry)
 - [:timeout](#timeout)
 
+<!--===============================================================================-->
+<hr />
+<!-- remove_policy -->
+<a name="apply_policy"></a>
+
+### ApplyPolicy
+
+Uses options:
+- [:commit_level](#commit_level)
+- [:key](#key)
+- [:timeout](#timeout)
+
 
 <!--===============================================================================-->
 <br /><hr />

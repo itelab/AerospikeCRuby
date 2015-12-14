@@ -1145,10 +1145,11 @@ static VALUE execute_udf(int argc, VALUE * argv, VALUE self) {
 
   as_key * k = get_key_struct(key);
   as_arraylist * args = array2as_list(udf_args);
+  as_policy_apply * policy = get_policy(options);
 
   as_val * res = NULL;
 
-  if ( ( status = aerospike_key_apply(as, &err, NULL, k, StringValueCStr(module_name), StringValueCStr(func_name), (as_list *)args, &res) ) != AEROSPIKE_OK ) {
+  if ( ( status = aerospike_key_apply(as, &err, policy, k, StringValueCStr(module_name), StringValueCStr(func_name), (as_list *)args, &res) ) != AEROSPIKE_OK ) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
       log_warn("[AerospikeC::Client][execute_udf] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;

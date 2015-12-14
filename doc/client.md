@@ -715,7 +715,7 @@ Parameters:
 - `udf_args`    - arguments passed to udf
 - `options`:
 
-  - @TODO options policy
+  - `:policy` - [AerospikeC::ApplyPolicy](policy.md#apply_policy) object
 
 Return:
 

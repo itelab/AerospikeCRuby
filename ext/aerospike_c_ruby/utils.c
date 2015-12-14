@@ -4,6 +4,7 @@ static int foreach_hash2record(VALUE key, VALUE val, VALUE record);
 static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE map);
 static char * key2bin_name(VALUE key);
 
+// ----------------------------------------------------------------------------------
 //
 // logger methods
 //
@@ -44,6 +45,7 @@ void log_fatal(const char * msg) {
   rb_funcall(Logger, rb_intern("fatal"), 1, rb_str_new2(msg));
 }
 
+// ----------------------------------------------------------------------------------
 //
 // unwrap Client VALUE struct into aerospike *
 //
@@ -53,6 +55,7 @@ aerospike * get_client_struct(VALUE client) {
   return as;
 }
 
+// ----------------------------------------------------------------------------------
 //
 // unwrap Key VALUE struct into as_key *
 //
@@ -62,6 +65,7 @@ as_key * get_key_struct(VALUE key) {
   return k;
 }
 
+// ----------------------------------------------------------------------------------
 //
 // unwrap Record VALUE struct into as_record *
 //
@@ -71,6 +75,7 @@ as_record * get_record_struct(VALUE rec) {
   return r;
 }
 
+// ----------------------------------------------------------------------------------
 //
 // raise RuntimeError with as_error info
 //
@@ -79,6 +84,7 @@ void raise_as_error(as_error err) {
   rb_raise(rb_eRuntimeError, "%s -- Error code: %d, at: [%s:%d]", err.message, err.code, err.file, err.line);
 }
 
+// ----------------------------------------------------------------------------------
 //
 // convert as_record to ruby hash
 //
@@ -96,37 +102,12 @@ VALUE record2hash(as_record * rec) {
     VALUE name = rb_str_new2( as_bin_get_name(bin) );
 
     rb_hash_aset(hash, name, as_val2rb_val(value));
-
-    /*******************
-      all under this comment was replaced with as_val2rb_val
-    ********************/
-
-    // switch ( as_val_type(value) ) {
-    //   case AS_INTEGER:
-    //     log_debug("[Utils][record2hash] as_val_type(value) -> integer");
-    //     rb_hash_aset(hash, name, as_val_int_2_val(value));
-    //     break;
-
-    //   case AS_STRING:
-    //     log_debug("[Utils][record2hash] as_val_type(value) -> string");
-    //     rb_hash_aset(hash, name, as_val_str_2_val(value));
-    //     break;
-
-    //   case AS_LIST:
-    //     log_debug("[Utils][record2hash] as_val_type(value) -> list");
-    //     tmp_list = as_list_fromval(value);
-    //     rb_hash_aset(hash, name, as_list2array(tmp_list));
-    //     break;
-
-    //   default:
-    //     rb_raise(rb_eRuntimeError, "[Utils][record2hash] Unsupported record value type: %s", as_val_type_as_str(value));
-    //     break;
-    // }
   }
 
   return hash;
 }
 
+// ----------------------------------------------------------------------------------
 //
 // convert ruby hash and save its value to record
 //
@@ -134,7 +115,7 @@ void hash2record(VALUE hash, VALUE rec) {
   rb_hash_foreach(hash, foreach_hash2record, rec);
 }
 
-
+// ----------------------------------------------------------------------------------
 //
 // convert ruby array to as_arraylist
 //
@@ -196,6 +177,7 @@ as_arraylist * array2as_list(VALUE ary) {
   return list;
 }
 
+// ----------------------------------------------------------------------------------
 //
 // convert as_list to ruby array
 //
@@ -210,38 +192,12 @@ VALUE as_list2array(as_arraylist * list) {
   while (as_arraylist_iterator_has_next(&it) ) {
     as_val * value = as_arraylist_iterator_next(&it);
     rb_ary_push(ary, as_val2rb_val(value));
-
-    /*******************
-      all under this comment was replaced with as_val2rb_val
-    ********************/
-
-    // switch ( as_val_type(value) ) {
-    //   case AS_INTEGER:
-    //     log_debug("[Utils][as_list2array] as_val_type(value) -> integer");
-    //     rb_ary_push(ary, as_val_int_2_val(value));
-    //     break;
-
-    //   case AS_STRING:
-    //     log_debug("[Utils][as_list2array] as_val_type(value) -> string");
-    //     rb_ary_push(ary, as_val_str_2_val(value));
-    //     break;
-
-    //   case AS_LIST:
-    //     log_debug("[Utils][as_list2array] as_val_type(value) -> list");
-    //     tmp_list = as_list_fromval(value);
-    //     rb_ary_push(ary, as_list2array(tmp_list));
-    //     break;
-
-    //   default:
-    //     rb_ary_push(ary, as_val2rb_val(value));
-    //     rb_raise(rb_eRuntimeError, "[Utils][as_list2array] Unsupported array value type: %s", as_val_type_as_str(value));
-    //     break;
-    // }
   }
 
   return ary;
 }
 
+// ----------------------------------------------------------------------------------
 //
 // foreach hash2record
 //
@@ -300,7 +256,7 @@ static int foreach_hash2record(VALUE key, VALUE val, VALUE record) {
   return ST_CONTINUE;
 }
 
-
+// ----------------------------------------------------------------------------------
 //
 // convert ruby hash key into char *
 //
@@ -323,6 +279,7 @@ static char * key2bin_name(VALUE key) {
   }
 }
 
+// ----------------------------------------------------------------------------------
 //
 // free memory method
 //
@@ -330,6 +287,7 @@ static void map_deallocate(as_hashmap * map) {
   as_hashmap_destroy(map);
 }
 
+// ----------------------------------------------------------------------------------
 //
 // convert ruby hash to as_hashmap
 //
@@ -345,6 +303,7 @@ as_hashmap * hash2as_hashmap(VALUE hash) {
   return map;
 }
 
+// ----------------------------------------------------------------------------------
 //
 // foreach hash2as_hashmap
 //
@@ -399,6 +358,7 @@ static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE hmap) {
 
 }
 
+// ----------------------------------------------------------------------------------
 //
 // convert as_hashmap * map into ruby hash
 //
@@ -427,6 +387,7 @@ VALUE as_hashmap2hash(as_hashmap * map) {
   return hash;
 }
 
+// ----------------------------------------------------------------------------------
 //
 // ruby array to char ** with last element NULL
 // remember to destroy allocated memory with inputArray_destroy(inputArray)
@@ -461,6 +422,7 @@ char ** rb_array2inputArray(VALUE ary) {
   return inputArray;
 }
 
+// ----------------------------------------------------------------------------------
 //
 // frees inputArray memory
 //
@@ -474,6 +436,7 @@ void inputArray_destroy(char ** inputArray) {
   free(inputArray);
 }
 
+// ----------------------------------------------------------------------------------
 //
 // ruby array to char **
 // remember to destroy allocated memory with bin_names_destroy(bin_names)
@@ -506,6 +469,7 @@ char ** rb_array2bin_names(VALUE ary) {
   return bin_names;
 }
 
+// ----------------------------------------------------------------------------------
 //
 // frees bin_names memory
 //
@@ -517,6 +481,7 @@ void bin_names_destroy(char ** bin_names, long len) {
   free(bin_names);
 }
 
+// ----------------------------------------------------------------------------------
 //
 // call to_s on val
 //
@@ -526,6 +491,7 @@ VALUE value_to_s(VALUE val) {
   return rb_funcall(val, rb_intern("to_s"), 0);
 }
 
+// ----------------------------------------------------------------------------------
 //
 // convert bool into TrueClass or FalseClass
 //
@@ -540,6 +506,7 @@ VALUE bool2rb_bool(bool val) {
   return Qnil;
 }
 
+// ----------------------------------------------------------------------------------
 //
 // convert TrueClass or FalseClass into bool
 //
@@ -549,6 +516,7 @@ bool rb_bool2bool(VALUE val) {
   else { rb_raise(rb_eRuntimeError, "[Utils][rb_bool2bool] Cannot convert %s into bool", rb_val_type_as_str(val)); }
 }
 
+// ----------------------------------------------------------------------------------
 //
 // as_val -> VALUE
 //
@@ -582,6 +550,7 @@ VALUE as_val2rb_val(as_val * value) {
   rb_raise(rb_eRuntimeError, "[Utils][as_val2rb_val] Unsupported array value type: %s", as_val_type_as_str(value));
 }
 
+// ----------------------------------------------------------------------------------
 //
 // call ruby inspect on val, and convert it into char *
 //
@@ -590,6 +559,7 @@ char * val_inspect(VALUE val) {
   return StringValueCStr(tmp);
 }
 
+// ----------------------------------------------------------------------------------
 //
 // as_val type into char *
 //
@@ -636,6 +606,7 @@ const char * as_val_type_as_str(as_val * value) {
   }
 }
 
+// ----------------------------------------------------------------------------------
 //
 // VALUE type into char *
 //
@@ -703,6 +674,7 @@ const char * rb_val_type_as_str(VALUE value) {
   }
 }
 
+// ----------------------------------------------------------------------------------
 //
 // AerospikeC::Query to as_query *
 // need to free after usage: destroy_query(query);
@@ -780,6 +752,7 @@ as_query * query_obj2as_query(VALUE query_obj) {
   return query;
 }
 
+// ----------------------------------------------------------------------------------
 //
 // unwrap AerospikeC::Policy to as_policy and return its pointer
 //
@@ -796,6 +769,9 @@ void * rb_policy2as_policy(VALUE rb_policy) {
   }
   else if ( type == remove_sym ) {
     Data_Get_Struct(rb_iv_get(rb_policy, "policy"), as_policy_remove, policy);
+  }
+  else if ( type == apply_sym ) {
+    Data_Get_Struct(rb_iv_get(rb_policy, "policy"), as_policy_apply, policy);
   }
   else {
     rb_raise(rb_eRuntimeError, "[Utils][rb_policy2as_policy] unknown policy type: %s", val_inspect(type));
