@@ -39,10 +39,11 @@ AerospikeCRuby is an aerospike library using aerospike-c-client wrapped into rub
 - Nested values like `[[1, 2], {"h1" => {"h2" => 2}}]` possible
 
 #### Major TODOs:
-- Policies
-- Bytes support (and object values mapping)
 - Large Data Types
+- Bytes support (and object values mapping)
 - Response types (hashes or expanded objects)
+- More Policies
+- Exceptions
 
 
 

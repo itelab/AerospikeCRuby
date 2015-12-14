@@ -7,6 +7,110 @@ VALUE RemovePolicy;
 
 // ----------------------------------------------------------------------------------
 //
+// options buffer
+//
+typedef struct options_buffer_s {
+  as_policy_consistency_level   consistency_level;
+  as_policy_commit_level        commit_level;
+  as_policy_replica             replica;
+  as_policy_gen                 gen;
+  as_policy_key                 key;
+  as_policy_exists              exists;
+  uint32_t                      retry;
+  uint32_t                      timeout;
+  uint16_t                      generation;
+} options_buffer;
+
+// ----------------------------------------------------------------------------------
+//
+// memory allocate error info
+//
+static const char * err_memory_info() {
+  return "[AerospikeC::Policy] Error while allocating memory for aerospike policy";
+}
+
+// ----------------------------------------------------------------------------------
+//
+// initialize buffer with default values
+//
+static void init_buffer(options_buffer * buffer) {
+  buffer->commit_level      = AS_POLICY_COMMIT_LEVEL_ALL;
+  buffer->consistency_level = AS_POLICY_CONSISTENCY_LEVEL_ONE;
+  buffer->replica           = AS_POLICY_REPLICA_MASTER;
+  buffer->gen               = AS_POLICY_GEN_IGNORE;
+  buffer->key               = AS_POLICY_KEY_DIGEST;
+  buffer->exists            = AS_POLICY_EXISTS_IGNORE;
+  buffer->retry             = 1;
+  buffer->timeout           = 1000;
+  buffer->generation        = 0;
+}
+
+// ----------------------------------------------------------------------------------
+//
+// parse options
+// set it into buffer
+// set instance variables
+//
+static void options2buffer(VALUE self, VALUE options, options_buffer * buffer) {
+  init_buffer(buffer);
+
+  VALUE option_tmp = rb_hash_aref(options, commit_level_sym);
+  if ( option_tmp != Qnil ) {
+    buffer->commit_level = FIX2INT(option_tmp);
+    rb_iv_set(self, "@commit_level", option_tmp);
+  }
+
+  option_tmp = rb_hash_aref(options, consistency_level_sym);
+  if ( option_tmp != Qnil ) {
+    buffer->consistency_level = FIX2INT(option_tmp);
+    rb_iv_set(self, "@consistency_level", option_tmp);
+  }
+
+  option_tmp = rb_hash_aref(options, replica_sym);
+  if ( option_tmp != Qnil ) {
+    buffer->replica = FIX2INT(option_tmp);
+    rb_iv_set(self, "@replica", option_tmp);
+  }
+
+  option_tmp = rb_hash_aref(options, gen_sym);
+  if ( option_tmp != Qnil ) {
+    buffer->gen = FIX2INT(option_tmp);
+    rb_iv_set(self, "@gen", option_tmp);
+  }
+
+  option_tmp = rb_hash_aref(options, key_sym);
+  if ( option_tmp != Qnil ) {
+    buffer->key = FIX2INT(option_tmp);
+    rb_iv_set(self, "@key", option_tmp);
+  }
+
+  option_tmp = rb_hash_aref(options, exists_sym);
+  if ( option_tmp != Qnil ) {
+    buffer->exists = FIX2INT(option_tmp);
+    rb_iv_set(self, "@exists", option_tmp);
+  }
+
+  option_tmp = rb_hash_aref(options, retry_sym);
+  if ( option_tmp != Qnil ) {
+    buffer->retry = FIX2INT(option_tmp);
+    rb_iv_set(self, "@retry", option_tmp);
+  }
+
+  option_tmp = rb_hash_aref(options, timeout_sym);
+  if ( option_tmp != Qnil ) {
+    buffer->timeout = FIX2INT(option_tmp);
+    rb_iv_set(self, "@timeout", option_tmp);
+  }
+
+  option_tmp = rb_hash_aref(options, generation_sym);
+  if ( option_tmp != Qnil ) {
+    buffer->generation = FIX2INT(option_tmp);
+    rb_iv_set(self, "@generation", option_tmp);
+  }
+}
+
+// ----------------------------------------------------------------------------------
+//
 // AerospikeC::ReadPolicy
 //
 //  * init,
@@ -19,39 +123,17 @@ static void free_policy_read(as_policy_read * policy) {
 
 static void init_policy_read(VALUE self, VALUE options) {
   as_policy_read * policy = (as_policy_read *) malloc (sizeof(as_policy_read));
+  if (! policy) rb_raise(rb_eRuntimeError, err_memory_info());
   as_policy_read_init(policy);
 
-  VALUE option_tmp;
+  options_buffer buffer;
+  options2buffer(self, options, &buffer);
 
-  option_tmp = rb_hash_aref(options, replica_sym);
-  if ( option_tmp != Qnil ) {
-    policy->replica = FIX2INT(option_tmp);
-    rb_iv_set(self, "@replica", option_tmp);
-  }
-
-  option_tmp = rb_hash_aref(options, consistency_level_sym);
-  if ( option_tmp != Qnil ) {
-    policy->consistency_level = FIX2INT(option_tmp);
-    rb_iv_set(self, "@consistency_level", option_tmp);
-  }
-
-  option_tmp = rb_hash_aref(options, key_sym);
-  if ( option_tmp != Qnil ) {
-    policy->key = FIX2INT(option_tmp);
-    rb_iv_set(self, "@key", option_tmp);
-  }
-
-  option_tmp = rb_hash_aref(options, retry_sym);
-  if ( option_tmp != Qnil ) {
-    policy->retry = FIX2INT(option_tmp);
-    rb_iv_set(self, "@retry", option_tmp);
-  }
-
-  option_tmp = rb_hash_aref(options, timeout_sym);
-  if ( option_tmp != Qnil ) {
-    policy->timeout = FIX2INT(option_tmp);
-    rb_iv_set(self, "@timeout", option_tmp);
-  }
+  policy->consistency_level = buffer.consistency_level;
+  policy->replica           = buffer.replica;
+  policy->key               = buffer.key;
+  policy->retry             = buffer.retry;
+  policy->timeout           = buffer.timeout;
 
   VALUE policy_struct = Data_Wrap_Struct(Policy, NULL, free_policy_read, policy);
 
@@ -82,45 +164,18 @@ static void free_policy_write(as_policy_write * policy) {
 
 static void init_policy_write(VALUE self, VALUE options) {
   as_policy_write * policy = (as_policy_write *) malloc (sizeof(as_policy_write));
+  if (! policy) rb_raise(rb_eRuntimeError, err_memory_info());
   as_policy_write_init(policy);
 
-  VALUE option_tmp;
+  options_buffer buffer;
+  options2buffer(self, options, &buffer);
 
-  option_tmp = rb_hash_aref(options, commit_level_sym);
-  if ( option_tmp != Qnil ) {
-    policy->commit_level = FIX2INT(option_tmp);
-    rb_iv_set(self, "@commit_level", option_tmp);
-  }
-
-  option_tmp = rb_hash_aref(options, exists_sym);
-  if ( option_tmp != Qnil ) {
-    policy->exists = FIX2INT(option_tmp);
-    rb_iv_set(self, "@exists", option_tmp);
-  }
-
-  option_tmp = rb_hash_aref(options, gen_sym);
-  if ( option_tmp != Qnil ) {
-    policy->gen = FIX2INT(option_tmp);
-    rb_iv_set(self, "@gen", option_tmp);
-  }
-
-  option_tmp = rb_hash_aref(options, key_sym);
-  if ( option_tmp != Qnil ) {
-    policy->key = FIX2INT(option_tmp);
-    rb_iv_set(self, "@key", option_tmp);
-  }
-
-  option_tmp = rb_hash_aref(options, retry_sym);
-  if ( option_tmp != Qnil ) {
-    policy->retry = FIX2INT(option_tmp);
-    rb_iv_set(self, "@retry", option_tmp);
-  }
-
-  option_tmp = rb_hash_aref(options, timeout_sym);
-  if ( option_tmp != Qnil ) {
-    policy->timeout = FIX2INT(option_tmp);
-    rb_iv_set(self, "@timeout", option_tmp);
-  }
+  policy->commit_level = buffer.commit_level;
+  policy->exists       = buffer.exists;
+  policy->gen          = buffer.gen;
+  policy->key          = buffer.key;
+  policy->retry        = buffer.retry;
+  policy->timeout      = buffer.timeout;
 
   VALUE policy_struct = Data_Wrap_Struct(Policy, NULL, free_policy_write, policy);
 
@@ -151,45 +206,18 @@ static void free_policy_remove(as_policy_remove * policy) {
 
 static void init_policy_remove(VALUE self, VALUE options) {
   as_policy_remove * policy = (as_policy_remove *) malloc (sizeof(as_policy_remove));
+  if (! policy) rb_raise(rb_eRuntimeError, err_memory_info());
   as_policy_remove_init(policy);
 
-  VALUE option_tmp;
+  options_buffer buffer;
+  options2buffer(self, options, &buffer);
 
-  option_tmp = rb_hash_aref(options, commit_level_sym);
-  if ( option_tmp != Qnil ) {
-    policy->commit_level = FIX2INT(option_tmp);
-    rb_iv_set(self, "@commit_level", option_tmp);
-  }
-
-  option_tmp = rb_hash_aref(options, gen_sym);
-  if ( option_tmp != Qnil ) {
-    policy->gen = FIX2INT(option_tmp);
-    rb_iv_set(self, "@gen", option_tmp);
-  }
-
-  option_tmp = rb_hash_aref(options, generation_sym);
-  if ( option_tmp != Qnil ) {
-    policy->generation = FIX2INT(option_tmp);
-    rb_iv_set(self, "@generation", option_tmp);
-  }
-
-  option_tmp = rb_hash_aref(options, key_sym);
-  if ( option_tmp != Qnil ) {
-    policy->key = FIX2INT(option_tmp);
-    rb_iv_set(self, "@key", option_tmp);
-  }
-
-  option_tmp = rb_hash_aref(options, retry_sym);
-  if ( option_tmp != Qnil ) {
-    policy->retry = FIX2INT(option_tmp);
-    rb_iv_set(self, "@retry", option_tmp);
-  }
-
-  option_tmp = rb_hash_aref(options, timeout_sym);
-  if ( option_tmp != Qnil ) {
-    policy->timeout = FIX2INT(option_tmp);
-    rb_iv_set(self, "@timeout", option_tmp);
-  }
+  policy->commit_level = buffer.commit_level;
+  policy->gen          = buffer.gen;
+  policy->generation   = buffer.generation;
+  policy->key          = buffer.key;
+  policy->retry        = buffer.retry;
+  policy->timeout      = buffer.timeout;
 
   VALUE policy_struct = Data_Wrap_Struct(Policy, NULL, free_policy_remove, policy);
 
