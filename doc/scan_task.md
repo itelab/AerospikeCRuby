@@ -20,6 +20,8 @@ With a new udf task, you can use any of the methods specified below:
   - [#progress](#progress)
   - [#status](#status)
 
+- [Priority](#priority)
+
 <a name="methods"></a>
 ## Methods
 
@@ -83,3 +85,17 @@ Possible statuses (self explanatory):
 - `AS_SCAN_STATUS_INPROGRESS`
 - `AS_SCAN_STATUS_ABORTED`
 - `AS_SCAN_STATUS_COMPLETED`
+
+
+<!--===============================================================================-->
+<br />
+<hr/>
+<!-- priority -->
+<a name="priority"></a>
+
+### Priority
+
+- `AerospikeC::ScanTask::AS_SCAN_PRIORITY_AUTO` - The cluster will auto adjust the scan priority.
+- `AerospikeC::ScanTask::AS_SCAN_PRIORITY_LOW` - Low priority scan.
+- `AerospikeC::ScanTask::AS_SCAN_PRIORITY_MEDIUM` - Medium priority scan.
+- `AerospikeC::ScanTask::AS_SCAN_PRIORITY_HIGH` - High priority scan.

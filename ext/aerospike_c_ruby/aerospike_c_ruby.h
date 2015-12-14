@@ -94,6 +94,7 @@
 #define generation_sym          ID2SYM(rb_intern("generation"))         // :generation
 #define policy_sym              ID2SYM(rb_intern("policy"))             // :policy
 #define apply_sym               ID2SYM(rb_intern("apply"))              // :apply
+#define priority_sym            ID2SYM(rb_intern("priority"))           // :priority
 
 #define as_val_int_2_val(val) INT2FIX( as_integer_get( as_integer_fromval(val) ) )          //(int)    as_val * -> VALUE
 #define as_val_str_2_val(val) rb_str_new2( as_string_tostring( as_string_fromval(val) ) )   //(string) as_val * -> VALUE

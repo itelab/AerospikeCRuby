@@ -756,6 +756,8 @@ Parameters:
 - `set` - set to scan
 - `options`:
 
+  - `:priority` - [AerospikeC::ScanTask priority](scan_task.md#priority)
+
   - @TODO options policy
 
 Return:
@@ -800,6 +802,8 @@ Parameters:
 - `udf_args`    - arguments passed to udf
 - `options`:
 
+  - `:priority` - [AerospikeC::ScanTask priority](scan_task.md#priority)
+
   - @TODO options policy
 
 Return:
@@ -843,6 +847,8 @@ Parameters:
 - `func_name`   - function name in module to execute
 - `udf_args`    - arguments passed to udf
 - `options`:
+
+  - `:priority` - [AerospikeC::ScanTask priority](scan_task.md#priority)
 
   - @TODO options policy
 

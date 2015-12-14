@@ -98,6 +98,14 @@ void init_aerospike_c_scan_task(VALUE AerospikeC) {
   ScanTask = rb_define_class_under(AerospikeC, "ScanTask", rb_cObject);
 
   //
+  // consts
+  //
+  rb_define_const(ScanTask, "AS_SCAN_PRIORITY_AUTO",    INT2FIX(AS_SCAN_PRIORITY_AUTO));
+  rb_define_const(ScanTask, "AS_SCAN_PRIORITY_LOW",     INT2FIX(AS_SCAN_PRIORITY_LOW));
+  rb_define_const(ScanTask, "AS_SCAN_PRIORITY_MEDIUM",  INT2FIX(AS_SCAN_PRIORITY_MEDIUM));
+  rb_define_const(ScanTask, "AS_SCAN_PRIORITY_HIGH",    INT2FIX(AS_SCAN_PRIORITY_HIGH));
+
+  //
   // methods
   //
   rb_define_method(ScanTask, "initialize", RB_FN_ANY()scan_initialize, 2);

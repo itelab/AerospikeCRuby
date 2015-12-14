@@ -72,7 +72,7 @@ Uses options:
 
 <!--===============================================================================-->
 <hr />
-<!-- remove_policy -->
+<!-- apply_policy -->
 <a name="apply_policy"></a>
 
 ### ApplyPolicy
