@@ -14,6 +14,8 @@ Policy classes:
 - [WritePolicy](#write_policy)
 - [ReadPolicy](#read_policy)
 - [RemovePolicy](#remove_policy)
+- [ApplyPolicy](#apply_policy)
+- [QueryPolicy](#query_policy)
 
 [Policy options:](#options)
 - [:commit_level](#commit_level)
@@ -80,6 +82,16 @@ Uses options:
 Uses options:
 - [:commit_level](#commit_level)
 - [:key](#key)
+- [:timeout](#timeout)
+
+<!--===============================================================================-->
+<hr />
+<!-- query_policy -->
+<a name="query_policy"></a>
+
+### QueryPolicy
+
+Uses options:
 - [:timeout](#timeout)
 
 

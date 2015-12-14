@@ -5,6 +5,7 @@ VALUE ReadPolicy;
 VALUE WritePolicy;
 VALUE RemovePolicy;
 VALUE ApplyPolicy;
+VALUE QueryPolicy;
 
 // ----------------------------------------------------------------------------------
 //
@@ -276,6 +277,43 @@ static VALUE apply_policy_initialize(int argc, VALUE * argv, VALUE self) {
 
 // ----------------------------------------------------------------------------------
 //
+// AerospikeC::QueryPolicy
+//
+//  * init,
+//  * free,
+//  * ruby initialize
+//
+static void free_policy_query(as_policy_query * policy) {
+  free(policy);
+}
+
+static void init_policy_query(VALUE self, VALUE options) {
+  as_policy_query * policy = (as_policy_query *) malloc (sizeof(as_policy_query));
+  if (! policy) rb_raise(rb_eRuntimeError, err_memory_info());
+  as_policy_query_init(policy);
+
+  options_buffer buffer;
+  options2buffer(self, options, &buffer);
+
+  policy->timeout = buffer.timeout;
+
+  VALUE policy_struct = Data_Wrap_Struct(Policy, NULL, free_policy_query, policy);
+
+  rb_iv_set(self, "policy", policy_struct);
+}
+
+static VALUE query_policy_initialize(int argc, VALUE * argv, VALUE self) {
+  VALUE options;
+
+  rb_scan_args(argc, argv, "01", &options);
+
+  VALUE super_args[2] = { query_sym, options };
+
+  rb_call_super(2, super_args);
+}
+
+// ----------------------------------------------------------------------------------
+//
 // AerospikeC::Policy
 //
 // initialize(type, options = {})
@@ -303,6 +341,9 @@ static VALUE policy_initialize(int argc, VALUE * argv, VALUE self) {
   }
   else if ( type == apply_sym ) {
     init_policy_apply(self, options);
+  }
+  else if ( type == query_sym ) {
+    init_policy_query(self, options);
   }
   else {
     rb_raise(rb_eRuntimeError, "[AerospikeC::Policy][initialize] unknown policy type");
@@ -383,4 +424,7 @@ void init_aerospike_c_policy(VALUE AerospikeC) {
 
   ApplyPolicy = rb_define_class_under(AerospikeC, "ApplyPolicy", Policy);
   rb_define_method(ApplyPolicy, "initialize", RB_FN_ANY()apply_policy_initialize, -1);
+
+  QueryPolicy = rb_define_class_under(AerospikeC, "QueryPolicy", Policy);
+  rb_define_method(QueryPolicy, "initialize", RB_FN_ANY()query_policy_initialize, -1);
 }

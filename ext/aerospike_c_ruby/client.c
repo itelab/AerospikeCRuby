@@ -1276,11 +1276,12 @@ static VALUE execute_query(VALUE self, VALUE query_obj) {
     rb_raise(rb_eRuntimeError, "[AerospikeC::Client][query] use AerospikeC::Query class to perform queries");
   }
 
-  as_query * query = query_obj2as_query(query_obj);
+  as_query * query         = query_obj2as_query(query_obj);
+  as_policy_query * policy = get_query_policy(query_obj);
 
   VALUE query_data = rb_ary_new();
 
-  if ( aerospike_query_foreach(as, &err, NULL, query, execute_query_callback, query_data) != AEROSPIKE_OK ) {
+  if ( aerospike_query_foreach(as, &err, policy, query, execute_query_callback, query_data) != AEROSPIKE_OK ) {
     destroy_query(query);
     raise_as_error(err);
   }
@@ -1359,14 +1360,15 @@ static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
 
   if ( NIL_P(udf_args) ) udf_args = rb_ary_new();
 
-  as_arraylist * args = array2as_list(udf_args);
-  as_query * query    = query_obj2as_query(query_obj);
+  as_arraylist * args      = array2as_list(udf_args);
+  as_query * query         = query_obj2as_query(query_obj);
+  as_policy_query * policy = get_query_policy(query_obj);
 
   as_query_apply(query, StringValueCStr(module_name), StringValueCStr(func_name), (as_list*)args);
 
   VALUE query_data = rb_ary_new();
 
-  if ( aerospike_query_foreach(as, &err, NULL, query, execute_udf_on_query_callback, query_data) != AEROSPIKE_OK ) {
+  if ( aerospike_query_foreach(as, &err, policy, query, execute_udf_on_query_callback, query_data) != AEROSPIKE_OK ) {
     destroy_query(query);
     as_arraylist_destroy(args);
     raise_as_error(err);

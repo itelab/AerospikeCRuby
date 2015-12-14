@@ -19,6 +19,7 @@ With a new operation, you can use any of the methods specified below:
   - [#namespace](#namespace)
   - [#set](#set)
   - [#bins](#bins)
+  - [#policy=](#policy=)
 
 <a name="methods"></a>
 ## Methods
@@ -130,3 +131,15 @@ Retruns instance `set`
 ### bins
 
 Retruns instance `bins`
+
+
+<!--===============================================================================-->
+<hr/>
+<!-- policy= -->
+<a name="policy="></a>
+
+### policy=(policy)
+
+Parameters:
+
+- `policy` - [AerospikeC::QueryPolicy](policy.md#query_policy) object

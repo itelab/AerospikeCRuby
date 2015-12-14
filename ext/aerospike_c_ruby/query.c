@@ -146,6 +146,26 @@ static VALUE add_bin(VALUE self, VALUE bin) {
 }
 
 // ----------------------------------------------------------------------------------
+//
+// policy=(policy)
+//
+// params:
+//   policy - AerospikeC::QueryPolicy
+//
+//  ------
+//  RETURN:
+//    1. bins
+//
+static VALUE set_policy(VALUE self, VALUE policy) {
+  if ( rb_funcall(policy, rb_intern("is_a?"), 1, QueryPolicy) == Qfalse )
+    rb_raise(rb_eRuntimeError, "[AerospikeC::Query][policy=] use AerospikeC::QueryPolicy as policy: %s", val_inspect(policy));
+
+  rb_iv_set(self, "@policy", policy);
+
+  return self;
+}
+
+// ----------------------------------------------------------------------------------
 // Init
 //
 void init_aerospike_c_query(VALUE AerospikeC) {
@@ -162,6 +182,7 @@ void init_aerospike_c_query(VALUE AerospikeC) {
   rb_define_method(Query, "range!", RB_FN_ANY()range, 3);
   rb_define_method(Query, "order_by!", RB_FN_ANY()order_by, 2);
   rb_define_method(Query, "bins<<", RB_FN_ANY()add_bin, 1);
+  rb_define_method(Query, "policy=", RB_FN_ANY()set_policy, 1);
 
   //
   // attr_accessor

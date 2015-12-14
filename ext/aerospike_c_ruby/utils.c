@@ -773,6 +773,9 @@ void * rb_policy2as_policy(VALUE rb_policy) {
   else if ( type == apply_sym ) {
     Data_Get_Struct(rb_iv_get(rb_policy, "policy"), as_policy_apply, policy);
   }
+  else if ( type == query_sym ) {
+    Data_Get_Struct(rb_iv_get(rb_policy, "policy"), as_policy_query, policy);
+  }
   else {
     rb_raise(rb_eRuntimeError, "[Utils][rb_policy2as_policy] unknown policy type: %s", val_inspect(type));
   }

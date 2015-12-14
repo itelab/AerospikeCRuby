@@ -143,3 +143,21 @@ void set_priority_options(as_scan * scan, VALUE options) {
     as_scan_set_priority(scan, FIX2INT(priority));
   }
 }
+
+// ----------------------------------------------------------------------------------
+//
+// get as_policy_query pointer from AerospikeC::Query object
+//
+as_policy_query * get_query_policy(VALUE query_obj) {
+  as_policy_query * policy;
+
+  VALUE rb_policy = rb_iv_get(query_obj, "@policy");
+
+  if ( rb_policy != Qnil ) {
+    Data_Get_Struct(rb_iv_get(rb_policy, "policy"), as_policy_query, policy);
+    return policy;
+  }
+  else {
+    return NULL;
+  }
+}
