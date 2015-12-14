@@ -1180,7 +1180,8 @@ static VALUE execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
 //   func_name - string, function name in module to execute
 //   udf_args - arguments passed to udf
 //   options:
-//     - priority - scan priority
+//     - priority: scan priority
+//     - policy: AerospikeC::Policy for read
 //
 //  ------
 //  RETURN:
@@ -1210,6 +1211,7 @@ static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) 
   }
 
   as_arraylist * args = array2as_list(udf_args);
+  as_policy_write * policy = get_policy(options);
 
   as_scan scan;
   as_scan_init(&scan, StringValueCStr(ns), StringValueCStr(set));
@@ -1218,7 +1220,7 @@ static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) 
 
   uint64_t scanid = 0;
 
-  if ( aerospike_scan_background(as, &err, NULL, &scan, &scanid) != AEROSPIKE_OK ) {
+  if ( aerospike_scan_background(as, &err, policy, &scan, &scanid) != AEROSPIKE_OK ) {
     raise_as_error(err);
   }
 

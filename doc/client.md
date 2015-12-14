@@ -850,7 +850,7 @@ Parameters:
 
   - `:priority` - [AerospikeC::ScanTask priority](scan_task.md#priority)
 
-  - @TODO options policy
+  - `:policy` - [AerospikeC::WritePolicy](policy.md#write_policy) object
 
 Return:
 
