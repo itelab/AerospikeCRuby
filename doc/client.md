@@ -747,7 +747,7 @@ client.execute_udf(key, "hello", "hello_world") # => "hello_world"
 ### scan(ns, set, options = {})
 
 Scan records in specified namespace and set.
-Multiple threads will likely be calling the callback in parallel so return data won't be sorted.
+
 Aerospike reference: http://www.aerospike.com/docs/guide/scan.html
 
 Parameters:
@@ -790,7 +790,7 @@ client.scan("test", "scan_test")
 `alias: scan_udf`
 
 Scan records in specified namespace and set and apply udf on each record scanned.
-Multiple threads will likely be calling the callback in parallel so return data won't be sorted.
+
 Aerospike reference: http://www.aerospike.com/docs/guide/scan.html
 
 Parameters:
@@ -878,7 +878,7 @@ end
 ### query(query_obj)
 
 Simple query execution.
-Multiple threads will likely be calling the callback in parallel so return data won't be sorted.
+
 
 Parameters:
 
@@ -926,7 +926,7 @@ client.query(q_range) # => [{"int_bin" => 8}, {"int_bin" => 9}, {"int_bin" => 10
 `alias: aggregate`
 
 Execute udf on query (aka aggregation).
-Multiple threads will likely be calling the callback in parallel so return data won't be sorted.
+
 Aerospike reference:
 - http://www.aerospike.com/docs/guide/aggregation.html
 - http://www.aerospike.com/docs/udf/developing_stream_udfs.html

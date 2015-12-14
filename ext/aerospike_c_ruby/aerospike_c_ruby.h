@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
 
 #include <aerospike/aerospike.h>
 #include <aerospike/aerospike_index.h>
@@ -187,5 +188,7 @@ extern VALUE ReadPolicy;
 extern VALUE RemovePolicy;
 extern VALUE ApplyPolicy;
 extern VALUE QueryPolicy;
+
+extern pthread_mutex_t G_CALLBACK_MUTEX;
 
 #endif // AEROSPIKE_C_RUBY_H

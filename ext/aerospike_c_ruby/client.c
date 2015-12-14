@@ -4,6 +4,11 @@
 VALUE Client;
 VALUE Logger;
 
+//
+// Aerospike queries and scans callback runs in parallel
+// Better not touch ruby api inside threads...
+//
+pthread_mutex_t G_CALLBACK_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 
 // ----------------------------------------------------------------------------------
 //
@@ -1043,15 +1048,17 @@ static VALUE execute_udf(int argc, VALUE * argv, VALUE self) {
 //
 bool scan_records_callback(const as_val * val, VALUE scan_data) {
   if ( val == NULL ) {
-    log_info("scan_records_callback end");
     return true;
   }
 
   as_record * record = as_rec_fromval(val);
 
+  pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
+
   VALUE rec = record2hash(record);
-  // log_debug(val_inspect(rec));
   rb_ary_push(scan_data, rec);
+
+  pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
 
   return true;
 }
@@ -1239,14 +1246,17 @@ static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) 
 //
 bool execute_query_callback(as_val * val, VALUE query_data) {
   if ( val == NULL ) {
-    log_info("scan_records_callback end");
     return true;
   }
 
   as_record * record = as_rec_fromval(val);
 
+  pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
+
   VALUE rec = record2hash(record);
   rb_ary_push(query_data, rec);
+
+  pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
 
   return true;
 }
