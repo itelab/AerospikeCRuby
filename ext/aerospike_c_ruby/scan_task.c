@@ -89,6 +89,7 @@ static VALUE is_completed(VALUE self) {
 }
 
 // ----------------------------------------------------------------------------------
+//
 // Init
 //
 void init_aerospike_c_scan_task(VALUE AerospikeC) {

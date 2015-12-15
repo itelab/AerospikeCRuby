@@ -32,4 +32,5 @@ void Init_aerospike_c_ruby() {
   init_aerospike_c_query(AerospikeC);
   init_aerospike_c_query_task(AerospikeC);
   init_aerospike_c_policy(AerospikeC);
+  init_aerospike_c_llist(AerospikeC);
 }

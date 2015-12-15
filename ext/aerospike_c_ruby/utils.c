@@ -89,7 +89,6 @@ void raise_as_error(as_error err) {
 // convert as_record to ruby hash
 //
 VALUE record2hash(as_record * rec) {
-  as_arraylist * tmp_list;
   VALUE hash = rb_hash_new();
 
   as_record_iterator it;
@@ -182,8 +181,6 @@ as_arraylist * array2as_list(VALUE ary) {
 // convert as_list to ruby array
 //
 VALUE as_list2array(as_arraylist * list) {
-  as_arraylist * tmp_list;
-
   as_arraylist_iterator it;
   as_arraylist_iterator_init(&it, list);
 
@@ -552,6 +549,66 @@ VALUE as_val2rb_val(as_val * value) {
 
 // ----------------------------------------------------------------------------------
 //
+// VALUE -> as_val
+//
+as_val * rb_val2as_val(VALUE value) {
+  switch( TYPE(value) ) {
+    case T_NIL:
+      return NULL;
+      break;
+
+    case T_FIXNUM:
+      return as_integer_new(FIX2LONG(value));
+      break;
+
+    case T_STRING:
+      return as_string_new(StringValueCStr(value), false);
+      break;
+
+    case T_ARRAY:
+      return array2as_list(value);
+      break;
+
+    case T_HASH:
+      return hash2as_hashmap(value);
+      break;
+
+    default:
+      rb_raise(rb_eRuntimeError, "[Utils][rb_val2as_val] Unsupported alue type: %s", rb_val_type_as_str(value));
+      break;
+  }
+}
+
+void as_val_free(as_val * value) {
+  switch ( as_val_type(value) ) {
+    case AS_NIL:
+      return;
+      break;
+
+    case AS_INTEGER:
+      as_integer_destroy( as_integer_fromval(value) );
+      break;
+
+    case AS_STRING:
+      as_string_destroy( as_string_fromval(value) );
+      break;
+
+    case AS_LIST:
+      as_list_destroy( as_list_fromval(value) );
+      break;
+
+    case AS_MAP:
+      as_map_destroy( as_map_fromval(value) );
+      break;
+
+    case AS_DOUBLE:
+      as_double_destroy( as_double_fromval(value) );
+      break;
+  }
+}
+
+// ----------------------------------------------------------------------------------
+//
 // call ruby inspect on val, and convert it into char *
 //
 char * val_inspect(VALUE val) {
@@ -781,4 +838,19 @@ void * rb_policy2as_policy(VALUE rb_policy) {
   }
 
   return policy;
+}
+
+// ----------------------------------------------------------------------------------
+//
+// get policy pointer if options policy given
+//
+void * get_policy(VALUE options) {
+  VALUE option_tmp = rb_hash_aref(options, policy_sym);
+
+  if ( rb_funcall(option_tmp, rb_intern("is_a?"), 1, Policy) == Qtrue ) {
+    return rb_policy2as_policy(option_tmp);
+  }
+  else {
+    return NULL;
+  }
 }

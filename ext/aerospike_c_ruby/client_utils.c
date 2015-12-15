@@ -31,21 +31,6 @@ VALUE check_with_header(VALUE bins, VALUE options, as_record * rec) {
 
 // ----------------------------------------------------------------------------------
 //
-// get policy pointer if options policy given
-//
-void * get_policy(VALUE options) {
-  VALUE option_tmp = rb_hash_aref(options, policy_sym);
-
-  if ( rb_funcall(option_tmp, rb_intern("is_a?"), 1, Policy) == Qtrue ) {
-    return rb_policy2as_policy(option_tmp);
-  }
-  else {
-    return NULL;
-  }
-}
-
-// ----------------------------------------------------------------------------------
-//
 // init config with options
 //
 void options2config(as_config * config, VALUE options) {

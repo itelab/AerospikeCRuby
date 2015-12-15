@@ -33,6 +33,7 @@ static void client_initialize(int argc, VALUE * argv, VALUE self) {
   as_config_add_host(&config, StringValueCStr(host), FIX2INT(port));
 
   options2config(&config, options);
+  rb_iv_set(self, "@options", options);
 
   aerospike * as = aerospike_new(&config);
 
@@ -1025,6 +1026,8 @@ static VALUE execute_udf(int argc, VALUE * argv, VALUE self) {
   as_val * res = NULL;
 
   if ( ( status = aerospike_key_apply(as, &err, policy, k, StringValueCStr(module_name), StringValueCStr(func_name), (as_list *)args, &res) ) != AEROSPIKE_OK ) {
+    as_arraylist_destroy(args);
+
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
       log_warn("[AerospikeC::Client][execute_udf] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
@@ -1473,6 +1476,32 @@ static VALUE close_connection(VALUE self) {
 
 // ----------------------------------------------------------------------------------
 //
+// creates new AerospikeC::Llist instance
+//
+// def llist(key, bin_name, options = {})
+//
+// params:
+//   key - AerospikeC::Key object
+//   bin_name - name of the bin to contain the ldt
+//
+//  ------
+//  RETURN:
+//    1. new AerospikeC::Llist object
+//
+static VALUE llist(int argc, VALUE * argv, VALUE self) {
+  VALUE key;
+  VALUE bin_name;
+  VALUE options;
+
+  rb_scan_args(argc, argv, "21", &key, &bin_name, &options);
+
+  if ( NIL_P(options) ) options = rb_hash_new(); // default options
+
+  return rb_funcall(Llist, rb_intern("new"), 4, self, key, bin_name, options);
+}
+
+// ----------------------------------------------------------------------------------
+//
 // Init
 //
 void init_aerospike_c_client(VALUE AerospikeC) {
@@ -1525,6 +1554,9 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   rb_define_method(Client, "query", RB_FN_ANY()execute_query, 1);
   rb_define_method(Client, "execute_udf_on_query", RB_FN_ANY()execute_udf_on_query, -1);
   rb_define_method(Client, "background_execute_udf_on_query", RB_FN_ANY()background_execute_udf_on_query, -1);
+
+  // llist
+  rb_define_method(Client, "llist", RB_FN_ANY()llist, -1);
 
   //
   // aliases
