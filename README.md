@@ -26,6 +26,7 @@ AerospikeCRuby is an aerospike library using aerospike-c-client wrapped into rub
 - udfs
 - scans (including background tasks)
 - queries (aka aggregations, including background tasks)
+- large lists (ldt)
 
 #### Bin info:
 - Bin names can be anything that responds to `to_s`, except `nil`
@@ -39,7 +40,6 @@ AerospikeCRuby is an aerospike library using aerospike-c-client wrapped into rub
 - Nested values like `[[1, 2], {"h1" => {"h2" => 2}}]` possible
 
 #### Major TODOs:
-- Large Data Types
 - Bytes support (and object values mapping)
 - Response types (hashes or expanded objects)
 - More Policies

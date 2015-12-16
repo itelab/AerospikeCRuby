@@ -158,17 +158,31 @@ puts llist.scan.inspect
 #
 # filter
 #
+# puts "-------------------------------"
+# puts "-> filter:"
+# puts llist.filter("my_filter_func", [4]).inspect
+# puts llist.scan.inspect
+
+
+###################################################################
+#
+# workaround for: https://discuss.aerospike.com/t/parsing-record-with-ldt/2264/2
+#
 puts "-------------------------------"
-puts "-> filter:"
-puts llist.filter("my_filter_func", [4]).inspect
+puts "-> workaround:"
+bins = client.get(key)
+puts bins
+puts "-------------------------------"
+puts bins["some_bin_name"].inspect
+new_llist = bins["some_bin_name"].llist
+new_llist.add({"key" => 5, "next" => "next_val"})
+
+puts "-------------------------------"
 puts llist.scan.inspect
 
 ###################################################################
 #
 # cleanup
 #
-puts "-------------------------------"
-puts "-> bug?"
-puts client.get(key)
 client.delete(key)
-
+client.drop_udf("llist_conf_udf.lua")

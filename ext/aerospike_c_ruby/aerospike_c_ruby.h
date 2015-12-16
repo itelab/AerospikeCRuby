@@ -99,6 +99,7 @@
 #define priority_sym            ID2SYM(rb_intern("priority"))           // :priority
 #define query_sym               ID2SYM(rb_intern("query"))              // :query
 #define module_sym              ID2SYM(rb_intern("module"))             // :module
+#define ldt_proxy_sym           ID2SYM(rb_intern("ldt_proxy"))          // :ldt_proxy
 
 #define as_val_int_2_val(val) INT2FIX( as_integer_get( as_integer_fromval(val) ) )          //(int)    as_val * -> VALUE
 #define as_val_str_2_val(val) rb_str_new2( as_string_tostring( as_string_fromval(val) ) )   //(string) as_val * -> VALUE
@@ -110,6 +111,8 @@
 
 #define rb_foreach_ary_int(ary) for(int i = 0; i < rb_ary_len_int(ary); ++i)
 #define rb_foreach_ary_long(ary) for(long i = 0; i < rb_ary_len_long(ary); ++i)
+
+#define RB_LLIST_WORAROUND_BIN rb_str_new2("_rblliststat_")
 
 
 // ---------------------------------------------------
@@ -124,6 +127,7 @@ void init_aerospike_c_scan_task(VALUE AerospikeC);  // scan_task.c
 void init_aerospike_c_query(VALUE AerospikeC);      // query.c
 void init_aerospike_c_policy(VALUE AerospikeC);     // policy.c
 void init_aerospike_c_llist(VALUE AerospikeC);      // llist.c
+void init_aerospike_c_ldt_proxy(VALUE AerospikeC);  // ldt_proxy.c
 
 // query_task.c
 void init_aerospike_c_query_task(VALUE AerospikeC);
@@ -207,6 +211,7 @@ extern VALUE ApplyPolicy;
 extern VALUE QueryPolicy;
 
 extern VALUE Llist;
+extern VALUE LdtProxy;
 
 extern pthread_mutex_t G_CALLBACK_MUTEX;
 

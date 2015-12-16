@@ -33,7 +33,7 @@ VALUE check_with_header(VALUE bins, VALUE options, as_record * rec) {
 //
 // init config with options
 //
-void options2config(as_config * config, VALUE options) {
+void options2config(as_config * config, VALUE options, VALUE self) {
   VALUE option_tmp = rb_hash_aref(options, hosts_sym);
   if ( option_tmp != Qnil ) { // hosts
     if ( TYPE(option_tmp) != T_ARRAY )
@@ -115,6 +115,17 @@ void options2config(as_config * config, VALUE options) {
 
   option_tmp = rb_hash_aref(options, logger_sym);
   if ( option_tmp != Qnil ) Logger = option_tmp; // logger
+
+  option_tmp = rb_hash_aref(options, ldt_proxy_sym);
+  if ( option_tmp != Qnil ) { // ldt_proxy
+    if ( TYPE(option_tmp) != T_TRUE && TYPE(option_tmp) != T_FALSE )
+      rb_raise(rb_eRuntimeError, "[AerospikeC::Client][initialize] options :ldt_proxy must be true/false");
+
+    rb_iv_set(self, "@ldt_proxy", option_tmp);
+  }
+  else {
+    rb_iv_set(self, "@ldt_proxy", Qtrue);
+  }
 }
 
 // ----------------------------------------------------------------------------------
@@ -144,5 +155,24 @@ as_policy_query * get_query_policy(VALUE query_obj) {
   }
   else {
     return NULL;
+  }
+}
+
+// ----------------------------------------------------------------------------------
+//
+// workaround for: https://discuss.aerospike.com/t/parsing-record-with-ldt/2264/2
+//
+void check_for_llist_workaround(VALUE self, VALUE key, VALUE hash) {
+  if ( rb_iv_get(self, "@ldt_proxy") != Qtrue ) return;
+
+  VALUE rblliststat = rb_hash_aref(hash, RB_LLIST_WORAROUND_BIN);
+
+  if ( rblliststat == Qnil ) return;
+
+  rb_foreach_ary_int(rblliststat) {
+    VALUE bin_name = rb_ary_entry(rblliststat, i);
+    VALUE llist    = rb_funcall(LdtProxy, rb_intern("new"), 3, self, key, bin_name);
+
+    rb_hash_aset(hash, bin_name, llist);
   }
 }

@@ -32,7 +32,7 @@ static void client_initialize(int argc, VALUE * argv, VALUE self) {
   as_config_init(&config);
   as_config_add_host(&config, StringValueCStr(host), FIX2INT(port));
 
-  options2config(&config, options);
+  options2config(&config, options, self);
   rb_iv_set(self, "@options", options);
 
   aerospike * as = aerospike_new(&config);
@@ -213,6 +213,8 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
   bins = check_with_header(bins, options, rec);
 
   as_record_destroy(rec);
+
+  check_for_llist_workaround(self, key, bins);
 
   log_info("[AerospikeC::Client][get] success");
 

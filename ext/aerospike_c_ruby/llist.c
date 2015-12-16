@@ -31,12 +31,43 @@ static aerospike * llist_key_struct(VALUE self) {
 //
 // unwrap Llist VALUE struct into as_ldt *
 //
-as_ldt * get_ldt_struct(VALUE self) {
+static as_ldt * get_ldt_struct(VALUE self) {
   as_ldt * ldt;
   Data_Get_Struct(rb_iv_get(self, "as_ldt"), as_ldt, ldt);
   return ldt;
 }
 
+// ----------------------------------------------------------------------------------
+//
+// workaround for: https://discuss.aerospike.com/t/parsing-record-with-ldt/2264/2
+//
+static void add_llist_status_bins_workaround(VALUE client, VALUE key, VALUE bin_name) {
+  if ( rb_iv_get(client, "@ldt_proxy") != Qtrue ) return;
+
+  VALUE llist_status_ary      = rb_ary_new();
+  VALUE llist_status_bin_name = RB_LLIST_WORAROUND_BIN;
+
+  rb_ary_push(llist_status_ary, llist_status_bin_name);
+
+  VALUE rblliststatus = rb_funcall(client, rb_intern("get"), 2, key, llist_status_ary);
+
+  VALUE status = rb_hash_aref(rblliststatus, llist_status_bin_name);
+
+  if ( status == Qnil ) {
+    llist_status_ary = rb_ary_new();
+    rb_ary_push(llist_status_ary, bin_name);
+    rb_hash_aset(rblliststatus, llist_status_bin_name, llist_status_ary);
+
+    rb_funcall(client, rb_intern("put"), 2, key, rblliststatus);
+  }
+  else {
+    if ( rb_funcall(status, rb_intern("include?"), 1, bin_name) == Qfalse ) {
+      rb_ary_push(status, bin_name);
+      rb_hash_aset(rblliststatus, llist_status_bin_name, status);
+      rb_funcall(client, rb_intern("put"), 2, key, rblliststatus);
+    }
+  }
+}
 
 // ----------------------------------------------------------------------------------
 //
@@ -114,6 +145,8 @@ static VALUE llist_add(int argc, VALUE * argv, VALUE self) {
 
   as_val_free(val);
 
+  add_llist_status_bins_workaround(rb_iv_get(self, "@client"), rb_iv_get(self, "@key"), rb_iv_get(self, "@bin_name"));
+
   return Qtrue;
 }
 
@@ -151,6 +184,8 @@ static VALUE llist_add_all(int argc, VALUE * argv, VALUE self) {
   }
 
   as_arraylist_destroy(vals);
+
+  add_llist_status_bins_workaround(rb_iv_get(self, "@client"), rb_iv_get(self, "@key"), rb_iv_get(self, "@bin_name"));
 
   return Qtrue;
 }

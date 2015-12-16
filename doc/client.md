@@ -54,6 +54,9 @@ With a new client, you can use any of the methods specified below:
     - [#execute_udf_on_query](#execute_udf_on_query)
     - [#background_execute_udf_on_query](#background_execute_udf_on_query)
 
+  - Large Data Type:
+    - [#llist](#llist)
+
 
 <a name="methods"></a>
 ## Methods
@@ -91,6 +94,8 @@ Parameters:
   - `:thread_pool_size` - number of threads stored in underlying thread pool that is used in batch/scan/query commands. These commands are often sent to multiple server nodes in parallel threads. A thread pool improves performance because threads do not have to be created/destroyed for each command. Calculate your value using the following formula: <b>thread_pool_size = (concurrent batch/scan/query commands) * (server nodes)</b>, `default: 16`
 
   - `:max_threads` - estimate of incoming threads concurrently using synchronous methods in the client instance. This field is used to size the synchronous connection pool for each server node, `default: 300`
+
+  - `:ldt_proxy` - usage of [AerospikeC::LdtProxy](llist.md#workaround_note), `default: true`
 
 Example:
 
@@ -1090,4 +1095,31 @@ q_range.range!("int_bin", 8, 10)
 query_task = client.background_execute_udf_on_query(q_range, "aggregate_udf", "mycount")
 query_task.wait_till_completed
 query_task.done? # => true
+```
+
+
+<!--===============================================================================-->
+<hr/>
+<!-- llist -->
+<a name="llist"></a>
+
+### llist(key, bin_name, options = {})
+
+Create new [Aerospike::Llist](llist.md) object
+
+Parameters:
+
+- `key` - [AerospikeC::Key](key.md) object
+- `bin_name` - bin name to save llist under
+- `options`:
+  - `:module` - configurator udf module name: http://www.aerospike.com/docs/guide/ldt_advanced.html
+
+Example:
+```ruby
+client = AerospikeC::Client.new("127.0.0.1", 3000)
+key    = AerospikeC::Key.new("test", "test", "llist")
+bin_name = "some_bin_name"
+
+llist = client.llist(key, bin_name)
+# => #<AerospikeC::Llist:0x00000000ce67b0 @bin_name="some_bin_name", @client=#<AerospikeC::Client:0x00000000ce6e68 @host="127.0.0.1", @port=3000, @last_scan_id=nil, @last_query_id=nil, @ldt_proxy=true, @options={}>, @key=#<AerospikeC::Key:0x00000000ce6b70 @namespace="test", @set="test", @key="llist">>
 ```
