@@ -17,7 +17,7 @@ static VALUE query_initialize(int argc, VALUE * argv, VALUE self) {
     bins = rb_ary_new();
   }
   else {
-    if ( TYPE(bins) != T_ARRAY) rb_raise(rb_eRuntimeError, "[AerospikeC::Query][initialize] bins must be an array: %s", rb_val_type_as_str(bins));
+    if ( TYPE(bins) != T_ARRAY) rb_raise(OptionError, "[AerospikeC::Query][initialize] bins must be an array: %s", rb_val_type_as_str(bins));
   }
 
   rb_iv_set(self, "@namespace", value_to_s(ns));
@@ -55,7 +55,7 @@ static VALUE eql(VALUE self, VALUE bin, VALUE value) {
       break;
 
     default:
-      rb_raise(rb_eRuntimeError, "[AerospikeC::Query][eql] Unsuporrted value type: %s", rb_val_type_as_str(value));
+      rb_raise(OptionError, "[AerospikeC::Query][eql] Unsuporrted value type: %s", rb_val_type_as_str(value));
       break;
   }
 
@@ -78,8 +78,8 @@ static VALUE eql(VALUE self, VALUE bin, VALUE value) {
 //    1. self (can chain methods)
 //
 static VALUE range(VALUE self, VALUE bin, VALUE min, VALUE max) {
-  if ( TYPE(min) != T_FIXNUM ) rb_raise(rb_eRuntimeError, "[AerospikeC::Query][range] min must be integer");
-  if ( TYPE(max) != T_FIXNUM ) rb_raise(rb_eRuntimeError, "[AerospikeC::Query][range] max must be integer");
+  if ( TYPE(min) != T_FIXNUM ) rb_raise(OptionError, "[AerospikeC::Query][range] min must be integer");
+  if ( TYPE(max) != T_FIXNUM ) rb_raise(OptionError, "[AerospikeC::Query][range] max must be integer");
 
   VALUE filter = rb_hash_new();
 
@@ -107,7 +107,7 @@ static VALUE range(VALUE self, VALUE bin, VALUE min, VALUE max) {
 //
 static VALUE order_by(VALUE self, VALUE bin, VALUE order) {
   if ( order != asc_sym && order != desc_sym ) {
-    rb_raise(rb_eRuntimeError, "[AerospikeC::Query][order_by] order value: %s, should be :desc or :asc", val_inspect(order));
+    rb_raise(OptionError, "[AerospikeC::Query][order_by] order value: %s, should be :desc or :asc", val_inspect(order));
   }
 
   VALUE q_order = rb_iv_get(self, "@order");
@@ -158,7 +158,7 @@ static VALUE add_bin(VALUE self, VALUE bin) {
 //
 static VALUE set_policy(VALUE self, VALUE policy) {
   if ( rb_funcall(policy, rb_intern("is_a?"), 1, QueryPolicy) == Qfalse )
-    rb_raise(rb_eRuntimeError, "[AerospikeC::Query][policy=] use AerospikeC::QueryPolicy as policy: %s", val_inspect(policy));
+    rb_raise(OptionError, "[AerospikeC::Query][policy=] use AerospikeC::QueryPolicy as policy: %s", val_inspect(policy));
 
   rb_iv_set(self, "@policy", policy);
 

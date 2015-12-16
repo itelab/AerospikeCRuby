@@ -86,7 +86,7 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
   VALUE option_tmp = rb_hash_aref(options, ttl_sym);
   if ( option_tmp != Qnil ) {
     if ( TYPE(option_tmp) != T_FIXNUM ) { // check ttl option
-      rb_raise(rb_eRuntimeError, "[AerospikeC::Client][put] ttl must be an integer, options: %s", val_inspect(options));
+      rb_raise(OptionError, "[AerospikeC::Client][put] ttl must be an integer, options: %s", val_inspect(options));
     }
   }
   else {
@@ -171,7 +171,7 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
   // read specific bins
   if ( specific_bins != Qnil && rb_ary_len_int(specific_bins) > 0 ) {
     if ( TYPE(specific_bins) != T_ARRAY ) {
-      rb_raise(rb_eRuntimeError, "[AerospikeC::Client][get] specific_bins must be an Array");
+      rb_raise(OptionError, "[AerospikeC::Client][get] specific_bins must be an Array");
     }
 
     char ** inputArray = rb_array2inputArray(specific_bins); // convert ruby array to char **
@@ -425,7 +425,7 @@ static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
     specific_bins = Qnil;
   }
   else {
-    if ( TYPE(specific_bins) != T_ARRAY ) rb_raise(rb_eRuntimeError, "[AerospikeC::Client][batch_get] specific_bins must be an Array");
+    if ( TYPE(specific_bins) != T_ARRAY ) rb_raise(OptionError, "[AerospikeC::Client][batch_get] specific_bins must be an Array");
 
     bin_names   = rb_array2bin_names(specific_bins);
     n_bin_names = rb_ary_len_long(specific_bins);
@@ -534,7 +534,7 @@ static VALUE touch(int argc, VALUE * argv, VALUE self) {
   }
   else {
     if ( TYPE(rb_hash_aref(options, ttl_sym)) != T_FIXNUM ) { // check ttl option
-      rb_raise(rb_eRuntimeError, "[AerospikeC::Client][put] ttl must be an integer");
+      rb_raise(OptionError, "[AerospikeC::Client][put] ttl must be an integer");
     }
   }
 
@@ -593,7 +593,7 @@ static VALUE operate(VALUE self, VALUE key, VALUE operations) {
 
   VALUE is_aerospike_c_operation = rb_funcall(operations, rb_intern("is_a?"), 1, Operation);
   if ( is_aerospike_c_operation != Qtrue ) {
-    rb_raise(rb_eRuntimeError, "[AerospikeC::Client][operate] use AerospikeC::Operation class to perform operations");
+    rb_raise(OptionError, "[AerospikeC::Client][operate] use AerospikeC::Operation class to perform operations");
   }
 
   VALUE rb_ops = rb_iv_get(operations, "@operations");
@@ -641,7 +641,7 @@ static VALUE operate(VALUE self, VALUE key, VALUE operations) {
       }
     }
     else {
-      rb_raise(rb_eRuntimeError, "[AerospikeC::Client][operate] uknown operation type: %s", val_inspect(operation_type));
+      rb_raise(ParseError, "[AerospikeC::Client][operate] uknown operation type: %s", val_inspect(operation_type));
     }
   }
 
@@ -723,11 +723,11 @@ static VALUE create_index(int argc, VALUE * argv, VALUE self) {
     d_type = AS_INDEX_STRING;
   }
   else {
-    rb_raise(rb_eRuntimeError, "[AerospikeC::Client][create_index] data_type must be :string or :numeric");
+    rb_raise(OptionError, "[AerospikeC::Client][create_index] data_type must be :string or :numeric");
   }
 
   as_index_task * task = (as_index_task *) malloc( sizeof(as_index_task) );
-  if (! task) rb_raise(rb_eRuntimeError, "[AerospikeC::Client][create_index] Error while allocating memory for aerospike task");
+  if (! task) rb_raise(MemoryError, "[AerospikeC::Client][create_index] Error while allocating memory for aerospike task");
 
 
   if ( aerospike_index_create(as, &err, task, NULL, StringValueCStr(ns), StringValueCStr(set),
@@ -847,15 +847,15 @@ static VALUE register_udf(int argc, VALUE * argv, VALUE self) {
     language = lua_sym;
   }
   else {
-    if ( language != lua_sym ) rb_raise(rb_eRuntimeError, "[AerospikeC::Client][register_udf] in aerospike-c-client v3.1.24, only lua language is available");
+    if ( language != lua_sym ) rb_raise(OptionError, "[AerospikeC::Client][register_udf] in aerospike-c-client v3.1.24, only lua language is available");
   }
 
   FILE* file = fopen(StringValueCStr(path_to_file), "r");
 
-  if (! file) rb_raise(rb_eRuntimeError, "[AerospikeC::Client][register_udf] Cannot read udf from given path: %s", StringValueCStr(path_to_file));
+  if (! file) rb_raise(OptionError, "[AerospikeC::Client][register_udf] Cannot read udf from given path: %s", StringValueCStr(path_to_file));
 
   uint8_t * content = (uint8_t *) malloc(1024 * 1024);
-  if (! content) rb_raise(rb_eRuntimeError, "[AerospikeC::Client][register_udf] Error while allocating memory for udf file content");
+  if (! content) rb_raise(MemoryError, "[AerospikeC::Client][register_udf] Error while allocating memory for udf file content");
 
   // read the file content into a local buffer
   uint8_t * p_write = content;
@@ -1288,7 +1288,7 @@ static VALUE execute_query(VALUE self, VALUE query_obj) {
 
   VALUE is_aerospike_c_query_obj = rb_funcall(query_obj, rb_intern("is_a?"), 1, Query);
   if ( is_aerospike_c_query_obj != Qtrue ) {
-    rb_raise(rb_eRuntimeError, "[AerospikeC::Client][query] use AerospikeC::Query class to perform queries");
+    rb_raise(OptionError, "[AerospikeC::Client][query] use AerospikeC::Query class to perform queries");
   }
 
   as_query * query         = query_obj2as_query(query_obj);
@@ -1325,7 +1325,7 @@ bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
       break;
 
     case AS_UNDEF:
-      rb_raise(rb_eRuntimeError, "[AerospikeC::Client][execute_udf_on_query_callback] undef");
+      rb_raise(ParseError, "[AerospikeC::Client][execute_udf_on_query_callback] undef");
       break;
 
     default:
@@ -1370,7 +1370,7 @@ static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
 
   VALUE is_aerospike_c_query_obj = rb_funcall(query_obj, rb_intern("is_a?"), 1, Query);
   if ( is_aerospike_c_query_obj != Qtrue ) {
-    rb_raise(rb_eRuntimeError, "[AerospikeC::Client][execute_udf_on_query] use AerospikeC::Query class to perform queries");
+    rb_raise(OptionError, "[AerospikeC::Client][execute_udf_on_query] use AerospikeC::Query class to perform queries");
   }
 
   if ( NIL_P(udf_args) ) udf_args = rb_ary_new();
@@ -1426,7 +1426,7 @@ static VALUE background_execute_udf_on_query(int argc, VALUE * argv, VALUE self)
 
   VALUE is_aerospike_c_query_obj = rb_funcall(query_obj, rb_intern("is_a?"), 1, Query);
   if ( is_aerospike_c_query_obj != Qtrue ) {
-    rb_raise(rb_eRuntimeError, "[AerospikeC::Client][background_execute_udf_on_query] use AerospikeC::Query class to perform queries");
+    rb_raise(OptionError, "[AerospikeC::Client][background_execute_udf_on_query] use AerospikeC::Query class to perform queries");
   }
 
   if ( NIL_P(udf_args) ) udf_args = rb_ary_new();

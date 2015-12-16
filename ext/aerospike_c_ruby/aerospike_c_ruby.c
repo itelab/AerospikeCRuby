@@ -34,4 +34,5 @@ void Init_aerospike_c_ruby() {
   init_aerospike_c_policy(AerospikeC);
   init_aerospike_c_llist(AerospikeC);
   init_aerospike_c_ldt_proxy(AerospikeC);
+  init_aerospike_c_exceptions(AerospikeC);
 }

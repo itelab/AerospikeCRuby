@@ -125,7 +125,7 @@ static void free_policy_read(as_policy_read * policy) {
 
 static void init_policy_read(VALUE self, VALUE options) {
   as_policy_read * policy = (as_policy_read *) malloc (sizeof(as_policy_read));
-  if (! policy) rb_raise(rb_eRuntimeError, err_memory_info());
+  if (! policy) rb_raise(MemoryError, err_memory_info());
   as_policy_read_init(policy);
 
   options_buffer buffer;
@@ -166,7 +166,7 @@ static void free_policy_write(as_policy_write * policy) {
 
 static void init_policy_write(VALUE self, VALUE options) {
   as_policy_write * policy = (as_policy_write *) malloc (sizeof(as_policy_write));
-  if (! policy) rb_raise(rb_eRuntimeError, err_memory_info());
+  if (! policy) rb_raise(MemoryError, err_memory_info());
   as_policy_write_init(policy);
 
   options_buffer buffer;
@@ -208,7 +208,7 @@ static void free_policy_remove(as_policy_remove * policy) {
 
 static void init_policy_remove(VALUE self, VALUE options) {
   as_policy_remove * policy = (as_policy_remove *) malloc (sizeof(as_policy_remove));
-  if (! policy) rb_raise(rb_eRuntimeError, err_memory_info());
+  if (! policy) rb_raise(MemoryError, err_memory_info());
   as_policy_remove_init(policy);
 
   options_buffer buffer;
@@ -250,7 +250,7 @@ static void free_policy_apply(as_policy_apply * policy) {
 
 static void init_policy_apply(VALUE self, VALUE options) {
   as_policy_apply * policy = (as_policy_apply *) malloc (sizeof(as_policy_apply));
-  if (! policy) rb_raise(rb_eRuntimeError, err_memory_info());
+  if (! policy) rb_raise(MemoryError, err_memory_info());
   as_policy_apply_init(policy);
 
   options_buffer buffer;
@@ -289,7 +289,7 @@ static void free_policy_query(as_policy_query * policy) {
 
 static void init_policy_query(VALUE self, VALUE options) {
   as_policy_query * policy = (as_policy_query *) malloc (sizeof(as_policy_query));
-  if (! policy) rb_raise(rb_eRuntimeError, err_memory_info());
+  if (! policy) rb_raise(MemoryError, err_memory_info());
   as_policy_query_init(policy);
 
   options_buffer buffer;
@@ -346,7 +346,7 @@ static VALUE policy_initialize(int argc, VALUE * argv, VALUE self) {
     init_policy_query(self, options);
   }
   else {
-    rb_raise(rb_eRuntimeError, "[AerospikeC::Policy][initialize] unknown policy type");
+    rb_raise(OptionError, "[AerospikeC::Policy][initialize] unknown policy type");
   }
 
   rb_iv_set(self, "@type", type);

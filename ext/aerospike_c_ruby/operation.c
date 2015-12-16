@@ -19,7 +19,7 @@ static VALUE operation_initialize(int argc, VALUE * argv, VALUE self) {
   }
   else {
     if ( TYPE(rb_hash_aref(options, ttl_sym)) != T_FIXNUM ) { // check ttl option
-      rb_raise(rb_eRuntimeError, "[AerospikeC::Operation][initialize] ttl must be an integer");
+      rb_raise(OptionError, "[AerospikeC::Operation][initialize] ttl must be an integer");
     }
   }
 
@@ -28,7 +28,7 @@ static VALUE operation_initialize(int argc, VALUE * argv, VALUE self) {
   }
   else {
     if ( TYPE(operations) != T_ARRAY ) {
-      rb_raise(rb_eRuntimeError, "[AerospikeC::Operation][initialize] operations must be and array");
+      rb_raise(OptionError, "[AerospikeC::Operation][initialize] operations must be and array");
     }
   }
 
@@ -49,7 +49,7 @@ static VALUE operation_initialize(int argc, VALUE * argv, VALUE self) {
 //
 static VALUE set_ttl(VALUE self, VALUE ttl) {
   if ( TYPE(ttl) != T_FIXNUM ) {
-    rb_raise(rb_eRuntimeError, "[AerospikeC::Operation][ttl=] ttl must be an integer");
+    rb_raise(OptionError, "[AerospikeC::Operation][ttl=] ttl must be an integer");
   }
 
   rb_iv_set(self, "@ttl", ttl);
@@ -112,7 +112,7 @@ static VALUE op_increment(VALUE self, VALUE bin, VALUE val) {
   }
 
   if ( TYPE(val) != T_FIXNUM ) {
-    rb_raise(rb_eRuntimeError, "[AerospikeC::Operation][increment!] value must be an integer");
+    rb_raise(OptionError, "[AerospikeC::Operation][increment!] value must be an integer");
   }
 
   VALUE operations = rb_iv_get(self, "@operations");

@@ -86,7 +86,7 @@ static void llist_initialize(int argc, VALUE * argv, VALUE self) {
   as_ldt * llist = (as_ldt *) malloc ( sizeof(as_ldt) );
 
   if (! llist)
-    rb_raise(rb_eRuntimeError, "[AerospikeC::Llist][initialize] Error while allocating memory for aerospike llist");
+    rb_raise(MemoryError, "[AerospikeC::Llist][initialize] Error while allocating memory for aerospike llist");
 
   char * conf_module;
 
@@ -100,7 +100,7 @@ static void llist_initialize(int argc, VALUE * argv, VALUE self) {
 
   if (! as_ldt_init(llist, StringValueCStr(bin_name), AS_LDT_LLIST, conf_module)) {
     llist_free(llist);
-    rb_raise(rb_eRuntimeError, "[AerospikeC::Llist][initialize] Unable to initialize llist");
+    rb_raise(MemoryError, "[AerospikeC::Llist][initialize] Unable to initialize llist");
   }
 
   VALUE llist_struct = Data_Wrap_Struct(Llist, NULL, llist_free, llist);
@@ -409,7 +409,7 @@ static VALUE llist_find_first(int argc, VALUE * argv, VALUE self) {
   if ( NIL_P(options) ) options = rb_hash_new(); // default options
 
   if ( TYPE(count) != T_FIXNUM )
-    rb_raise(rb_eRuntimeError, "[AerospikeC::Llist][find_first] count must be integer");
+    rb_raise(OptionError, "[AerospikeC::Llist][find_first] count must be integer");
 
   as_policy_apply * policy = get_policy(options);
   as_ldt * llist           = get_ldt_struct(self);
@@ -469,7 +469,7 @@ static VALUE llist_find_last(int argc, VALUE * argv, VALUE self) {
   if ( NIL_P(options) ) options = rb_hash_new(); // default options
 
   if ( TYPE(count) != T_FIXNUM )
-    rb_raise(rb_eRuntimeError, "[AerospikeC::Llist][find_last] count must be integer");
+    rb_raise(OptionError, "[AerospikeC::Llist][find_last] count must be integer");
 
   as_policy_apply * policy = get_policy(options);
   as_ldt * llist           = get_ldt_struct(self);
@@ -530,7 +530,7 @@ static VALUE llist_find_from(int argc, VALUE * argv, VALUE self) {
   if ( NIL_P(options) ) options = rb_hash_new(); // default options
 
   if ( TYPE(count) != T_FIXNUM )
-    rb_raise(rb_eRuntimeError, "[AerospikeC::Llist][find_from] count must be integer");
+    rb_raise(OptionError, "[AerospikeC::Llist][find_from] count must be integer");
 
   as_policy_apply * policy = get_policy(options);
   as_val * val             = rb_val2as_val(value);
@@ -646,7 +646,7 @@ static VALUE llist_size(int argc, VALUE * argv, VALUE self) {
 //   if ( NIL_P(options) ) options = rb_hash_new(); // default options
 
 //   if ( TYPE(capacity) != T_FIXNUM )
-//     rb_raise(rb_eRuntimeError, "[AerospikeC::Llist][set_capacity] capacity must be integer");
+//     rb_raise(OptionError, "[AerospikeC::Llist][set_capacity] capacity must be integer");
 
 //   as_policy_apply * policy = get_policy(options);
 //   as_ldt * llist           = get_ldt_struct(self);

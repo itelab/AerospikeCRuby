@@ -128,6 +128,7 @@ void init_aerospike_c_query(VALUE AerospikeC);      // query.c
 void init_aerospike_c_policy(VALUE AerospikeC);     // policy.c
 void init_aerospike_c_llist(VALUE AerospikeC);      // llist.c
 void init_aerospike_c_ldt_proxy(VALUE AerospikeC);  // ldt_proxy.c
+void init_aerospike_c_exceptions(AerospikeC);       // exceptions.c
 
 // query_task.c
 void init_aerospike_c_query_task(VALUE AerospikeC);
@@ -212,6 +213,11 @@ extern VALUE QueryPolicy;
 
 extern VALUE Llist;
 extern VALUE LdtProxy;
+
+extern VALUE AsError;
+extern VALUE MemoryError;
+extern VALUE ParseError;
+extern VALUE OptionError;
 
 extern pthread_mutex_t G_CALLBACK_MUTEX;
 

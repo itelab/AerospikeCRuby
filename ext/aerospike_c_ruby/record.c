@@ -34,7 +34,7 @@ static void rec_initialize(int argc, VALUE * argv, VALUE self) {
   }
   else {
     if ( TYPE(rb_hash_aref(options, ttl_sym)) != T_FIXNUM ) { // check ttl option
-      rb_raise(rb_eRuntimeError, "[AerospikeC::Record][initialize] ttl must be an integer");
+      rb_raise(OptionError, "[AerospikeC::Record][initialize] ttl must be an integer");
     }
   }
 
@@ -44,7 +44,7 @@ static void rec_initialize(int argc, VALUE * argv, VALUE self) {
   long len = rb_ary_len_long(value);
 
   as_record * rec = (as_record *) malloc( sizeof(as_record) );
-  if (! rec) rb_raise(rb_eRuntimeError, "[AerospikeC::Record][initialize] Error while allocating memory for aerospike record");
+  if (! rec) rb_raise(MemoryError, "[AerospikeC::Record][initialize] Error while allocating memory for aerospike record");
 
   as_record_init(rec, len);
   rec->ttl = FIX2INT( rb_hash_aref(options, ttl_sym) );
@@ -72,7 +72,7 @@ static VALUE set_bins(VALUE self, VALUE value) {
   long len = rb_ary_len_long(value);
 
   as_record * rec = (as_record *) malloc( sizeof(as_record) );
-  if (! rec) rb_raise(rb_eRuntimeError, "[AerospikeC::Record][bins=] Error while allocating memory for aerospike record");
+  if (! rec) rb_raise(MemoryError, "[AerospikeC::Record][bins=] Error while allocating memory for aerospike record");
 
   as_record_init(rec, len);
   rec->ttl = FIX2INT( rb_funcall(self, rb_intern("ttl"), 0) );
@@ -91,7 +91,7 @@ static VALUE set_bins(VALUE self, VALUE value) {
 //
 static VALUE set_ttl(VALUE self, VALUE ttl) {
   if ( TYPE(ttl) != T_FIXNUM ) {
-    rb_raise(rb_eRuntimeError, "[AerospikeC::Client][put] ttl must be an integer");
+    rb_raise(OptionError, "[AerospikeC::Client][put] ttl must be an integer");
   }
 
   rb_iv_set(self, "@ttl", ttl);

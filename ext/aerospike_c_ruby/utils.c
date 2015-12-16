@@ -81,7 +81,7 @@ as_record * get_record_struct(VALUE rec) {
 //
 void raise_as_error(as_error err) {
   log_fatal(err.message);
-  rb_raise(rb_eRuntimeError, "%s -- Error code: %d, at: [%s:%d]", err.message, err.code, err.file, err.line);
+  rb_raise(AsError, "%s -- Error code: %d, at: [%s:%d]", err.message, err.code, err.file, err.line);
 }
 
 // ----------------------------------------------------------------------------------
@@ -168,7 +168,7 @@ as_arraylist * array2as_list(VALUE ary) {
         break;
 
       default:
-        rb_raise(rb_eRuntimeError, "[array2as_list] Unsupported array value type: %s", rb_val_type_as_str(element));
+        rb_raise(ParseError, "[array2as_list] Unsupported array value type: %s", rb_val_type_as_str(element));
         break;
     }
   }
@@ -246,7 +246,7 @@ static int foreach_hash2record(VALUE key, VALUE val, VALUE record) {
       break;
 
     default:
-      rb_raise(rb_eRuntimeError, "[Utils][foreach_hash2record] Unsupported record value type: %s", rb_val_type_as_str(val));
+      rb_raise(ParseError, "[Utils][foreach_hash2record] Unsupported record value type: %s", rb_val_type_as_str(val));
       break;
   }
 
@@ -262,7 +262,7 @@ static char * key2bin_name(VALUE key) {
 
   switch ( TYPE(key) ) { // get bin name from key
     case T_NIL:
-      rb_raise(rb_eRuntimeError, "Record key cannot be nil");
+      rb_raise(ParseError, "Record key cannot be nil: %s", val_inspect(key));
       break;
 
     case T_STRING:
@@ -316,7 +316,7 @@ static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE hmap) {
 
   switch ( TYPE(val) ) { // set bin_name = val dependent on type
     case T_NIL:
-      rb_raise(rb_eRuntimeError, "Hash value cannot be nil");
+      rb_raise(ParseError, "Hash value cannot be nil: %s", val_inspect(val));
       break;
 
     case T_SYMBOL:
@@ -347,7 +347,7 @@ static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE hmap) {
       break;
 
     default:
-      rb_raise(rb_eRuntimeError, "Unsupported record value type: %s", rb_val_type_as_str(val));
+      rb_raise(ParseError, "Unsupported record value type: %s", rb_val_type_as_str(val));
       break;
   }
 
@@ -510,7 +510,7 @@ VALUE bool2rb_bool(bool val) {
 bool rb_bool2bool(VALUE val) {
   if ( val == Qtrue ) { return true; }
   else if ( val == Qfalse ) { return false; }
-  else { rb_raise(rb_eRuntimeError, "[Utils][rb_bool2bool] Cannot convert %s into bool", rb_val_type_as_str(val)); }
+  else { rb_raise(ParseError, "[Utils][rb_bool2bool] Cannot convert %s into bool", rb_val_type_as_str(val)); }
 }
 
 // ----------------------------------------------------------------------------------
@@ -544,7 +544,7 @@ VALUE as_val2rb_val(as_val * value) {
       break;
   }
 
-  rb_raise(rb_eRuntimeError, "[Utils][as_val2rb_val] Unsupported array value type: %s", as_val_type_as_str(value));
+  rb_raise(ParseError, "[Utils][as_val2rb_val] Unsupported array value type: %s", as_val_type_as_str(value));
 }
 
 // ----------------------------------------------------------------------------------
@@ -574,7 +574,7 @@ as_val * rb_val2as_val(VALUE value) {
       break;
 
     default:
-      rb_raise(rb_eRuntimeError, "[Utils][rb_val2as_val] Unsupported alue type: %s", rb_val_type_as_str(value));
+      rb_raise(ParseError, "[Utils][rb_val2as_val] Unsupported alue type: %s", rb_val_type_as_str(value));
       break;
   }
 }
@@ -775,7 +775,7 @@ as_query * query_obj2as_query(VALUE query_obj) {
     }
     else {
       destroy_query(query);
-      rb_raise(rb_eRuntimeError, "[Utils][query_obj2as_query] Unsupported eql value type: %s", val_inspect(val));
+      rb_raise(ParseError, "[Utils][query_obj2as_query] Unsupported eql value type: %s", val_inspect(val));
     }
   }
   else if ( filter_type == range_sym ) { // range
@@ -787,7 +787,7 @@ as_query * query_obj2as_query(VALUE query_obj) {
   else {
     VALUE tmp = rb_hash_aref(filter, filter_type_sym);
     destroy_query(query);
-    rb_raise(rb_eRuntimeError, "[Utils][query_obj2as_query] Unsupported filter type: %s", val_inspect(tmp));
+    rb_raise(ParseError, "[Utils][query_obj2as_query] Unsupported filter type: %s", val_inspect(tmp));
   }
 
   VALUE order_by = rb_iv_get(query_obj, "@order");
@@ -834,7 +834,7 @@ void * rb_policy2as_policy(VALUE rb_policy) {
     Data_Get_Struct(rb_iv_get(rb_policy, "policy"), as_policy_query, policy);
   }
   else {
-    rb_raise(rb_eRuntimeError, "[Utils][rb_policy2as_policy] unknown policy type: %s", val_inspect(type));
+    rb_raise(ParseError, "[Utils][rb_policy2as_policy] unknown policy type: %s", val_inspect(type));
   }
 
   return policy;

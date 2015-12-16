@@ -16,7 +16,7 @@ VALUE status2ruby_str(as_scan_status status) {
     return rb_str_new2("AS_SCAN_STATUS_COMPLETED");
   }
   else {
-    rb_raise(rb_eRuntimeError, "[AerospikeC::ScanTask][status] undefined ScanTask status");
+    rb_raise(ParseError, "[AerospikeC::ScanTask][status] undefined ScanTask status");
   }
 }
 
