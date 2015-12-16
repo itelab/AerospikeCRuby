@@ -29,7 +29,7 @@ bins = client.get(key)
 # => {"LDTCONTROLBIN"=>nil, "_rblliststat_"=>["some_bin_name"], "some_bin_name"=>#<AerospikeC::LdtProxy:0x0000000192d848 @bin_name="some_bin_name", @client=#<AerospikeC::Client:0x0000000193b8a8 @host="127.0.0.1", @port=3000, @last_scan_id=nil, @last_query_id=nil, @ldt_proxy=true, @options={}>, @key=#<AerospikeC::Key:0x0000000193b588 @namespace="test", @set="test", @key="llist">>}
 ```
 
-Adding large list also adds `_rblliststat_` bin with array of bin names, which have llist under it. This is neccessary for parsing these names to `AerospikeC::LdtProxy` objects(because they are not `Llist` already you can pass your own options)
+Adding large list also adds `_rblliststat_` bin with array of bin names, which have llist under it. This is neccessary for parsing these names to [AerospikeC::LdtProxy](ldt_proxy.md) objects(because they are not `Llist` already you can pass your own options)
 
 ```ruby
 ldt_proxy = bins["some_bin_name"]
