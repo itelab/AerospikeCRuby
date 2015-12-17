@@ -101,7 +101,7 @@
 #define module_sym              ID2SYM(rb_intern("module"))             // :module
 #define ldt_proxy_sym           ID2SYM(rb_intern("ldt_proxy"))          // :ldt_proxy
 
-#define as_val_int_2_val(val) INT2FIX( as_integer_get( as_integer_fromval(val) ) )          //(int)    as_val * -> VALUE
+#define as_val_int_2_val(val) LONG2FIX( as_integer_get( as_integer_fromval(val) ) )          //(int)    as_val * -> VALUE
 #define as_val_str_2_val(val) rb_str_new2( as_string_tostring( as_string_fromval(val) ) )   //(string) as_val * -> VALUE
 #define as_val_dbl_2_val(val) rb_float_new( as_double_get( as_double_fromval(val) ) )       //(double) as_val * -> VALUE
 #define rb_ary_len_int(ary) FIX2INT( rb_funcall(ary, rb_intern("length"), 0) )              //(int)    VALUE -> int
