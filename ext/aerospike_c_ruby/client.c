@@ -1318,6 +1318,8 @@ bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
   VALUE tmp;
   as_record * record;
 
+  log_debug("execute_udf_on_query_callback");
+
   switch ( as_val_type(val) ) {
     case AS_REC:
       record = as_rec_fromval(val);
@@ -1372,6 +1374,8 @@ static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
   if ( is_aerospike_c_query_obj != Qtrue ) {
     rb_raise(OptionError, "[AerospikeC::Client][execute_udf_on_query] use AerospikeC::Query class to perform queries");
   }
+
+  log_debug("xxx");
 
   if ( NIL_P(udf_args) ) udf_args = rb_ary_new();
 
