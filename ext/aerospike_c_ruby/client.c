@@ -1317,10 +1317,17 @@ bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
     return false;
   }
 
+  log_debug("execute_udf_on_query_callback 2");
+
   pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
 
+  log_debug("execute_udf_on_query_callback 3");
+
   VALUE tmp;
+  log_debug("execute_udf_on_query_callback 4");
   as_record * record;
+
+  log_debug("execute_udf_on_query_callback 5");
 
   switch ( as_val_type(val) ) {
     case AS_REC:
@@ -1340,7 +1347,11 @@ bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
       break;
   }
 
+  log_debug("execute_udf_on_query_callback 6");
+
   rb_ary_push(query_data, tmp);
+
+  log_debug("execute_udf_on_query_callback 7");
 
   pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
 
