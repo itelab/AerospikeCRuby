@@ -145,6 +145,7 @@ void set_priority_options(as_scan * scan, VALUE options) {
 // get as_policy_query pointer from AerospikeC::Query object
 //
 as_policy_query * get_query_policy(VALUE query_obj) {
+  log_debug("get_query_policy(VALUE query_obj)");
   as_policy_query * policy;
 
   VALUE rb_policy = rb_iv_get(query_obj, "@policy");
