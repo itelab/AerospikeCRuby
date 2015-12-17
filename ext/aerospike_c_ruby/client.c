@@ -1256,12 +1256,12 @@ bool execute_query_callback(as_val * val, VALUE query_data) {
 
   as_record * record = as_rec_fromval(val);
 
-  pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
+  // pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
 
   VALUE rec = record2hash(record);
   rb_ary_push(query_data, rec);
 
-  pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
+  // pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
 
   return true;
 }
