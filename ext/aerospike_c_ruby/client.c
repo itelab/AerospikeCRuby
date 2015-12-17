@@ -1251,7 +1251,7 @@ static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) 
 //
 bool execute_query_callback(as_val * val, VALUE query_data) {
   if ( val == NULL ) {
-    return true;
+    return false;
   }
 
   as_record * record = as_rec_fromval(val);
@@ -1312,7 +1312,7 @@ static VALUE execute_query(VALUE self, VALUE query_obj) {
 bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
   if ( val == NULL ) {
     log_info("scan_records_callback end");
-    return true;
+    return false;
   }
 
   VALUE tmp;
