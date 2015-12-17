@@ -1324,15 +1324,18 @@ bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
 
   switch ( as_val_type(val) ) {
     case AS_REC:
+      log_debug("execute_udf_on_query_callback AS_REC");
       record = as_rec_fromval(val);
       tmp = record2hash(record);
       break;
 
     case AS_UNDEF:
+      log_debug("execute_udf_on_query_callback AS_UNDEF");
       rb_raise(ParseError, "[AerospikeC::Client][execute_udf_on_query_callback] undef");
       break;
 
     default:
+      log_debug("execute_udf_on_query_callback default");
       tmp = as_val2rb_val(val);
       break;
   }
