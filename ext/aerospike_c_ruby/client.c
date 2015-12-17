@@ -1310,6 +1310,8 @@ static VALUE execute_query(VALUE self, VALUE query_obj) {
 // callback method for execute_udf_on_query
 //
 bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
+  log_debug("execute_udf_on_query_callback");
+
   if ( val == NULL ) {
     log_info("scan_records_callback end");
     return false;
@@ -1317,8 +1319,6 @@ bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
 
   VALUE tmp;
   as_record * record;
-
-  log_debug("execute_udf_on_query_callback");
 
   switch ( as_val_type(val) ) {
     case AS_REC:
@@ -1383,9 +1383,13 @@ static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
   as_query * query         = query_obj2as_query(query_obj);
   as_policy_query * policy = get_query_policy(query_obj);
 
+  log_debug("apply query");
+
   as_query_apply(query, StringValueCStr(module_name), StringValueCStr(func_name), (as_list*)args);
 
   VALUE query_data = rb_ary_new();
+
+  log_debug("calling aerospike_query_foreach");
 
   if ( aerospike_query_foreach(as, &err, policy, query, execute_udf_on_query_callback, query_data) != AEROSPIKE_OK ) {
     destroy_query(query);
