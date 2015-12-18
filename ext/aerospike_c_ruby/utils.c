@@ -779,7 +779,6 @@ as_query * query_obj2as_query(VALUE query_obj) {
     }
   }
   else if ( filter_type == range_sym ) { // range
-    log_debug("querying range");
     VALUE min = rb_hash_aref(filter, min_sym);
     VALUE max = rb_hash_aref(filter, max_sym);
 
@@ -799,7 +798,6 @@ as_query * query_obj2as_query(VALUE query_obj) {
   // ----------------
   // order
   for (int i = 0; i < len; ++i) {
-    log_debug("ordering");
     VALUE order = rb_ary_entry(order_by, i);
 
     VALUE order_bin  = rb_hash_aref(order, bin_sym);

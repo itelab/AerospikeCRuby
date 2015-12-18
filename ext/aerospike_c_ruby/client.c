@@ -496,7 +496,7 @@ static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
 
   if ( specific_bins != Qnil ) bin_names_destroy(bin_names, n_bin_names);
 
-  log_debug("[AerospikeC::Client][batch_get] success");
+  log_info("[AerospikeC::Client][batch_get] success");
 
   return records_bins;
 }
@@ -1310,48 +1310,32 @@ static VALUE execute_query(VALUE self, VALUE query_obj) {
 // callback method for execute_udf_on_query
 //
 bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
-  log_debug("execute_udf_on_query_callback");
-
   if ( val == NULL ) {
     log_info("scan_records_callback end");
     return false;
   }
 
-  log_debug("execute_udf_on_query_callback 2");
-
   pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
 
-  log_debug("execute_udf_on_query_callback 3");
-
   VALUE tmp;
-  log_debug("execute_udf_on_query_callback 4");
   as_record * record;
-
-  log_debug("execute_udf_on_query_callback 5");
 
   switch ( as_val_type(val) ) {
     case AS_REC:
-      log_debug("execute_udf_on_query_callback AS_REC");
       record = as_rec_fromval(val);
       tmp = record2hash(record);
       break;
 
     case AS_UNDEF:
-      log_debug("execute_udf_on_query_callback AS_UNDEF");
       rb_raise(ParseError, "[AerospikeC::Client][execute_udf_on_query_callback] undef");
       break;
 
     default:
-      log_debug("execute_udf_on_query_callback default");
       tmp = as_val2rb_val(val);
       break;
   }
 
-  log_debug("execute_udf_on_query_callback 6");
-
   rb_ary_push(query_data, tmp);
-
-  log_debug("execute_udf_on_query_callback 7");
 
   pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
 
@@ -1393,21 +1377,15 @@ static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
     rb_raise(OptionError, "[AerospikeC::Client][execute_udf_on_query] use AerospikeC::Query class to perform queries");
   }
 
-  log_debug("xxx");
-
   if ( NIL_P(udf_args) ) udf_args = rb_ary_new();
 
   as_arraylist * args      = array2as_list(udf_args);
   as_query * query         = query_obj2as_query(query_obj);
   as_policy_query * policy = get_query_policy(query_obj);
 
-  log_debug("apply query");
-
   as_query_apply(query, StringValueCStr(module_name), StringValueCStr(func_name), (as_list*)args);
 
   VALUE query_data = rb_ary_new();
-
-  log_debug("calling aerospike_query_foreach");
 
   if ( aerospike_query_foreach(as, &err, policy, query, execute_udf_on_query_callback, query_data) != AEROSPIKE_OK ) {
     destroy_query(query);
