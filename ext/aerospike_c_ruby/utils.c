@@ -402,7 +402,7 @@ static VALUE as_hashmap2hash_protected(VALUE rdata) {
     as_val * key = val_pair->_1;
     as_val * value = val_pair->_2;
 
-    name = as_val_str_2_val(key);
+    name = rb_str_new_cstr( as_string_tostring( as_string_fromval(val) ) );
     RB_GC_GUARD(name);
 
     val = as_val2rb_val(value);
