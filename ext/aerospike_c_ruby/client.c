@@ -1343,7 +1343,7 @@ bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
       break;
 
     case AS_MAP:
-      tmp = as_hashmap2hash(val);
+      tmp = as_hashmap2hash((as_hashmap *)val);
       break;
 
     case AS_DOUBLE:

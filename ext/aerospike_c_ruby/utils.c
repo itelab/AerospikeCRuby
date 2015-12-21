@@ -400,7 +400,7 @@ static VALUE as_hashmap2hash_protected(VALUE rdata) {
     as_val * key = val_pair->_1;
     as_val * value = val_pair->_2;
 
-    VALUE name = as_val2rb_val(key);
+    VALUE name = as_val_str_2_val(key);
     VALUE val  = as_val2rb_val(value);
 
     // rb_raise(rb_eRuntimeError, "key: %s, val: %s", val_inspect(name), val_inspect(val));
