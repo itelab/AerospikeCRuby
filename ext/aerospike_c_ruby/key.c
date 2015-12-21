@@ -29,7 +29,14 @@ static char * arg_to_cstr(VALUE key) {
 //
 static void key_deallocate(as_key * key) {
   as_key_destroy(key);
-  free(key);
+  xfree(key);
+}
+
+static VALUE key_allocate(VALUE self) {
+  as_key * k = (as_key *) malloc ( sizeof(as_key) );
+  if (! k) rb_raise(MemoryError, "[AerospikeC::Key][initialize] Error while allocating memory for aerospike key");
+
+  return Data_Wrap_Struct(self, NULL, key_deallocate, k);
 }
 
 //
@@ -42,8 +49,8 @@ static void key_initialize(VALUE self, VALUE as_namespace, VALUE set, VALUE key)
   char * c_set = arg_to_cstr(set);
   char * c_key = arg_to_cstr(key);
 
-  as_key * k = (as_key *) malloc ( sizeof(as_key) );
-  if (! k) rb_raise(MemoryError, "[AerospikeC::Key][initialize] Error while allocating memory for aerospike key");
+  as_key * k;
+  Data_Get_Struct(self, as_key, k);
 
   as_key_init(k, c_namespace, c_set, c_key);
 
@@ -54,10 +61,6 @@ static void key_initialize(VALUE self, VALUE as_namespace, VALUE set, VALUE key)
   rb_iv_set(self, "@namespace", as_namespace);
   rb_iv_set(self, "@set", set);
   rb_iv_set(self, "@key", key);
-
-  key_struct = Data_Wrap_Struct(Key, NULL, key_deallocate, k);
-
-  rb_iv_set(self, "as_key", key_struct);
 
   log_debug("[AerospikeC::Key][initialize] initializing key");
 }
@@ -71,6 +74,7 @@ void init_aerospike_c_key(VALUE AerospikeC) {
   // class AerospikeC::Key < Object
   //
   Key = rb_define_class_under(AerospikeC, "Key", rb_cObject);
+  rb_define_alloc_func(Key, key_allocate);
 
   //
   // methods

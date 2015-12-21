@@ -14,7 +14,14 @@ static VALUE bin_val(VALUE self) {
 //
 static void rec_deallocate(as_record * rec) {
   as_record_destroy(rec);
-  free(rec);
+  xfree(rec);
+}
+
+static VALUE rec_allocate(VALUE self) {
+  as_record * rec = (as_record *) malloc( sizeof(as_record) );
+  if (! rec) rb_raise(MemoryError, "[AerospikeC::Record][initialize] Error while allocating memory for aerospike record");
+
+  return Data_Wrap_Struct(self, NULL, rec_deallocate, rec);
 }
 
 //
@@ -43,17 +50,13 @@ static void rec_initialize(int argc, VALUE * argv, VALUE self) {
 
   long len = rb_ary_len_long(value);
 
-  as_record * rec = (as_record *) malloc( sizeof(as_record) );
-  if (! rec) rb_raise(MemoryError, "[AerospikeC::Record][initialize] Error while allocating memory for aerospike record");
+  as_record * rec;
+  Data_Get_Struct(self, as_record, rec);
 
   as_record_init(rec, len);
   rec->ttl = FIX2INT( rb_hash_aref(options, ttl_sym) );
 
-  VALUE record = Data_Wrap_Struct(Record, NULL, rec_deallocate, rec);
-
-  hash2record(value, record);
-
-  rb_iv_set(self, "rec", record);
+  hash2record(value, self);
 }
 
 //
@@ -66,25 +69,25 @@ static VALUE length(VALUE self) {
 //
 // def bins=(value)
 //
-static VALUE set_bins(VALUE self, VALUE value) {
-  rb_iv_set(self, "@bins", value);
+// static VALUE set_bins(VALUE self, VALUE value) {
+//   rb_iv_set(self, "@bins", value);
 
-  long len = rb_ary_len_long(value);
+//   long len = rb_ary_len_long(value);
 
-  as_record * rec = (as_record *) malloc( sizeof(as_record) );
-  if (! rec) rb_raise(MemoryError, "[AerospikeC::Record][bins=] Error while allocating memory for aerospike record");
+//   as_record * rec = (as_record *) malloc( sizeof(as_record) );
+//   if (! rec) rb_raise(MemoryError, "[AerospikeC::Record][bins=] Error while allocating memory for aerospike record");
 
-  as_record_init(rec, len);
-  rec->ttl = FIX2INT( rb_funcall(self, rb_intern("ttl"), 0) );
+//   as_record_init(rec, len);
+//   rec->ttl = FIX2INT( rb_funcall(self, rb_intern("ttl"), 0) );
 
-  VALUE record = Data_Wrap_Struct(Record, NULL, rec_deallocate, rec);
+//   VALUE record = Data_Wrap_Struct(Record, NULL, rec_deallocate, rec);
 
-  hash2record(value, record);
+//   hash2record(value, self);
 
-  rb_iv_set(self, "rec", record);
+//   rb_iv_set(self, "rec", record);
 
-  return self;
-}
+//   return self;
+// }
 
 //
 // def ttl=(seconds)
@@ -108,13 +111,14 @@ void init_aerospike_c_record(VALUE AerospikeC) {
   // class AerospikeC::Record < Object
   //
   Record = rb_define_class_under(AerospikeC, "Record", rb_cObject);
+  rb_define_alloc_func(Record, rec_allocate);
 
   //
   // methods
   //
   rb_define_method(Record, "initialize", RB_FN_ANY()rec_initialize, -1);
   rb_define_method(Record, "length", RB_FN_ANY()length, 0);
-  rb_define_method(Record, "bins=", RB_FN_ANY()set_bins, 1);
+  // rb_define_method(Record, "bins=", RB_FN_ANY()set_bins, 1);
   rb_define_method(Record, "ttl=", RB_FN_ANY()set_ttl, 1);
 
   //

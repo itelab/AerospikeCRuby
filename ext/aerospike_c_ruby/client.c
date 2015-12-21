@@ -10,6 +10,15 @@ VALUE Logger;
 //
 pthread_mutex_t G_CALLBACK_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 
+//
+// client allocate
+//
+static VALUE client_allocate(VALUE self) {
+  aerospike * as = (aerospike *) malloc ( sizeof(aerospike) );
+
+  return Data_Wrap_Struct(self, NULL, client_deallocate, as);
+}
+
 // ----------------------------------------------------------------------------------
 //
 // def initialize(host, port, options = {})
@@ -35,17 +44,16 @@ static void client_initialize(int argc, VALUE * argv, VALUE self) {
   options2config(&config, options, self);
   rb_iv_set(self, "@options", options);
 
-  aerospike * as = aerospike_new(&config);
+  aerospike * as;
+  Data_Get_Struct(self, aerospike, as);
+
+  aerospike_init(as, &config);
 
   as_error err;
   if (aerospike_connect(as, &err) != AEROSPIKE_OK) {
     aerospike_destroy(as);
     raise_as_error(err);
   }
-
-  VALUE client_struct = Data_Wrap_Struct(Client, NULL, client_deallocate, as);
-
-  rb_iv_set(self, "client", client_struct);
 }
 
 // ----------------------------------------------------------------------------------
@@ -1572,6 +1580,7 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   // class AerospikeC::Client < Object
   //
   Client = rb_define_class_under(AerospikeC, "Client", rb_cObject);
+  rb_define_alloc_func(Client, client_allocate);
 
   //
   // methods

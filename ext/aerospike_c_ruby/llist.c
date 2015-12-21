@@ -11,6 +11,15 @@ static void llist_free(as_ldt * llist) {
   xfree(llist);
 }
 
+static VALUE llist_allocate(VALUE self) {
+  as_ldt * llist = (as_ldt *) malloc ( sizeof(as_ldt) );
+
+  if (! llist)
+    rb_raise(MemoryError, "[AerospikeC::Llist][initialize] Error while allocating memory for aerospike llist");
+
+  return Data_Wrap_Struct(self, NULL, llist_free, llist);
+}
+
 // ----------------------------------------------------------------------------------
 //
 // unwrap LList client VALUE struct into aerospike *
@@ -33,7 +42,7 @@ static aerospike * llist_key_struct(VALUE self) {
 //
 static as_ldt * get_ldt_struct(VALUE self) {
   as_ldt * ldt;
-  Data_Get_Struct(rb_iv_get(self, "as_ldt"), as_ldt, ldt);
+  Data_Get_Struct(self, as_ldt, ldt);
   return ldt;
 }
 
@@ -83,10 +92,8 @@ static void llist_initialize(int argc, VALUE * argv, VALUE self) {
 
   if ( NIL_P(options) ) options = rb_hash_new(); // default options
 
-  as_ldt * llist = (as_ldt *) malloc ( sizeof(as_ldt) );
-
-  if (! llist)
-    rb_raise(MemoryError, "[AerospikeC::Llist][initialize] Error while allocating memory for aerospike llist");
+  as_ldt * llist;
+  Data_Get_Struct(self, as_ldt, llist);
 
   char * conf_module;
 
@@ -103,9 +110,6 @@ static void llist_initialize(int argc, VALUE * argv, VALUE self) {
     rb_raise(MemoryError, "[AerospikeC::Llist][initialize] Unable to initialize llist");
   }
 
-  VALUE llist_struct = Data_Wrap_Struct(Llist, NULL, llist_free, llist);
-
-  rb_iv_set(self, "as_ldt", llist_struct);
   rb_iv_set(self, "@bin_name", bin_name);
   rb_iv_set(self, "@client", client);
   rb_iv_set(self, "@key", key);
@@ -721,6 +725,7 @@ void init_aerospike_c_llist(VALUE AerospikeC) {
   // class AerospikeC::Llist < Object
   //
   Llist = rb_define_class_under(AerospikeC, "Llist", rb_cObject);
+  rb_define_alloc_func(Llist, llist_allocate);
 
   //
   // methods

@@ -51,7 +51,7 @@ void log_fatal(const char * msg) {
 //
 aerospike * get_client_struct(VALUE client) {
   aerospike * as;
-  Data_Get_Struct(rb_iv_get(client, "client"), aerospike, as);
+  Data_Get_Struct(client, aerospike, as);
   return as;
 }
 
@@ -61,7 +61,7 @@ aerospike * get_client_struct(VALUE client) {
 //
 as_key * get_key_struct(VALUE key) {
   as_key * k;
-  Data_Get_Struct(rb_iv_get(key, "as_key"), as_key, k);
+  Data_Get_Struct(key, as_key, k);
   return k;
 }
 
@@ -71,7 +71,7 @@ as_key * get_key_struct(VALUE key) {
 //
 as_record * get_record_struct(VALUE rec) {
   as_record * r;
-  Data_Get_Struct(rb_iv_get(rec, "rec"), as_record, r);
+  Data_Get_Struct(rec, as_record, r);
   return r;
 }
 
