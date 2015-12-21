@@ -43,8 +43,6 @@ static VALUE key_allocate(VALUE self) {
 // def initialize
 //
 static void key_initialize(VALUE self, VALUE as_namespace, VALUE set, VALUE key) {
-  VALUE key_struct;
-
   char * c_namespace = arg_to_cstr(as_namespace);
   char * c_set = arg_to_cstr(set);
   char * c_key = arg_to_cstr(key);

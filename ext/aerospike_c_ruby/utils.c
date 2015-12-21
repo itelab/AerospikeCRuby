@@ -360,6 +360,8 @@ static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE hmap) {
 // convert as_hashmap * map into ruby hash
 //
 VALUE as_hashmap2hash(as_hashmap * map) {
+  pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
+
   VALUE name;
   VALUE val;
   VALUE hash = rb_hash_new();
@@ -387,6 +389,8 @@ VALUE as_hashmap2hash(as_hashmap * map) {
   }
 
   as_hashmap_iterator_destroy(&it);
+
+  pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
 
   return hash;
 }
