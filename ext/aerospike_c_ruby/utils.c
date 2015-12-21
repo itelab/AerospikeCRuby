@@ -364,6 +364,8 @@ VALUE as_hashmap2hash(as_hashmap * map) {
   VALUE val;
   VALUE hash = rb_hash_new();
 
+  RB_GC_GUARD(hash);
+
   as_hashmap_iterator it;
   as_hashmap_iterator_init(&it, map);
 
@@ -376,9 +378,10 @@ VALUE as_hashmap2hash(as_hashmap * map) {
     as_string * i = as_string_fromval(key);
 
     name = rb_str_new2(i->value);
-    val = as_val2rb_val(value);
+    RB_GC_GUARD(name);
 
-    // rb_raise(rb_eRuntimeError, "key: %s, val: %s", val_inspect(name), val_inspect(val));
+    val = as_val2rb_val(value);
+    RB_GC_GUARD(value);
 
     rb_hash_aset(hash, name, val);
   }

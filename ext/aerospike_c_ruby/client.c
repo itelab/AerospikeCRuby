@@ -1316,6 +1316,8 @@ static VALUE execute_query(VALUE self, VALUE query_obj) {
 
   VALUE query_data = rb_ary_new();
 
+  RB_GC_GUARD(query_data);
+
   if ( aerospike_query_foreach(as, &err, policy, query, execute_query_callback, query_data) != AEROSPIKE_OK ) {
     destroy_query(query);
     raise_as_error(err);
@@ -1370,6 +1372,8 @@ static VALUE execute_udf_on_query_callback_protected(VALUE rdata) {
       break;
   }
 
+  RB_GC_GUARD(tmp);
+
   return tmp;
 }
 
@@ -1384,7 +1388,9 @@ static bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
   int state = 0;
   VALUE result = rb_protect(execute_udf_on_query_callback_protected, (VALUE)(val), &state);
 
-  rb_ary_push(query_data, result);
+  if (!state) {
+    rb_ary_push(query_data, result);
+  }
 
   pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
 
@@ -1435,6 +1441,8 @@ static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
   as_query_apply(query, StringValueCStr(module_name), StringValueCStr(func_name), (as_list*)args);
 
   VALUE query_data = rb_ary_new();
+
+  RB_GC_GUARD(query_data);
 
   if ( aerospike_query_foreach(as, &err, policy, query, execute_udf_on_query_callback, query_data) != AEROSPIKE_OK ) {
     destroy_query(query);
