@@ -558,7 +558,9 @@ bool rb_bool2bool(VALUE val) {
 //
 // as_val -> VALUE
 //
-VALUE as_val2rb_val(as_val * value) {
+VALUE as_val2rb_val_protected(VALUE rdata) {
+  as_val * value = (as_val *) rdata;
+
   switch ( as_val_type(value) ) {
     case AS_NIL:
       return Qnil;
@@ -590,6 +592,18 @@ VALUE as_val2rb_val(as_val * value) {
   }
 
   return Qnil;
+}
+
+VALUE as_val2rb_val(as_val * value) {
+  int state = 0;
+  VALUE result = rb_protect(as_val2rb_val_protected, (VALUE)(value), &state);
+
+  if (state) {
+    return Qnil;
+  }
+  else {
+    return result;
+  }
 }
 
 // ----------------------------------------------------------------------------------
