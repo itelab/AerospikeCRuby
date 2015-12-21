@@ -425,6 +425,7 @@ VALUE as_hashmap2hash(as_hashmap * map) {
   VALUE result = rb_protect(as_hashmap2hash_protected, (VALUE)(map), &state);
 
   if (state) {
+    rb_jump_tag(state);
     return rb_hash_new();
   }
   else {
