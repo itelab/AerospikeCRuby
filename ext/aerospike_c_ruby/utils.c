@@ -389,6 +389,8 @@ static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE hmap) {
 static VALUE as_hashmap2hash_protected(VALUE rdata) {
   as_hashmap * map = (as_hashmap *) rdata;
 
+  VALUE name;
+  VALUE val;
   VALUE hash = rb_hash_new();
 
   as_hashmap_iterator it;
@@ -400,8 +402,11 @@ static VALUE as_hashmap2hash_protected(VALUE rdata) {
     as_val * key = val_pair->_1;
     as_val * value = val_pair->_2;
 
-    VALUE name = as_val_str_2_val(key);
-    VALUE val  = as_val2rb_val(value);
+    name = as_val_str_2_val(key);
+    RB_GC_GUARD(name);
+
+    val = as_val2rb_val(value);
+    RB_GC_GUARD(val);
 
     // rb_raise(rb_eRuntimeError, "key: %s, val: %s", val_inspect(name), val_inspect(val));
 
