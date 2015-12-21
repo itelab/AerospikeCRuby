@@ -88,8 +88,7 @@ void raise_as_error(as_error err) {
 //
 // convert as_record to ruby hash
 //
-static VALUE record2hash_protected(VALUE rdata) {
-  as_record * rec = (as_record *) rdata;
+VALUE record2hash(as_record * rec) {
   VALUE hash = rb_hash_new();
 
   as_record_iterator it;
@@ -105,18 +104,6 @@ static VALUE record2hash_protected(VALUE rdata) {
   }
 
   return hash;
-}
-
-VALUE record2hash(as_record * rec) {
-  int state = 0;
-  VALUE result = rb_protect(record2hash_protected, (VALUE)(rec), &state);
-
-  if (state) {
-    return rb_hash_new();
-  }
-  else {
-    return result;
-  }
 }
 
 // ----------------------------------------------------------------------------------
@@ -193,9 +180,7 @@ as_arraylist * array2as_list(VALUE ary) {
 //
 // convert as_list to ruby array
 //
-static VALUE as_list2array_protected(VALUE rdata) {
-  as_arraylist * list = (as_arraylist *) rdata;
-
+VALUE as_list2array(as_arraylist * list) {
   as_arraylist_iterator it;
   as_arraylist_iterator_init(&it, list);
 
@@ -207,18 +192,6 @@ static VALUE as_list2array_protected(VALUE rdata) {
   }
 
   return ary;
-}
-
-VALUE as_list2array(as_arraylist * list) {
-  int state = 0;
-  VALUE result = rb_protect(as_list2array_protected, (VALUE)(list), &state);
-
-  if (state) {
-    return rb_ary_new();
-  }
-  else {
-    return result;
-  }
 }
 
 // ----------------------------------------------------------------------------------
@@ -386,9 +359,7 @@ static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE hmap) {
 //
 // convert as_hashmap * map into ruby hash
 //
-static VALUE as_hashmap2hash_protected(VALUE rdata) {
-  as_hashmap * map = (as_hashmap *) rdata;
-
+VALUE as_hashmap2hash(as_hashmap * map) {
   VALUE name;
   VALUE val;
   VALUE hash = rb_hash_new();
@@ -404,11 +375,8 @@ static VALUE as_hashmap2hash_protected(VALUE rdata) {
 
     as_string * i = as_string_fromval(key);
 
-    name = rb_str_new(i->value, i->len);
-    RB_GC_GUARD(name);
-
+    name = rb_str_new2(i->value);
     val = as_val2rb_val(value);
-    RB_GC_GUARD(val);
 
     // rb_raise(rb_eRuntimeError, "key: %s, val: %s", val_inspect(name), val_inspect(val));
 
@@ -418,19 +386,6 @@ static VALUE as_hashmap2hash_protected(VALUE rdata) {
   as_hashmap_iterator_destroy(&it);
 
   return hash;
-}
-
-VALUE as_hashmap2hash(as_hashmap * map) {
-  int state = 0;
-  VALUE result = rb_protect(as_hashmap2hash_protected, (VALUE)(map), &state);
-
-  if (state) {
-    rb_jump_tag(state);
-    return rb_hash_new();
-  }
-  else {
-    return result;
-  }
 }
 
 // ----------------------------------------------------------------------------------
@@ -566,9 +521,7 @@ bool rb_bool2bool(VALUE val) {
 //
 // as_val -> VALUE
 //
-VALUE as_val2rb_val_protected(VALUE rdata) {
-  as_val * value = (as_val *) rdata;
-
+VALUE as_val2rb_val(as_val * value) {
   switch ( as_val_type(value) ) {
     case AS_NIL:
       return Qnil;
@@ -595,23 +548,11 @@ VALUE as_val2rb_val_protected(VALUE rdata) {
       break;
 
     case AS_UNDEF:
-      return Qnil;
+      return rb_str_new2("undef");
       break;
   }
 
-  return Qnil;
-}
-
-VALUE as_val2rb_val(as_val * value) {
-  int state = 0;
-  VALUE result = rb_protect(as_val2rb_val_protected, (VALUE)(value), &state);
-
-  if (state) {
-    return Qnil;
-  }
-  else {
-    return result;
-  }
+  return rb_str_new2(as_val_type_as_str(value));
 }
 
 // ----------------------------------------------------------------------------------

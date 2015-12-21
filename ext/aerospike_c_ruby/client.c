@@ -1332,7 +1332,7 @@ static VALUE execute_query(VALUE self, VALUE query_obj) {
 static VALUE execute_udf_on_query_callback_protected(VALUE rdata) {
   as_val * val = (as_val *) rdata;
 
-  VALUE tmp = Qnil;
+  VALUE tmp;
   as_record * record;
 
   switch ( as_val_type(val) ) {
@@ -1358,7 +1358,7 @@ static VALUE execute_udf_on_query_callback_protected(VALUE rdata) {
       break;
 
     case AS_MAP:
-      tmp = as_hashmap2hash((as_hashmap *)val);
+      tmp = as_hashmap2hash(val);
       break;
 
     case AS_DOUBLE:
@@ -1366,7 +1366,7 @@ static VALUE execute_udf_on_query_callback_protected(VALUE rdata) {
       break;
 
     case AS_UNDEF:
-      tmp = Qnil;
+      tmp = rb_str_new2("undef");
       break;
   }
 
@@ -1384,9 +1384,7 @@ static bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
   int state = 0;
   VALUE result = rb_protect(execute_udf_on_query_callback_protected, (VALUE)(val), &state);
 
-  if (!state) {
-    rb_ary_push(query_data, result);
-  }
+  rb_ary_push(query_data, result);
 
   pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
 
