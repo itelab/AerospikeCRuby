@@ -88,7 +88,8 @@ void raise_as_error(as_error err) {
 //
 // convert as_record to ruby hash
 //
-VALUE record2hash(as_record * rec) {
+static VALUE record2hash_protected(VALUE rdata) {
+  as_record * rec = (as_record *) rdata;
   VALUE hash = rb_hash_new();
 
   as_record_iterator it;
@@ -104,6 +105,18 @@ VALUE record2hash(as_record * rec) {
   }
 
   return hash;
+}
+
+VALUE record2hash(as_record * rec) {
+  int state = 0;
+  VALUE result = rb_protect(record2hash_protected, (VALUE)(rec), &state);
+
+  if (state) {
+    rb_jump_tag(state);
+  }
+  else {
+    return result;
+  }
 }
 
 // ----------------------------------------------------------------------------------
@@ -180,7 +193,9 @@ as_arraylist * array2as_list(VALUE ary) {
 //
 // convert as_list to ruby array
 //
-VALUE as_list2array(as_arraylist * list) {
+static VALUE as_list2array_protected(VALUE rdata) {
+  as_arraylist * list = (as_arraylist *) rdata;
+
   as_arraylist_iterator it;
   as_arraylist_iterator_init(&it, list);
 
@@ -192,6 +207,18 @@ VALUE as_list2array(as_arraylist * list) {
   }
 
   return ary;
+}
+
+VALUE as_list2array(as_arraylist * list) {
+  int state = 0;
+  VALUE result = rb_protect(as_list2array_protected, (VALUE)(list), &state);
+
+  if (state) {
+    rb_jump_tag(state);
+  }
+  else {
+    return result;
+  }
 }
 
 // ----------------------------------------------------------------------------------
@@ -359,7 +386,9 @@ static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE hmap) {
 //
 // convert as_hashmap * map into ruby hash
 //
-VALUE as_hashmap2hash(as_hashmap * map) {
+static VALUE as_hashmap2hash_protected(VALUE rdata) {
+  as_hashmap * map = (as_hashmap *) rdata;
+
   VALUE hash = rb_hash_new();
 
   as_hashmap_iterator it;
@@ -382,6 +411,18 @@ VALUE as_hashmap2hash(as_hashmap * map) {
   as_hashmap_iterator_destroy(&it);
 
   return hash;
+}
+
+VALUE as_hashmap2hash(as_hashmap * map) {
+  int state = 0;
+  VALUE result = rb_protect(as_hashmap2hash_protected, (VALUE)(map), &state);
+
+  if (state) {
+    rb_jump_tag(state);
+  }
+  else {
+    return result;
+  }
 }
 
 // ----------------------------------------------------------------------------------
@@ -542,9 +583,13 @@ VALUE as_val2rb_val(as_val * value) {
     case AS_DOUBLE:
       return as_val_dbl_2_val(value);
       break;
+
+    case AS_UNDEF:
+      return Qnil;
+      break;
   }
 
-  rb_raise(ParseError, "[Utils][as_val2rb_val] Unsupported array value type: %s", as_val_type_as_str(value));
+  return Qnil;
 }
 
 // ----------------------------------------------------------------------------------
@@ -657,9 +702,6 @@ const char * as_val_type_as_str(as_val * value) {
 
     case AS_GEOJSON:
       return "AS_GEOJSON";
-
-    default:
-      return itoa(as_val_type(value));
   }
 }
 
@@ -725,9 +767,6 @@ const char * rb_val_type_as_str(VALUE value) {
 
     case T_SYMBOL:
       return "T_SYMBOL";
-
-    default:
-      return itoa(TYPE(value));
   }
 }
 
