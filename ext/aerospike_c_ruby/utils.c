@@ -377,7 +377,7 @@ VALUE as_hashmap2hash(as_hashmap * map) {
 
     as_string * i = as_string_fromval(key);
 
-    name = ID2SYM(rb_intern(i->value));
+    name = rb_str_new2(i->value);
     RB_GC_GUARD(name);
 
     val = as_val2rb_val(value);
