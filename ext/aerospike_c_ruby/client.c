@@ -1317,7 +1317,7 @@ bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
 
   pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
 
-  VALUE tmp;
+  VALUE tmp = Qnil;
   as_record * record;
 
   switch ( as_val_type(val) ) {
@@ -1326,12 +1326,32 @@ bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
       tmp = record2hash(record);
       break;
 
-    case AS_UNDEF:
-      rb_raise(ParseError, "[AerospikeC::Client][execute_udf_on_query_callback] undef");
+    case AS_NIL:
+      tmp = Qnil;
       break;
 
-    default:
-      tmp = as_val2rb_val(val);
+    case AS_INTEGER:
+      tmp = as_val_int_2_val(val);
+      break;
+
+    case AS_STRING:
+      tmp = as_val_str_2_val(val);
+      break;
+
+    case AS_LIST:
+      tmp = as_list2array(val);
+      break;
+
+    case AS_MAP:
+      tmp = as_hashmap2hash(val);
+      break;
+
+    case AS_DOUBLE:
+      tmp = as_val_dbl_2_val(val);
+      break;
+
+    case AS_UNDEF:
+      tmp = Qnil;
       break;
   }
 
