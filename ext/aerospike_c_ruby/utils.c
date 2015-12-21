@@ -385,6 +385,7 @@ VALUE as_hashmap2hash(as_hashmap * map) {
 
     // rb_raise(rb_eRuntimeError, "key: %s, val: %s", val_inspect(name), val_inspect(val));
 
+    log_debug("----------------------------");
     log_debug(val_inspect(name));
     log_debug(val_inspect(val));
     log_debug(val_inspect(hash));
