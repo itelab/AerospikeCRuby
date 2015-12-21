@@ -1051,17 +1051,27 @@ static VALUE execute_udf(int argc, VALUE * argv, VALUE self) {
 //
 // callback for scan_records
 //
-bool scan_records_callback(const as_val * val, VALUE scan_data) {
+static VALUE scan_records_callback_protected(VALUE rdata) {
+  as_val * val = (as_val *) rdata;
+
+  as_record * record = as_rec_fromval(val);
+
+  return record2hash(record);
+}
+
+static bool scan_records_callback(const as_val * val, VALUE scan_data) {
   if ( val == NULL ) {
     return true;
   }
 
-  as_record * record = as_rec_fromval(val);
-
   pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
 
-  VALUE rec = record2hash(record);
-  rb_ary_push(scan_data, rec);
+  int state = 0;
+  VALUE result = rb_protect(scan_records_callback_protected, (VALUE)(val), &state);
+
+  if (!state) {
+    rb_ary_push(scan_data, result);
+  }
 
   pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
 
@@ -1249,17 +1259,27 @@ static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) 
 //
 // callback method for execute_query
 //
-bool execute_query_callback(as_val * val, VALUE query_data) {
+static VALUE execute_query_callback_protected(VALUE rdata) {
+  as_val * val = (as_val *) rdata;
+
+  as_record * record = as_rec_fromval(val);
+
+  return record2hash(record);
+}
+
+static bool execute_query_callback(as_val * val, VALUE query_data) {
   if ( val == NULL ) {
     return false;
   }
 
-  as_record * record = as_rec_fromval(val);
-
   pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
 
-  VALUE rec = record2hash(record);
-  rb_ary_push(query_data, rec);
+  int state = 0;
+  VALUE result = rb_protect(execute_query_callback_protected, (VALUE)(val), &state);
+
+  if (!state) {
+    rb_ary_push(query_data, result);
+  }
 
   pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
 
@@ -1309,13 +1329,8 @@ static VALUE execute_query(VALUE self, VALUE query_obj) {
 //
 // callback method for execute_udf_on_query
 //
-bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
-  if ( val == NULL ) {
-    log_info("scan_records_callback end");
-    return false;
-  }
-
-  pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
+static VALUE execute_udf_on_query_callback_protected(VALUE rdata) {
+  as_val * val = (as_val *) rdata;
 
   VALUE tmp = Qnil;
   as_record * record;
@@ -1355,7 +1370,23 @@ bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
       break;
   }
 
-  rb_ary_push(query_data, tmp);
+  return tmp;
+}
+
+static bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
+  if ( val == NULL ) {
+    log_info("scan_records_callback end");
+    return false;
+  }
+
+  pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
+
+  int state = 0;
+  VALUE result = rb_protect(execute_udf_on_query_callback_protected, (VALUE)(val), &state);
+
+  if (!state) {
+    rb_ary_push(query_data, result);
+  }
 
   pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
 
