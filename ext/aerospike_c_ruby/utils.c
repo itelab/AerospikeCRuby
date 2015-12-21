@@ -377,7 +377,7 @@ VALUE as_hashmap2hash(as_hashmap * map) {
 
     as_string * i = as_string_fromval(key);
 
-    name = rb_str_new_cstr(i->value);
+    name = rb_utf8_str_new_cstr(i->value);
     RB_GC_GUARD(name);
 
     val = as_val2rb_val(value);
