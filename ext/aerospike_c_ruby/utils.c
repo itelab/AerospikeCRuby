@@ -112,7 +112,7 @@ VALUE record2hash(as_record * rec) {
   VALUE result = rb_protect(record2hash_protected, (VALUE)(rec), &state);
 
   if (state) {
-    rb_jump_tag(state);
+    return rb_hash_new();
   }
   else {
     return result;
@@ -214,7 +214,7 @@ VALUE as_list2array(as_arraylist * list) {
   VALUE result = rb_protect(as_list2array_protected, (VALUE)(list), &state);
 
   if (state) {
-    rb_jump_tag(state);
+    return rb_ary_new();
   }
   else {
     return result;
@@ -418,7 +418,7 @@ VALUE as_hashmap2hash(as_hashmap * map) {
   VALUE result = rb_protect(as_hashmap2hash_protected, (VALUE)(map), &state);
 
   if (state) {
-    rb_jump_tag(state);
+    return rb_hash_new();
   }
   else {
     return result;
