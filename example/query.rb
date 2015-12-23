@@ -1,7 +1,9 @@
 require "aerospike_c_ruby"
+require "logger"
 
 lua_path = File.expand_path(File.join(File.dirname(__FILE__), "lua"))
 client = AerospikeC::Client.new("127.0.0.1", 3000, {lua_path: lua_path})
+client.logger = Logger.new("log/query.log")
 
 #
 # eql
@@ -35,22 +37,28 @@ tasks.each do |task|
   task.wait_till_completed
 end
 
-#
-# build data to operate on
-#
-i = 0
-100.times do
-  key = AerospikeC::Key.new("test", "query_test", "query#{i}")
-  bins = {
-    int_bin: i,
-    string_bin: "string#{(i%10) == 0 ? 21 : i }",
-    other_bin: i+5,
-    other_bin2: [1, 2, "three"]
-  }
+def build_data(client)
+  #
+  # build data to operate on
+  #
+  i = 0
+  100.times do
+    key = AerospikeC::Key.new("test", "query_test", "query#{i}")
+    bins = {
+      int_bin: i,
+      string_bin: "string#{(i%10) == 0 ? 21 : i }",
+      other_bin: i+5,
+      other_bin2: [1, 2, "three"]
+    }
 
-  client.put(key, bins)
-  i += 1
+    client.put(key, bins)
+    i += 1
+  end
 end
+
+build_data(client)
+
+
 
 #
 # query
@@ -80,8 +88,10 @@ puts "alias:"
 rs = client.aggregate(q_range, "aggregate_udf", "mycount")
 puts rs.inspect
 
-rs = client.execute_udf_on_query(q_eql, "aggregate_udf", "other_bin_min", [50])
-puts rs.inspect
+5000.times do
+  rs = client.execute_udf_on_query(q_eql, "aggregate_udf", "other_bin_min", [50])
+  puts rs.inspect
+end
 
 puts "------------- background_execute_udf_on_query:"
 query_task = client.background_execute_udf_on_query(q_range, "aggregate_udf", "mycount")
@@ -109,3 +119,5 @@ end
 client.drop_index("test", "test_query_test_int_bin_idx")
 client.drop_index("test", "test_query_test_string_bin_idx")
 client.drop_udf("aggregate_udf.lua")
+
+puts GC.count

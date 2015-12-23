@@ -185,6 +185,9 @@ VALUE        as_hashmap2hash(as_hashmap * map);
 void * rb_policy2as_policy(VALUE rb_policy);
 void * get_policy(VALUE options);
 
+VALUE enable_rb_GC();
+VALUE disable_rb_GC();
+
 // ---------------------------------------------------
 //
 // extern variables

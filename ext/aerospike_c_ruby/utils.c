@@ -366,8 +366,6 @@ VALUE as_hashmap2hash(as_hashmap * map) {
   VALUE val;
   VALUE hash = rb_hash_new();
 
-  RB_GC_GUARD(hash);
-
   as_hashmap_iterator it;
   as_hashmap_iterator_init(&it, map);
 
@@ -380,10 +378,7 @@ VALUE as_hashmap2hash(as_hashmap * map) {
     as_string * i = as_string_fromval(key);
 
     name = rb_str_new2(i->value);
-    RB_GC_GUARD(name);
-
-    val = as_val2rb_val(value);
-    RB_GC_GUARD(value);
+    val  = as_val2rb_val(value);
 
     rb_hash_aset(hash, name, val);
   }
@@ -862,4 +857,20 @@ void * get_policy(VALUE options) {
   else {
     return NULL;
   }
+}
+
+// ----------------------------------------------------------------------------------
+//
+// enable ruby garbage collector
+//
+VALUE enable_rb_GC() {
+  rb_funcall(rb_mGC, rb_intern("enable"), 0);
+}
+
+// ----------------------------------------------------------------------------------
+//
+// disable ruby garbage collector
+//
+VALUE disable_rb_GC() {
+  rb_funcall(rb_mGC, rb_intern("disable"), 0);
 }

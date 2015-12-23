@@ -1000,13 +1000,12 @@ static VALUE list_udf(int argc, VALUE * argv, VALUE self) {
 //   module_name - string, registered module name
 //   func_name - string, function name in module to execute
 //   udf_args - arguments passed to udf
-//   options - ?
+//   options:
+//     policy - AerospikeC::ApplyPolicy
 //
 //  ------
 //  RETURN:
 //    1. data returned from udf
-//
-// @TODO options policy
 //
 static VALUE execute_udf(int argc, VALUE * argv, VALUE self) {
   as_error err;
@@ -1056,8 +1055,10 @@ static VALUE execute_udf(int argc, VALUE * argv, VALUE self) {
   return result;
 }
 
+// ----------------------------------------------------------------------------------
 //
 // callback for scan_records
+// push into array only if non error
 //
 static VALUE scan_records_callback_protected(VALUE rdata) {
   as_val * val = (as_val *) rdata;
@@ -1068,18 +1069,15 @@ static VALUE scan_records_callback_protected(VALUE rdata) {
 }
 
 static bool scan_records_callback(const as_val * val, VALUE scan_data) {
-  if ( val == NULL ) {
-    return true;
-  }
+  if ( val == NULL ) return true;
 
   pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
 
   int state = 0;
   VALUE result = rb_protect(scan_records_callback_protected, (VALUE)(val), &state);
 
-  if (!state) {
+  if (!state)
     rb_ary_push(scan_data, result);
-  }
 
   pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
 
@@ -1105,8 +1103,28 @@ static bool scan_records_callback(const as_val * val, VALUE scan_data) {
 //
 // @TODO options policy
 //
-static VALUE scan_records(int argc, VALUE * argv, VALUE self) {
+static VALUE scan_records_begin(VALUE rdata) {
+  scan_method_options * args = (scan_method_options *) rdata;
   as_error err;
+
+  disable_rb_GC();
+
+  if ( aerospike_scan_foreach(args->as, &err, args->policy, args->scan, args->callback, args->scan_data) != AEROSPIKE_OK )
+    raise_as_error(err);
+
+  return args->scan_data;
+}
+
+static VALUE scan_records_ensure(VALUE rdata) {
+  scan_method_options * args = (scan_method_options *) rdata;
+
+  enable_rb_GC();
+  as_scan_destroy(args->scan);
+
+  return args->scan_data;
+}
+
+static VALUE scan_records(int argc, VALUE * argv, VALUE self) {
   aerospike * as = get_client_struct(self);
 
   VALUE ns;
@@ -1126,13 +1144,15 @@ static VALUE scan_records(int argc, VALUE * argv, VALUE self) {
 
   VALUE scan_data = rb_ary_new();
 
-  if ( aerospike_scan_foreach(as, &err, NULL, &scan, scan_records_callback, scan_data) != AEROSPIKE_OK ) {
-    raise_as_error(err);
-  }
+  scan_method_options s_args;
 
-  as_scan_destroy(&scan);
+  s_args.as        = as;
+  s_args.scan      = &scan;
+  s_args.policy    = NULL;
+  s_args.callback  = scan_records_callback;
+  s_args.scan_data = scan_data;
 
-  return scan_data;
+  return rb_ensure(scan_records_begin, (VALUE)(&s_args), scan_records_ensure, (VALUE)(&s_args));;
 }
 
 // ----------------------------------------------------------------------------------
@@ -1157,8 +1177,30 @@ static VALUE scan_records(int argc, VALUE * argv, VALUE self) {
 //
 // @TODO options policy
 //
-static VALUE execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
+static VALUE execute_udf_on_scan_begin(VALUE rdata) {
+  scan_method_options * args = (scan_method_options *) rdata;
   as_error err;
+
+  disable_rb_GC();
+
+  if ( aerospike_scan_foreach(args->as, &err, args->policy, args->scan, args->callback, args->scan_data) != AEROSPIKE_OK )
+    raise_as_error(err);
+
+  return args->scan_data;
+}
+
+static VALUE execute_udf_on_scan_ensure(VALUE rdata) {
+  scan_method_options * args = (scan_method_options *) rdata;
+
+  enable_rb_GC();
+
+  as_scan_destroy(args->scan);
+  as_arraylist_destroy(args->args);
+
+  return args->scan_data;
+}
+
+static VALUE execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
   aerospike * as = get_client_struct(self);
 
   VALUE ns;
@@ -1171,12 +1213,8 @@ static VALUE execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
   rb_scan_args(argc, argv, "42", &ns, &set, &module_name, &func_name, &udf_args, &options);
 
   // default values for optional arguments
-  if ( NIL_P(options) ) {
-    options = rb_hash_new();
-  }
-  if ( NIL_P(udf_args) ) {
-    udf_args = rb_ary_new();
-  }
+  if ( NIL_P(options) ) options = rb_hash_new();
+  if ( NIL_P(udf_args) ) udf_args = rb_ary_new();
 
   as_arraylist * args = array2as_list(udf_args);
 
@@ -1187,14 +1225,16 @@ static VALUE execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
 
   VALUE scan_data = rb_ary_new();
 
-  if ( aerospike_scan_foreach(as, &err, NULL, &scan, scan_records_callback, scan_data) != AEROSPIKE_OK ) {
-    raise_as_error(err);
-  }
+  scan_method_options s_args;
 
-  as_scan_destroy(&scan);
-  as_arraylist_destroy(args);
+  s_args.as        = as;
+  s_args.scan      = &scan;
+  s_args.policy    = NULL;
+  s_args.callback  = scan_records_callback;
+  s_args.args      = args;
+  s_args.scan_data = scan_data;
 
-  return scan_data;
+  return rb_ensure(scan_records_begin, (VALUE)(&s_args), scan_records_ensure, (VALUE)(&s_args));;
 }
 
 // ----------------------------------------------------------------------------------
@@ -1211,13 +1251,11 @@ static VALUE execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
 //   udf_args - arguments passed to udf
 //   options:
 //     - priority: scan priority
-//     - policy: AerospikeC::Policy for read
+//     - policy: AerospikeC::Policy for write
 //
 //  ------
 //  RETURN:
 //    1. AerospikeC::ScanTask object
-//
-// @TODO options policy
 //
 static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
   as_error err;
@@ -1264,8 +1302,10 @@ static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) 
   return rb_funcall(ScanTask, rb_intern("new"), 2, scan_id, self);
 }
 
+// ----------------------------------------------------------------------------------
 //
 // callback method for execute_query
+// push into array only if non error
 //
 static VALUE execute_query_callback_protected(VALUE rdata) {
   as_val * val = (as_val *) rdata;
@@ -1308,36 +1348,54 @@ static bool execute_query_callback(as_val * val, VALUE query_data) {
 //  RETURN:
 //    1. data returned from query
 //
-// @TODO options policy in AeropsikeC::Query
-//
-static VALUE execute_query(VALUE self, VALUE query_obj) {
+static VALUE execute_query_begin(VALUE rdata) {
+  query_method_options * args = (query_method_options *) rdata;
   as_error err;
+
+  disable_rb_GC();
+
+  if ( aerospike_query_foreach(args->as, &err, args->policy, args->query, args->callback, args->query_data) != AEROSPIKE_OK )
+    raise_as_error(err);
+
+  return args->query_data;
+}
+
+static VALUE execute_query_ensure(VALUE rdata) {
+  query_method_options * args = (query_method_options *) rdata;
+
+  destroy_query(args->query);
+  enable_rb_GC();
+
+  return args->query_data;
+}
+
+static VALUE execute_query(VALUE self, VALUE query_obj) {
   aerospike * as = get_client_struct(self);
 
   VALUE is_aerospike_c_query_obj = rb_funcall(query_obj, rb_intern("is_a?"), 1, Query);
-  if ( is_aerospike_c_query_obj != Qtrue ) {
+  if ( is_aerospike_c_query_obj != Qtrue )
     rb_raise(OptionError, "[AerospikeC::Client][query] use AerospikeC::Query class to perform queries");
-  }
 
   as_query * query         = query_obj2as_query(query_obj);
   as_policy_query * policy = get_query_policy(query_obj);
 
   VALUE query_data = rb_ary_new();
 
-  RB_GC_GUARD(query_data);
+  query_method_options q_args;
 
-  if ( aerospike_query_foreach(as, &err, policy, query, execute_query_callback, query_data) != AEROSPIKE_OK ) {
-    destroy_query(query);
-    raise_as_error(err);
-  }
+  q_args.as         = as;
+  q_args.policy     = policy;
+  q_args.query      = query;
+  q_args.query_data = query_data;
+  q_args.callback   = execute_query_callback;
 
-  destroy_query(query);
-
-  return query_data;
+  return rb_ensure(execute_query_begin, (VALUE)(&q_args), execute_query_ensure, (VALUE)(&q_args));
 }
 
+// ----------------------------------------------------------------------------------
 //
 // callback method for execute_udf_on_query
+// push into array only if non error
 //
 static VALUE execute_udf_on_query_callback_protected(VALUE rdata) {
   as_val * val = (as_val *) rdata;
@@ -1351,54 +1409,24 @@ static VALUE execute_udf_on_query_callback_protected(VALUE rdata) {
       tmp = record2hash(record);
       break;
 
-    case AS_NIL:
-      tmp = Qnil;
-      break;
-
-    case AS_INTEGER:
-      tmp = as_val_int_2_val(val);
-      break;
-
-    case AS_STRING:
-      tmp = as_val_str_2_val(val);
-      break;
-
-    case AS_LIST:
-      tmp = as_list2array(val);
-      break;
-
-    case AS_MAP:
-      tmp = as_hashmap2hash(val);
-      break;
-
-    case AS_DOUBLE:
-      tmp = as_val_dbl_2_val(val);
-      break;
-
-    case AS_UNDEF:
-      tmp = rb_str_new2("undef");
+    default:
+      tmp = as_val2rb_val(val);
       break;
   }
-
-  RB_GC_GUARD(tmp);
 
   return tmp;
 }
 
 static bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
-  if ( val == NULL ) {
-    log_info("scan_records_callback end");
-    return false;
-  }
+  if ( val == NULL ) return false;
 
   pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
 
   int state = 0;
   VALUE result = rb_protect(execute_udf_on_query_callback_protected, (VALUE)(val), &state);
 
-  if (!state) {
+  if (!state)
     rb_ary_push(query_data, result);
-  }
 
   pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
 
@@ -1422,10 +1450,30 @@ static bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
 //  RETURN:
 //    1. data returned from query
 //
-// @TODO options policy in AeropsikeC::Query
-//
-static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
+static VALUE execute_udf_on_query_begin(VALUE rdata) {
+  query_method_options * args = (query_method_options *) rdata;
   as_error err;
+
+  disable_rb_GC();
+
+  if ( aerospike_query_foreach(args->as, &err, args->policy, args->query, args->callback, args->query_data) != AEROSPIKE_OK )
+    raise_as_error(err);
+
+  return args->query_data;
+}
+
+static VALUE execute_udf_on_query_ensure(VALUE rdata) {
+  query_method_options * args = (query_method_options *) rdata;
+
+  destroy_query(args->query);
+  as_arraylist_destroy(args->args);
+
+  enable_rb_GC();
+
+  return args->query_data;
+}
+
+static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
   aerospike * as = get_client_struct(self);
 
   VALUE query_obj;
@@ -1436,9 +1484,8 @@ static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
   rb_scan_args(argc, argv, "31", &query_obj, &module_name, &func_name, &udf_args);
 
   VALUE is_aerospike_c_query_obj = rb_funcall(query_obj, rb_intern("is_a?"), 1, Query);
-  if ( is_aerospike_c_query_obj != Qtrue ) {
+  if ( is_aerospike_c_query_obj != Qtrue )
     rb_raise(OptionError, "[AerospikeC::Client][execute_udf_on_query] use AerospikeC::Query class to perform queries");
-  }
 
   if ( NIL_P(udf_args) ) udf_args = rb_ary_new();
 
@@ -1450,18 +1497,16 @@ static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
 
   VALUE query_data = rb_ary_new();
 
-  RB_GC_GUARD(query_data);
+  query_method_options q_args;
 
-  if ( aerospike_query_foreach(as, &err, policy, query, execute_udf_on_query_callback, query_data) != AEROSPIKE_OK ) {
-    destroy_query(query);
-    as_arraylist_destroy(args);
-    raise_as_error(err);
-  }
+  q_args.as         = as;
+  q_args.args       = args;
+  q_args.policy     = policy;
+  q_args.query      = query;
+  q_args.query_data = query_data;
+  q_args.callback   = execute_udf_on_query_callback;
 
-  destroy_query(query);
-  as_arraylist_destroy(args);
-
-  return query_data;
+  return rb_ensure(execute_udf_on_query_begin, (VALUE)(&q_args), execute_udf_on_query_ensure, (VALUE)(&q_args));
 }
 
 // ----------------------------------------------------------------------------------
