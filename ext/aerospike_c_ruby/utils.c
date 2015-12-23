@@ -180,7 +180,7 @@ VALUE record2hash(as_record * rec) {
 //
 void hash2record(VALUE hash, VALUE rec) {
   rb_hash_foreach(hash, foreach_hash2record, rec);
-  log_debug("Converted ruby hash into as_record");
+  // log_debug("Converted ruby hash into as_record");
 }
 
 // ----------------------------------------------------------------------------------
@@ -237,7 +237,7 @@ as_arraylist * array2as_list(VALUE ary) {
     }
   }
 
-  log_debug("Converted ruby array into as_list");
+  // log_debug("Converted ruby array into as_list");
 
   return list;
 }
@@ -257,7 +257,7 @@ VALUE as_list2array(as_arraylist * list) {
     rb_ary_push(ary, as_val2rb_val(value));
   }
 
-  log_debug("Converted as_list into ruby array");
+  // log_debug("Converted as_list into ruby array");
 
   return ary;
 }
@@ -358,7 +358,7 @@ as_hashmap * hash2as_hashmap(VALUE hash) {
 
   rb_hash_foreach(hash, foreach_hash2as_hashmap, hmap);
 
-  log_debug("Converted ruby hash into as_hashmap");
+  // log_debug("Converted ruby hash into as_hashmap");
 
   return map;
 }
@@ -446,7 +446,7 @@ VALUE as_hashmap2hash(as_hashmap * map) {
 
   as_hashmap_iterator_destroy(&it);
 
-  log_debug("Converted as_hashmap into ruby hash");
+  // log_debug("Converted as_hashmap into ruby hash");
 
   return hash;
 }
@@ -881,7 +881,7 @@ as_query * query_obj2as_query(VALUE query_obj) {
     as_query_orderby(query, StringValueCStr(order_bin), FIX2INT(order_type));
   }
 
-  log_debug("Converted ruby AerospikeC::Query to as_query");
+  // log_debug("Converted ruby AerospikeC::Query to as_query");
 
   return query;
 }
@@ -914,7 +914,7 @@ void * rb_policy2as_policy(VALUE rb_policy) {
     rb_raise(ParseError, "[Utils][rb_policy2as_policy] unknown policy type: %s", val_inspect(type));
   }
 
-  log_debug("Converted ruby AerospikeC::Policy into as_policy");
+  // log_debug("Converted ruby AerospikeC::Policy into as_policy");
 
   return policy;
 }
