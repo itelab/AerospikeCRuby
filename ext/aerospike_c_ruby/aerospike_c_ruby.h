@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <sys/time.h>
 
 #include <aerospike/aerospike.h>
 #include <aerospike/aerospike_index.h>
@@ -145,6 +146,12 @@ void log_warn  (const char * msg);
 void log_error (const char * msg);
 void log_fatal (const char * msg);
 
+void log_info_with_time(const char * msg, struct timeval * tm);
+void log_info_with_time_v(const char * msg, struct timeval * tm, VALUE val);
+void log_info_with_time_v2(const char * msg, struct timeval * tm, VALUE val, VALUE val2);
+
+void start_timing(struct timeval * tm);
+
 aerospike * get_client_struct(VALUE client);
 as_key *    get_key_struct(VALUE key);
 as_record * get_record_struct(VALUE rec);
@@ -164,6 +171,7 @@ char ** rb_array2bin_names(VALUE ary);
 void    bin_names_destroy(char ** bin_names, long len);
 
 VALUE  value_to_s(VALUE val);
+char * value_to_s_cstr(VALUE val);
 char * val_inspect(VALUE val);
 
 VALUE bool2rb_bool(bool val);

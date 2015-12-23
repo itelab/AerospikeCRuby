@@ -30,6 +30,9 @@ static VALUE is_done(VALUE self) {
 //   interval_ms - the polling interval in milliseconds. If zero, 1000 ms is used
 //
 static VALUE wait_till_completed(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   if ( rb_iv_get(self, "@done") == Qtrue ) return Qtrue;
 
   VALUE interval_ms;
@@ -51,7 +54,7 @@ static VALUE wait_till_completed(int argc, VALUE * argv, VALUE self) {
   }
 
   rb_iv_set(self, "@done", Qtrue);
-  log_info("[AerospikeC::QueryTask][wait_till_completed] success");
+  log_info_with_time("[QueryTask][wait_till_completed] success", &tm);
 
   return rb_iv_get(self, "@done");
 }

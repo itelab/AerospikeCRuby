@@ -12,7 +12,7 @@ static void llist_free(as_ldt * llist) {
 }
 
 static VALUE llist_allocate(VALUE self) {
-  as_ldt * llist = (as_ldt *) ruby_xmalloc ( sizeof(as_ldt) );
+  as_ldt * llist = (as_ldt *) malloc ( sizeof(as_ldt) );
 
   if (! llist)
     rb_raise(MemoryError, "[AerospikeC::Llist][initialize] Error while allocating memory for aerospike llist");
@@ -120,6 +120,9 @@ static void llist_initialize(int argc, VALUE * argv, VALUE self) {
 // def add(value, options = {})
 //
 static VALUE llist_add(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   as_status status;
   aerospike * as = llist_client_struct(self);
@@ -140,7 +143,7 @@ static VALUE llist_add(int argc, VALUE * argv, VALUE self) {
     as_val_free(val);
 
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[AerospikeC::LList][add] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      log_warn("[LList][add] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
@@ -151,6 +154,8 @@ static VALUE llist_add(int argc, VALUE * argv, VALUE self) {
 
   add_llist_status_bins_workaround(rb_iv_get(self, "@client"), rb_iv_get(self, "@key"), rb_iv_get(self, "@bin_name"));
 
+  log_info_with_time_v("[Llist][add] success", &tm, value);
+
   return Qtrue;
 }
 
@@ -159,6 +164,9 @@ static VALUE llist_add(int argc, VALUE * argv, VALUE self) {
 // def add_all(values, options = {})
 //
 static VALUE llist_add_all(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   as_status status;
   aerospike * as = llist_client_struct(self);
@@ -180,7 +188,7 @@ static VALUE llist_add_all(int argc, VALUE * argv, VALUE self) {
     as_arraylist_destroy(vals);
 
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[AerospikeC::LList][add_all] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      log_warn("[LList][add_all] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
@@ -191,6 +199,8 @@ static VALUE llist_add_all(int argc, VALUE * argv, VALUE self) {
 
   add_llist_status_bins_workaround(rb_iv_get(self, "@client"), rb_iv_get(self, "@key"), rb_iv_get(self, "@bin_name"));
 
+  log_info_with_time("[LList][add_all] success", &tm);
+
   return Qtrue;
 }
 
@@ -199,6 +209,9 @@ static VALUE llist_add_all(int argc, VALUE * argv, VALUE self) {
 // def update(value, options = {})
 //
 static VALUE llist_update(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   as_status status;
   aerospike * as = llist_client_struct(self);
@@ -219,7 +232,7 @@ static VALUE llist_update(int argc, VALUE * argv, VALUE self) {
     as_val_free(val);
 
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[AerospikeC::LList][update] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      log_warn("[LList][update] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
@@ -227,6 +240,8 @@ static VALUE llist_update(int argc, VALUE * argv, VALUE self) {
   }
 
   as_val_free(val);
+
+  log_info_with_time_v("[LList][update] success", &tm, value);
 
   return Qtrue;
 }
@@ -236,6 +251,9 @@ static VALUE llist_update(int argc, VALUE * argv, VALUE self) {
 // def update_all(values, options = {})
 //
 static VALUE llist_update_all(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   as_status status;
   aerospike * as = llist_client_struct(self);
@@ -257,7 +275,7 @@ static VALUE llist_update_all(int argc, VALUE * argv, VALUE self) {
     as_arraylist_destroy(vals);
 
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[AerospikeC::LList][update_all] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      log_warn("[LList][update_all] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
@@ -265,6 +283,8 @@ static VALUE llist_update_all(int argc, VALUE * argv, VALUE self) {
   }
 
   as_arraylist_destroy(vals);
+
+  log_info_with_time("[LList][update_all] success", &tm);
 
   return Qtrue;
 }
@@ -274,6 +294,9 @@ static VALUE llist_update_all(int argc, VALUE * argv, VALUE self) {
 // def scan(options = {})
 //
 static VALUE llist_scan(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   as_status status;
   aerospike * as = llist_client_struct(self);
@@ -292,7 +315,7 @@ static VALUE llist_scan(int argc, VALUE * argv, VALUE self) {
 
   if ( ( status = aerospike_llist_scan(as, &err, policy, key, llist, &result_list) ) != AEROSPIKE_OK ) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[AerospikeC::LList][scan] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      log_warn("[LList][scan] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
@@ -303,6 +326,8 @@ static VALUE llist_scan(int argc, VALUE * argv, VALUE self) {
 
   as_arraylist_destroy(result_list);
 
+  log_info_with_time("[LList][scan] success", &tm);
+
   return result;
 }
 
@@ -311,6 +336,9 @@ static VALUE llist_scan(int argc, VALUE * argv, VALUE self) {
 // def delete(value, options = {})
 //
 static VALUE llist_delete(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   as_status status;
   aerospike * as = llist_client_struct(self);
@@ -331,12 +359,12 @@ static VALUE llist_delete(int argc, VALUE * argv, VALUE self) {
     as_val_free(val);
 
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[AerospikeC::LList][delete] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      log_warn("[LList][delete] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
     if ( status == AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND ) {
-      log_warn("[AerospikeC::LList][delete] AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND");
+      log_warn("[LList][delete] AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND");
       return Qnil;
     }
 
@@ -344,6 +372,8 @@ static VALUE llist_delete(int argc, VALUE * argv, VALUE self) {
   }
 
   as_val_free(val);
+
+  log_info_with_time_v("[LList][delete] success", &tm, value);
 
   return Qtrue;
 }
@@ -353,6 +383,9 @@ static VALUE llist_delete(int argc, VALUE * argv, VALUE self) {
 // def find(value, options = {})
 //
 static VALUE llist_find(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   as_status status;
   aerospike * as = llist_client_struct(self);
@@ -375,12 +408,12 @@ static VALUE llist_find(int argc, VALUE * argv, VALUE self) {
     as_val_free(val);
 
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[AerospikeC::LList][find] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      log_warn("[LList][find] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
     if ( status == AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND ) {
-      log_warn("[AerospikeC::LList][find] AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND");
+      log_warn("[LList][find] AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND");
       return Qnil;
     }
 
@@ -392,6 +425,8 @@ static VALUE llist_find(int argc, VALUE * argv, VALUE self) {
   as_val_free(val);
   as_arraylist_destroy(result_list);
 
+  log_info_with_time_v("[LList][find] success", &tm, value);
+
   return rb_ary_entry(result, 0);
 }
 
@@ -400,6 +435,9 @@ static VALUE llist_find(int argc, VALUE * argv, VALUE self) {
 // def find_first(count, options = {})
 //
 static VALUE llist_find_first(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   as_status status;
   aerospike * as = llist_client_struct(self);
@@ -413,7 +451,7 @@ static VALUE llist_find_first(int argc, VALUE * argv, VALUE self) {
   if ( NIL_P(options) ) options = rb_hash_new(); // default options
 
   if ( TYPE(count) != T_FIXNUM )
-    rb_raise(OptionError, "[AerospikeC::Llist][find_first] count must be integer");
+    rb_raise(OptionError, "[Llist][find_first] count must be integer");
 
   as_policy_apply * policy = get_policy(options);
   as_ldt * llist           = get_ldt_struct(self);
@@ -422,12 +460,12 @@ static VALUE llist_find_first(int argc, VALUE * argv, VALUE self) {
 
   if ( ( status = aerospike_llist_find_first(as, &err, policy, key, llist, FIX2LONG(count), &result_list) ) != AEROSPIKE_OK ) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[AerospikeC::LList][find_first] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      log_warn("[LList][find_first] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
     if ( status == AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND ) {
-      log_warn("[AerospikeC::LList][find_first] AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND");
+      log_warn("[LList][find_first] AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND");
       return Qnil;
     }
 
@@ -437,6 +475,8 @@ static VALUE llist_find_first(int argc, VALUE * argv, VALUE self) {
   VALUE result = as_list2array((as_arraylist *)result_list);
 
   as_arraylist_destroy(result_list);
+
+  log_info_with_time_v("[LList][find_first] success", &tm, count);
 
   return result;
 }
@@ -460,6 +500,9 @@ static VALUE llist_first(int argc, VALUE * argv, VALUE self) {
 // def find_last(count, options = {})
 //
 static VALUE llist_find_last(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   as_status status;
   aerospike * as = llist_client_struct(self);
@@ -473,7 +516,7 @@ static VALUE llist_find_last(int argc, VALUE * argv, VALUE self) {
   if ( NIL_P(options) ) options = rb_hash_new(); // default options
 
   if ( TYPE(count) != T_FIXNUM )
-    rb_raise(OptionError, "[AerospikeC::Llist][find_last] count must be integer");
+    rb_raise(OptionError, "[Llist][find_last] count must be integer");
 
   as_policy_apply * policy = get_policy(options);
   as_ldt * llist           = get_ldt_struct(self);
@@ -482,12 +525,12 @@ static VALUE llist_find_last(int argc, VALUE * argv, VALUE self) {
 
   if ( ( status = aerospike_llist_find_last(as, &err, policy, key, llist, FIX2LONG(count), &result_list) ) != AEROSPIKE_OK ) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[AerospikeC::LList][find_last] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      log_warn("[LList][find_last] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
     if ( status == AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND ) {
-      log_warn("[AerospikeC::LList][find_last] AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND");
+      log_warn("[LList][find_last] AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND");
       return Qnil;
     }
 
@@ -497,6 +540,8 @@ static VALUE llist_find_last(int argc, VALUE * argv, VALUE self) {
   VALUE result = as_list2array((as_arraylist *)result_list);
 
   as_arraylist_destroy(result_list);
+
+  log_info_with_time_v("[LList][find_last] success", &tm, count);
 
   return result;
 }
@@ -520,6 +565,9 @@ static VALUE llist_last(int argc, VALUE * argv, VALUE self) {
 // def find_from(value, count, options = {})
 //
 static VALUE llist_find_from(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   as_status status;
   aerospike * as = llist_client_struct(self);
@@ -534,7 +582,7 @@ static VALUE llist_find_from(int argc, VALUE * argv, VALUE self) {
   if ( NIL_P(options) ) options = rb_hash_new(); // default options
 
   if ( TYPE(count) != T_FIXNUM )
-    rb_raise(OptionError, "[AerospikeC::Llist][find_from] count must be integer");
+    rb_raise(OptionError, "[Llist][find_from] count must be integer");
 
   as_policy_apply * policy = get_policy(options);
   as_val * val             = rb_val2as_val(value);
@@ -546,12 +594,12 @@ static VALUE llist_find_from(int argc, VALUE * argv, VALUE self) {
     as_val_free(val);
 
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[AerospikeC::LList][find_from] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      log_warn("[LList][find_from] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
     if ( status == AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND ) {
-      log_warn("[AerospikeC::LList][find_from] AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND");
+      log_warn("[LList][find_from] AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND");
       return Qnil;
     }
 
@@ -563,6 +611,8 @@ static VALUE llist_find_from(int argc, VALUE * argv, VALUE self) {
   as_val_free(val);
   as_arraylist_destroy(result_list);
 
+  log_info_with_time_v2("[LList][find_from] success", &tm, value, count);
+
   return result;
 }
 
@@ -571,6 +621,9 @@ static VALUE llist_find_from(int argc, VALUE * argv, VALUE self) {
 // def size(options = {})
 //
 static VALUE llist_size(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   as_status status;
   aerospike * as = llist_client_struct(self);
@@ -589,12 +642,14 @@ static VALUE llist_size(int argc, VALUE * argv, VALUE self) {
 
   if ( ( status = aerospike_llist_size(as, &err, policy, key, llist, &llist_size) ) != AEROSPIKE_OK ) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[AerospikeC::LList][size] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      log_warn("[LList][size] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
     raise_as_error(err);
   }
+
+  log_info_with_time("[LList][size] success", &tm);
 
   return LONG2FIX(llist_size);
 }
@@ -622,7 +677,7 @@ static VALUE llist_size(int argc, VALUE * argv, VALUE self) {
 
 //   if ( ( status = aerospike_llist_get_capacity(as, &err, policy, key, llist, &ldt_capacity) ) != AEROSPIKE_OK ) {
 //     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-//       log_warn("[AerospikeC::LList][capacity] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+//       log_warn("[LList][capacity] AEROSPIKE_ERR_RECORD_NOT_FOUND");
 //       return Qnil;
 //     }
 
@@ -650,7 +705,7 @@ static VALUE llist_size(int argc, VALUE * argv, VALUE self) {
 //   if ( NIL_P(options) ) options = rb_hash_new(); // default options
 
 //   if ( TYPE(capacity) != T_FIXNUM )
-//     rb_raise(OptionError, "[AerospikeC::Llist][set_capacity] capacity must be integer");
+//     rb_raise(OptionError, "[Llist][set_capacity] capacity must be integer");
 
 //   as_policy_apply * policy = get_policy(options);
 //   as_ldt * llist           = get_ldt_struct(self);
@@ -659,7 +714,7 @@ static VALUE llist_size(int argc, VALUE * argv, VALUE self) {
 
 //   if ( ( status = aerospike_llist_set_capacity(as, &err, policy, key, llist, &ldt_capacity) ) != AEROSPIKE_OK ) {
 //     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-//       log_warn("[AerospikeC::LList][set_capacity] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+//       log_warn("[LList][set_capacity] AEROSPIKE_ERR_RECORD_NOT_FOUND");
 //       return Qnil;
 //     }
 
@@ -700,7 +755,7 @@ static VALUE llist_size(int argc, VALUE * argv, VALUE self) {
 //     as_arraylist_destroy(args);
 
 //     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-//       log_warn("[AerospikeC::LList][set_capacity] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+//       log_warn("[LList][set_capacity] AEROSPIKE_ERR_RECORD_NOT_FOUND");
 //       return Qnil;
 //     }
 

@@ -166,6 +166,39 @@ static VALUE set_policy(VALUE self, VALUE policy) {
 }
 
 // ----------------------------------------------------------------------------------
+//
+// query_info
+//
+static VALUE query_info(VALUE self) {
+  VALUE filter = rb_iv_get(self, "@filter");
+  VALUE bins = rb_iv_get(self, "@bins");
+
+  VALUE filter_type = rb_hash_aref(filter, filter_type_sym);
+  VALUE query_bin   = rb_hash_aref(filter, bin_sym);
+
+  char * select_info;
+
+  if ( rb_ary_len_int(bins) == 0 ) {
+    select_info = "*";
+  }
+  else {
+    select_info = value_to_s_cstr(bins);
+  }
+
+  if ( filter_type == eql_sym ) {
+    VALUE val        = rb_hash_aref(filter, value_sym);
+
+    return rb_sprintf("SELECT %s WHERE %s = %s", select_info, StringValueCStr(query_bin), value_to_s_cstr(val));
+  }
+  else if ( filter_type == range_sym ) {
+    VALUE min = rb_hash_aref(filter, min_sym);
+    VALUE max = rb_hash_aref(filter, max_sym);
+
+    return rb_sprintf("SELECT %s WHERE %s BETWEEN %s AND %s", select_info, StringValueCStr(query_bin), value_to_s_cstr(min), value_to_s_cstr(max));
+  }
+}
+
+// ----------------------------------------------------------------------------------
 // Init
 //
 void init_aerospike_c_query(VALUE AerospikeC) {
@@ -183,6 +216,7 @@ void init_aerospike_c_query(VALUE AerospikeC) {
   rb_define_method(Query, "order_by!", RB_FN_ANY()order_by, 2);
   rb_define_method(Query, "bins<<", RB_FN_ANY()add_bin, 1);
   rb_define_method(Query, "policy=", RB_FN_ANY()set_policy, 1);
+  rb_define_method(Query, "query_info", RB_FN_ANY()query_info, 0);
 
   //
   // attr_accessor

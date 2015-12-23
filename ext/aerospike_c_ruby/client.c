@@ -24,6 +24,9 @@ static VALUE client_allocate(VALUE self) {
 // def initialize(host, port, options = {})
 //
 static void client_initialize(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   VALUE host;
   VALUE port;
   VALUE options;
@@ -54,6 +57,8 @@ static void client_initialize(int argc, VALUE * argv, VALUE self) {
     aerospike_destroy(as);
     raise_as_error(err);
   }
+
+  log_info_with_time("[Client] initializing and connecting done", &tm);
 }
 
 // ----------------------------------------------------------------------------------
@@ -75,6 +80,9 @@ static void client_initialize(int argc, VALUE * argv, VALUE self) {
 //    2. nil when AEROSPIKE_ERR_RECORD_NOT_FOUND
 //
 static VALUE put(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_status status;
   as_error err;
   as_record * rec = NULL;
@@ -118,7 +126,7 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
     as_record_destroy(rec);
 
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[AerospikeC::Client][put] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      log_warn("[Client][put] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
@@ -127,7 +135,7 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
 
   as_record_destroy(rec);
 
-  log_info("[AerospikeC::Client][put] success");
+  log_info_with_time_v("[Client][put] success", &tm, rb_funcall(key, rb_intern("key_info"), 0));
 
   return Qtrue;
 }
@@ -152,6 +160,9 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
 //    2. nil when AEROSPIKE_ERR_RECORD_NOT_FOUND
 //
 static VALUE get(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   as_status status;
   aerospike * as  = get_client_struct(self);
@@ -187,7 +198,7 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
       inputArray_destroy(inputArray);
 
       if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-        log_warn("[AerospikeC::Client][get] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+        log_warn("[Client][get] AEROSPIKE_ERR_RECORD_NOT_FOUND");
         return Qnil;
       }
 
@@ -200,6 +211,10 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
     as_record_destroy(rec);
     inputArray_destroy(inputArray);
 
+    check_for_llist_workaround(self, key, bins);
+
+    log_info_with_time_v("[Client][get] success", &tm, rb_funcall(key, rb_intern("key_info"), 0));
+
     return bins;
   }
 
@@ -208,7 +223,7 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
     as_record_destroy(rec);
 
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[AerospikeC::Client][get] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      log_warn("[Client][get] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
@@ -222,7 +237,7 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
 
   check_for_llist_workaround(self, key, bins);
 
-  log_info("[AerospikeC::Client][get] success");
+  log_info_with_time_v("[Client][get] success", &tm, rb_funcall(key, rb_intern("key_info"), 0));
 
   return bins;
 }
@@ -244,6 +259,9 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
 //    2. nil if AEROSPIKE_ERR_RECORD_NOT_FOUND
 //
 static VALUE delete_record(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   as_status status;
   aerospike * as = get_client_struct(self);
@@ -260,14 +278,14 @@ static VALUE delete_record(int argc, VALUE * argv, VALUE self) {
 
   if ( ( status = aerospike_key_remove(as, &err, policy, k) ) != AEROSPIKE_OK ) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[AerospikeC::Client][delete] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      log_warn("[Client][delete] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
     raise_as_error(err);
   }
 
-  log_info("[AerospikeC::Client][delete] success");
+  log_info_with_time_v("[Client][delete] success", &tm, rb_funcall(key, rb_intern("key_info"), 0));
 
   return Qtrue;
 }
@@ -286,6 +304,7 @@ static VALUE delete_record(int argc, VALUE * argv, VALUE self) {
 //    1. true if no errors
 //
 static VALUE set_logger(VALUE self, VALUE logger) {
+  log_info("[Client] Setting logger object");
   Logger = logger;
   return Qtrue;
 }
@@ -307,6 +326,9 @@ static VALUE set_logger(VALUE self, VALUE logger) {
 //    2. false otherwise
 //
 static VALUE key_exists(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   as_status status;
   aerospike * as  = get_client_struct(self);
@@ -325,12 +347,16 @@ static VALUE key_exists(int argc, VALUE * argv, VALUE self) {
   if ( ( status = aerospike_key_exists(as, &err, policy, k, &rec) ) != AEROSPIKE_OK ) {
     as_record_destroy(rec);
 
-    if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) return Qfalse;
+    if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
+      log_info_with_time_v("[Client][exists?] success - false", &tm, rb_funcall(key, rb_intern("key_info"), 0));
+      return Qfalse;
+    }
 
     raise_as_error(err);
   }
   else {
     as_record_destroy(rec);
+    log_info_with_time_v("[Client][exists?] success - true", &tm, rb_funcall(key, rb_intern("key_info"), 0));
     return Qtrue;
   }
 }
@@ -350,6 +376,9 @@ static VALUE key_exists(int argc, VALUE * argv, VALUE self) {
 //    2. nil when AEROSPIKE_ERR_RECORD_NOT_FOUND
 //
 static VALUE get_header(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   as_status status;
   aerospike * as  = get_client_struct(self);
@@ -371,7 +400,7 @@ static VALUE get_header(int argc, VALUE * argv, VALUE self) {
 
   if ( ( status = aerospike_key_select(as, &err, policy, k, inputArray, &rec) ) != AEROSPIKE_OK) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[AerospikeC::Client][get_header] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      log_warn("[Client][get_header] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
@@ -382,6 +411,8 @@ static VALUE get_header(int argc, VALUE * argv, VALUE self) {
   rb_hash_aset(header, rb_str_new2("expire_in"), INT2FIX(rec->ttl));
 
   as_record_destroy(rec);
+
+  log_info_with_time_v("[Client][get_header] success", &tm, rb_funcall(key, rb_intern("key_info"), 0));
 
   return header;
 }
@@ -405,6 +436,9 @@ static VALUE get_header(int argc, VALUE * argv, VALUE self) {
 // @TODO options policy
 //
 static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   as_status status;
   aerospike * as = get_client_struct(self);
@@ -468,7 +502,7 @@ static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
   // read here!
   if ( ( status = aerospike_batch_read(as, &err, NULL, &records) ) != AEROSPIKE_OK ) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[AerospikeC::Client][batch_get] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      log_warn("[Client][batch_get] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
@@ -493,7 +527,7 @@ static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
 
   if ( specific_bins != Qnil ) bin_names_destroy(bin_names, n_bin_names);
 
-  log_info("[AerospikeC::Client][batch_get] success");
+  log_info_with_time("[Client][batch_get] success", &tm);
 
   return records_bins;
 }
@@ -515,6 +549,9 @@ static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
 // @TODO options policy
 //
 static VALUE touch(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   as_status status;
   aerospike * as = get_client_struct(self);
@@ -546,7 +583,7 @@ static VALUE touch(int argc, VALUE * argv, VALUE self) {
 
   if ( ( status = aerospike_key_operate(as, &err, NULL, k, &ops, &rec) ) != AEROSPIKE_OK ) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[AerospikeC::Client][touch] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      log_warn("[Client][touch] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
@@ -561,6 +598,8 @@ static VALUE touch(int argc, VALUE * argv, VALUE self) {
 
   as_record_destroy(rec);
   as_operations_destroy(&ops);
+
+  log_info_with_time_v("[Client][touch] success", &tm, rb_funcall(key, rb_intern("key_info"), 0));
 
   return header;
 }
@@ -583,6 +622,9 @@ static VALUE touch(int argc, VALUE * argv, VALUE self) {
 // @TODO options policy
 //
 static VALUE operate(VALUE self, VALUE key, VALUE operations) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   as_status status;
   aerospike * as = get_client_struct(self);
@@ -646,7 +688,7 @@ static VALUE operate(VALUE self, VALUE key, VALUE operations) {
 
   if ( ( status = aerospike_key_operate(as, &err, NULL, k, &ops, &rec) ) != AEROSPIKE_OK ) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[AerospikeC::Client][operate] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      log_warn("[Client][operate] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
@@ -659,7 +701,7 @@ static VALUE operate(VALUE self, VALUE key, VALUE operations) {
   as_record_destroy(rec);
   as_operations_destroy(&ops);
 
-  log_info("[AerospikeC::Client][operate] success");
+  log_info_with_time_v("[Client][operate] success", &tm, rb_funcall(key, rb_intern("key_info"), 0));
 
   return record;
 }
@@ -673,6 +715,7 @@ static VALUE operate(VALUE self, VALUE key, VALUE operations) {
 //    1. new AerospikeC::Operation object
 //
 static VALUE operation_obj(VALUE self) {
+  log_info("[Client] Getting new Operation object");
   return rb_funcall(Operation, rb_intern("new"), 0);
 }
 
@@ -694,6 +737,9 @@ static VALUE operation_obj(VALUE self) {
 // @TODO options policy
 //
 static VALUE create_index(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   aerospike * as = get_client_struct(self);
 
@@ -731,6 +777,8 @@ static VALUE create_index(int argc, VALUE * argv, VALUE self) {
 
   VALUE index_task_struct = Data_Wrap_Struct(IndexTask, NULL, index_task_deallocate, task);
 
+  log_info_with_time("[Client][create_index] done", &tm);
+
   return rb_funcall(IndexTask, rb_intern("new"), 1, index_task_struct);
 }
 
@@ -749,6 +797,9 @@ static VALUE create_index(int argc, VALUE * argv, VALUE self) {
 // @TODO options policy
 //
 static VALUE drop_index(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   aerospike * as = get_client_struct(self);
 
@@ -763,6 +814,8 @@ static VALUE drop_index(int argc, VALUE * argv, VALUE self) {
 
   if ( aerospike_index_remove(as, &err, NULL, StringValueCStr(ns), StringValueCStr(name)) != AEROSPIKE_OK )
     raise_as_error(err);
+
+  log_info_with_time("[Client][drop_index] done", &tm);
 
   return Qtrue;
 }
@@ -784,6 +837,9 @@ static VALUE drop_index(int argc, VALUE * argv, VALUE self) {
 // @TODO options policy
 //
 static VALUE info_cmd(VALUE self, VALUE cmd) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   aerospike * as = get_client_struct(self);
 
@@ -798,6 +854,8 @@ static VALUE info_cmd(VALUE self, VALUE cmd) {
 
   VALUE info_res = rb_str_new2(res);
   free(res);
+
+  log_info_with_time("[Client][info_cmd] done", &tm);
 
   return info_res;
 }
@@ -820,6 +878,9 @@ static VALUE info_cmd(VALUE self, VALUE cmd) {
 // @TODO options policy
 //
 static VALUE register_udf(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   aerospike * as = get_client_struct(self);
 
@@ -871,7 +932,7 @@ static VALUE register_udf(int argc, VALUE * argv, VALUE self) {
 
   as_bytes_destroy(&udf_content);
 
-  log_info("[AerospikeC::Client][register_udf] success");
+  log_info_with_time("[Client][register_udf] success", &tm);
 
   return rb_funcall(UdfTask, rb_intern("new"), 2, server_path, self);
 }
@@ -892,6 +953,9 @@ static VALUE register_udf(int argc, VALUE * argv, VALUE self) {
 // @TODO options policy
 //
 static VALUE drop_udf(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   aerospike * as = get_client_struct(self);
 
@@ -906,7 +970,7 @@ static VALUE drop_udf(int argc, VALUE * argv, VALUE self) {
   if ( aerospike_udf_remove(as, &err, NULL, StringValueCStr(server_path)) != AEROSPIKE_OK )
     raise_as_error(err);
 
-  log_info("[AerospikeC::Client][drop_udf] success");
+  log_info_with_time("[Client][drop_udf] success", &tm);
 
   return Qtrue;
 }
@@ -984,6 +1048,9 @@ static VALUE list_udf(int argc, VALUE * argv, VALUE self) {
 //    1. data returned from udf
 //
 static VALUE execute_udf(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   as_status status;
   aerospike * as = get_client_struct(self);
@@ -1006,11 +1073,14 @@ static VALUE execute_udf(int argc, VALUE * argv, VALUE self) {
 
   as_val * res = NULL;
 
-  if ( ( status = aerospike_key_apply(as, &err, policy, k, StringValueCStr(module_name), StringValueCStr(func_name), (as_list *)args, &res) ) != AEROSPIKE_OK ) {
+  char * c_module_name = StringValueCStr(module_name);
+  char * c_func_name   = StringValueCStr(func_name);
+
+  if ( ( status = aerospike_key_apply(as, &err, policy, k, c_module_name, c_func_name, (as_list *)args, &res) ) != AEROSPIKE_OK ) {
     as_arraylist_destroy(args);
 
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[AerospikeC::Client][execute_udf] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      log_warn("[Client][execute_udf] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
@@ -1022,7 +1092,10 @@ static VALUE execute_udf(int argc, VALUE * argv, VALUE self) {
   as_val_destroy(&res);
   as_arraylist_destroy(args);
 
-  log_info("[AerospikeC::Client][execute_udf] success");
+  VALUE key_info = rb_funcall(key, rb_intern("key_info"), 0);
+  VALUE mod_info = rb_sprintf("mod: %s, func: %s", c_module_name, c_func_name);
+
+  log_info_with_time_v2("[Client][execute_udf] success", &tm, key_info, mod_info);
 
   return result;
 }
@@ -1097,6 +1170,9 @@ static VALUE scan_records_ensure(VALUE rdata) {
 }
 
 static VALUE scan_records(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   aerospike * as = get_client_struct(self);
 
   VALUE ns;
@@ -1124,7 +1200,11 @@ static VALUE scan_records(int argc, VALUE * argv, VALUE self) {
   s_args.callback  = scan_records_callback;
   s_args.scan_data = scan_data;
 
-  return rb_ensure(scan_records_begin, (VALUE)(&s_args), scan_records_ensure, (VALUE)(&s_args));;
+  VALUE result = rb_ensure(scan_records_begin, (VALUE)(&s_args), scan_records_ensure, (VALUE)(&s_args));;
+
+  log_info_with_time("[Client][scan] success", &tm);
+
+  return result;
 }
 
 // ----------------------------------------------------------------------------------
@@ -1173,6 +1253,9 @@ static VALUE execute_udf_on_scan_ensure(VALUE rdata) {
 }
 
 static VALUE execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   aerospike * as = get_client_struct(self);
 
   VALUE ns;
@@ -1192,7 +1275,11 @@ static VALUE execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
 
   as_scan scan;
   as_scan_init(&scan, StringValueCStr(ns), StringValueCStr(set));
-  as_scan_apply_each(&scan, StringValueCStr(module_name), StringValueCStr(func_name), (as_list *)args);
+
+  char * c_module_name = StringValueCStr(module_name);
+  char * c_func_name = StringValueCStr(func_name);
+
+  as_scan_apply_each(&scan, c_module_name, c_func_name, (as_list *)args);
   set_priority_options(&scan, options);
 
   VALUE scan_data = rb_ary_new();
@@ -1206,7 +1293,13 @@ static VALUE execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
   s_args.args      = args;
   s_args.scan_data = scan_data;
 
-  return rb_ensure(scan_records_begin, (VALUE)(&s_args), scan_records_ensure, (VALUE)(&s_args));;
+  VALUE result = rb_ensure(scan_records_begin, (VALUE)(&s_args), scan_records_ensure, (VALUE)(&s_args));;
+
+  VALUE mod_info = rb_sprintf("mod: %s, func: %s", c_module_name, c_func_name);
+
+  log_info_with_time_v("[Client][scan_udf] success", &tm, mod_info);
+
+  return result;
 }
 
 // ----------------------------------------------------------------------------------
@@ -1230,6 +1323,9 @@ static VALUE execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
 //    1. AerospikeC::ScanTask object
 //
 static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   aerospike * as = get_client_struct(self);
 
@@ -1251,7 +1347,11 @@ static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) 
 
   as_scan scan;
   as_scan_init(&scan, StringValueCStr(ns), StringValueCStr(set));
-  as_scan_apply_each(&scan, StringValueCStr(module_name), StringValueCStr(func_name), (as_list *)args);
+
+  char * c_module_name = StringValueCStr(module_name);
+  char * c_func_name = StringValueCStr(func_name);
+
+  as_scan_apply_each(&scan, c_module_name, c_func_name, (as_list *)args);
   set_priority_options(&scan, options);
 
   uint64_t scanid = 0;
@@ -1265,6 +1365,10 @@ static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) 
 
   as_scan_destroy(&scan);
   as_arraylist_destroy(args);
+
+  VALUE mod_info = rb_sprintf("mod: %s, func: %s", c_module_name, c_func_name);
+
+  log_info_with_time_v("[Client][bg_scan_udf] success", &tm, mod_info);
 
   return rb_funcall(ScanTask, rb_intern("new"), 2, scan_id, self);
 }
@@ -1334,6 +1438,9 @@ static VALUE execute_query_ensure(VALUE rdata) {
 }
 
 static VALUE execute_query(VALUE self, VALUE query_obj) {
+  struct timeval tm;
+  start_timing(&tm);
+
   aerospike * as = get_client_struct(self);
 
   VALUE is_aerospike_c_query_obj = rb_funcall(query_obj, rb_intern("is_a?"), 1, Query);
@@ -1353,7 +1460,11 @@ static VALUE execute_query(VALUE self, VALUE query_obj) {
   q_args.query_data = query_data;
   q_args.callback   = execute_query_callback;
 
-  return rb_ensure(execute_query_begin, (VALUE)(&q_args), execute_query_ensure, (VALUE)(&q_args));
+  VALUE result = rb_ensure(execute_query_begin, (VALUE)(&q_args), execute_query_ensure, (VALUE)(&q_args));
+
+  log_info_with_time("[Client][query] success", &tm);
+
+  return result;
 }
 
 // ----------------------------------------------------------------------------------
@@ -1438,6 +1549,9 @@ static VALUE execute_udf_on_query_ensure(VALUE rdata) {
 }
 
 static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
+  struct timeval tm;
+  start_timing(&tm);
+
   aerospike * as = get_client_struct(self);
 
   VALUE query_obj;
@@ -1449,7 +1563,7 @@ static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
 
   VALUE is_aerospike_c_query_obj = rb_funcall(query_obj, rb_intern("is_a?"), 1, Query);
   if ( is_aerospike_c_query_obj != Qtrue )
-    rb_raise(OptionError, "[AerospikeC::Client][execute_udf_on_query] use AerospikeC::Query class to perform queries");
+    rb_raise(OptionError, "[AerospikeC::Client][aggregate] use AerospikeC::Query class to perform queries");
 
   if ( NIL_P(udf_args) ) udf_args = rb_ary_new();
 
@@ -1457,7 +1571,10 @@ static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
   as_query * query         = query_obj2as_query(query_obj);
   as_policy_query * policy = get_query_policy(query_obj);
 
-  as_query_apply(query, StringValueCStr(module_name), StringValueCStr(func_name), (as_list*)args);
+  char * c_module_name = StringValueCStr(module_name);
+  char * c_func_name = StringValueCStr(func_name);
+
+  as_query_apply(query, c_module_name, c_func_name, (as_list*)args);
 
   VALUE query_data = rb_ary_new();
 
@@ -1470,7 +1587,13 @@ static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
   q_args.query_data = query_data;
   q_args.callback   = execute_udf_on_query_callback;
 
-  return rb_ensure(execute_udf_on_query_begin, (VALUE)(&q_args), execute_udf_on_query_ensure, (VALUE)(&q_args));
+  VALUE result = rb_ensure(execute_udf_on_query_begin, (VALUE)(&q_args), execute_udf_on_query_ensure, (VALUE)(&q_args));
+
+  VALUE mod_info = rb_sprintf("mod: %s, func: %s", c_module_name, c_func_name);
+
+  log_info_with_time_v("[Client][aggregate]", &tm, mod_info);
+
+  return result;
 }
 
 // ----------------------------------------------------------------------------------
@@ -1492,6 +1615,9 @@ static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
 // @TODO options policy in AeropsikeC::Query
 //
 static VALUE background_execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   aerospike * as = get_client_struct(self);
 
@@ -1504,7 +1630,7 @@ static VALUE background_execute_udf_on_query(int argc, VALUE * argv, VALUE self)
 
   VALUE is_aerospike_c_query_obj = rb_funcall(query_obj, rb_intern("is_a?"), 1, Query);
   if ( is_aerospike_c_query_obj != Qtrue ) {
-    rb_raise(OptionError, "[AerospikeC::Client][background_execute_udf_on_query] use AerospikeC::Query class to perform queries");
+    rb_raise(OptionError, "[AerospikeC::Client][bg_aggregate] use AerospikeC::Query class to perform queries");
   }
 
   if ( NIL_P(udf_args) ) udf_args = rb_ary_new();
@@ -1512,7 +1638,10 @@ static VALUE background_execute_udf_on_query(int argc, VALUE * argv, VALUE self)
   as_arraylist * args = array2as_list(udf_args);
   as_query * query    = query_obj2as_query(query_obj);
 
-  as_query_apply(query, StringValueCStr(module_name), StringValueCStr(func_name), (as_list*)args);
+  char * c_module_name = StringValueCStr(module_name);
+  char * c_func_name = StringValueCStr(func_name);
+
+  as_query_apply(query, c_module_name, c_func_name, (as_list*)args);
 
   uint64_t query_id = 0;
 
@@ -1529,6 +1658,10 @@ static VALUE background_execute_udf_on_query(int argc, VALUE * argv, VALUE self)
 
   rb_iv_set(self, "@last_query_id", queryid);
 
+  VALUE mod_info = rb_sprintf("mod: %s, func: %s", c_module_name, c_func_name);
+
+  log_info_with_time_v("[Client][bg_aggregate] success", &tm, mod_info);
+
   return rb_funcall(QueryTask, rb_intern("new"), 3, queryid, rb_query, self);
 }
 
@@ -1544,12 +1677,17 @@ static VALUE background_execute_udf_on_query(int argc, VALUE * argv, VALUE self)
 //    1. self
 //
 static VALUE close_connection(VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   as_error err;
   aerospike * as = get_client_struct(self);
 
   if ( aerospike_close(as, &err) != AEROSPIKE_OK )  {
     raise_as_error(err);
   }
+
+  log_info_with_time("[Client][close] done!", &tm);
 
   return self;
 }
@@ -1576,6 +1714,8 @@ static VALUE llist(int argc, VALUE * argv, VALUE self) {
   rb_scan_args(argc, argv, "21", &key, &bin_name, &options);
 
   if ( NIL_P(options) ) options = rb_hash_new(); // default options
+
+  log_info("[Client] Getting new Llist");
 
   return rb_funcall(Llist, rb_intern("new"), 4, self, key, bin_name, options);
 }

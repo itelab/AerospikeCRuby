@@ -4,46 +4,114 @@ static int foreach_hash2record(VALUE key, VALUE val, VALUE record);
 static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE map);
 static char * key2bin_name(VALUE key);
 
+static int color_code = 35;
+
+static void switch_color_code() {
+  if (color_code == 35) color_code = 36;
+  else if (color_code == 36) color_code = 35;
+  else color_code = 36;
+}
+
 // ----------------------------------------------------------------------------------
 //
 // logger methods
 //
 void log_debug(const char * msg) {
 #ifdef AEROSPIKE_C_RUBY_DEBUG
-  if ( TYPE(Logger) != T_OBJECT ) {
-    return;
-  }
-  rb_funcall(Logger, rb_intern("debug"), 1, rb_str_new2(msg));
+  if ( TYPE(Logger) != T_OBJECT ) return;
+
+  switch_color_code();
+
+  VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s\e[0m %s", color_code, "<AerospikeC>", msg);
+  rb_funcall(Logger, rb_intern("debug"), 1, rb_msg);
 #endif
 }
 
 void log_info(const char * msg) {
-  if ( TYPE(Logger) != T_OBJECT ) {
-    return;
-  }
-  rb_funcall(Logger, rb_intern("info"), 1, rb_str_new2(msg));
+  if ( TYPE(Logger) != T_OBJECT ) return;
+
+  switch_color_code();
+
+  VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s\e[0m %s", color_code, "<AerospikeC>", msg);
+  rb_funcall(Logger, rb_intern("info"), 1, rb_msg);
 }
 
 void log_warn(const char * msg) {
-  if ( TYPE(Logger) != T_OBJECT ) {
-    return;
-  }
-  rb_funcall(Logger, rb_intern("warn"), 1, rb_str_new2(msg));
+  if ( TYPE(Logger) != T_OBJECT ) return;
+
+  switch_color_code();
+
+  VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s\e[0m %s", color_code, "<AerospikeC>", msg);
+  rb_funcall(Logger, rb_intern("warn"), 1, rb_msg);
 }
 
 void log_error(const char * msg) {
-  if ( TYPE(Logger) != T_OBJECT ) {
-    return;
-  }
-  rb_funcall(Logger, rb_intern("error"), 1, rb_str_new2(msg));
+  if ( TYPE(Logger) != T_OBJECT ) return;
+
+  switch_color_code();
+
+  VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s\e[0m \e[1m\e[31%s\e[0m", color_code, "<AerospikeC>", msg);
+  rb_funcall(Logger, rb_intern("error"), 1, rb_msg);
 }
 
 void log_fatal(const char * msg) {
-  if ( TYPE(Logger) != T_OBJECT ) {
-    return;
-  }
-  rb_funcall(Logger, rb_intern("fatal"), 1, rb_str_new2(msg));
+  if ( TYPE(Logger) != T_OBJECT ) return;
+
+  switch_color_code();
+
+  VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s\e[0m \e[1m\e[31%s\e[0m", color_code, "<AerospikeC>", msg);
+  rb_funcall(Logger, rb_intern("fatal"), 1, rb_msg);
 }
+
+void log_info_with_time(const char * msg, struct timeval * tm) {
+  if ( TYPE(Logger) != T_OBJECT ) return;
+
+  struct timeval tm2;
+  gettimeofday(&tm2, NULL);
+
+  double elapsedTime = (tm2.tv_sec - tm->tv_sec) * 1000.0;
+  elapsedTime += (tm2.tv_usec - tm->tv_usec) / 1000.0;
+
+  switch_color_code();
+
+  VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s (%.4f ms)\e[0m \e[1m%s\e[0m", color_code, "<AerospikeC>", elapsedTime, msg);
+  rb_funcall(Logger, rb_intern("info"), 1, rb_msg);
+}
+
+void log_info_with_time_v(const char * msg, struct timeval * tm, VALUE val) {
+  if ( TYPE(Logger) != T_OBJECT ) return;
+
+  struct timeval tm2;
+  gettimeofday(&tm2, NULL);
+
+  double elapsedTime = (tm2.tv_sec - tm->tv_sec) * 1000.0;
+  elapsedTime += (tm2.tv_usec - tm->tv_usec) / 1000.0;
+
+  switch_color_code();
+
+  VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s (%.4f ms)\e[0m \e[1m%s, %s\e[0m", color_code, "<AerospikeC>", elapsedTime, msg, val_inspect(val));
+  rb_funcall(Logger, rb_intern("info"), 1, rb_msg);
+}
+
+void log_info_with_time_v2(const char * msg, struct timeval * tm, VALUE val, VALUE val2) {
+  if ( TYPE(Logger) != T_OBJECT ) return;
+
+  struct timeval tm2;
+  gettimeofday(&tm2, NULL);
+
+  double elapsedTime = (tm2.tv_sec - tm->tv_sec) * 1000.0;
+  elapsedTime += (tm2.tv_usec - tm->tv_usec) / 1000.0;
+
+  switch_color_code();
+
+  VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s (%.4f ms)\e[0m \e[1m%s, %s, %s\e[0m", color_code, "<AerospikeC>", elapsedTime, msg, val_inspect(val), val_inspect(val2));
+  rb_funcall(Logger, rb_intern("info"), 1, rb_msg);
+}
+
+void start_timing(struct timeval * tm) {
+  gettimeofday(tm, NULL);
+}
+
 
 // ----------------------------------------------------------------------------------
 //
@@ -112,6 +180,7 @@ VALUE record2hash(as_record * rec) {
 //
 void hash2record(VALUE hash, VALUE rec) {
   rb_hash_foreach(hash, foreach_hash2record, rec);
+  log_debug("Converted ruby hash into as_record");
 }
 
 // ----------------------------------------------------------------------------------
@@ -132,28 +201,23 @@ as_arraylist * array2as_list(VALUE ary) {
 
     switch ( TYPE(element) ) {
       case T_NIL:
-        log_debug("[Utils][array2as_list] TYPE(element) -> nil");
-        rb_raise(rb_eRuntimeError, "[array2as_list] Array value cannot be nil");
+        rb_raise(ParseError, "[array2as_list] Array value cannot be nil");
         break;
 
       case T_SYMBOL:
-        log_debug("[Utils][array2as_list] TYPE(element) -> symbol");
         tmp = rb_funcall(element, rb_intern("to_s"), 0);
         as_arraylist_append_str(list, StringValueCStr( tmp ));
         break;
 
       case T_STRING:
-        log_debug("[Utils][array2as_list] TYPE(element) -> string");
         as_arraylist_append_str(list, StringValueCStr( element ));
         break;
 
       case T_FIXNUM:
-        log_debug("[Utils][array2as_list] TYPE(element) -> fixnum");
         as_arraylist_append_int64(list, FIX2LONG(element));
         break;
 
       case T_ARRAY:
-        log_debug("[Utils][array2as_list] TYPE(element) -> array");
         tmp_list = array2as_list(element);
         as_arraylist_append_list(list, (as_list *)tmp_list);
         break;
@@ -173,6 +237,8 @@ as_arraylist * array2as_list(VALUE ary) {
     }
   }
 
+  log_debug("Converted ruby array into as_list");
+
   return list;
 }
 
@@ -191,6 +257,8 @@ VALUE as_list2array(as_arraylist * list) {
     rb_ary_push(ary, as_val2rb_val(value));
   }
 
+  log_debug("Converted as_list into ruby array");
+
   return ary;
 }
 
@@ -208,40 +276,33 @@ static int foreach_hash2record(VALUE key, VALUE val, VALUE record) {
 
   switch ( TYPE(val) ) { // set bin_name = val dependent on type
     case T_NIL:
-      log_debug("[Utils][foreach_hash2record] TYPE(val) -> nil");
       as_record_set_nil(rec, key2bin_name(key));
       break;
 
     case T_SYMBOL:
-      log_debug("[Utils][foreach_hash2record] TYPE(val) -> symbol");
       tmp = rb_funcall(val, rb_intern("to_s"), 0);
       as_record_set_str(rec, key2bin_name(key), StringValueCStr(tmp));
       break;
 
     case T_FIXNUM:
-      log_debug("[Utils][foreach_hash2record] TYPE(val) -> fixnum");
       as_record_set_int64(rec, key2bin_name(key), FIX2LONG(val));
       break;
 
     case T_STRING:
-      log_debug("[Utils][foreach_hash2record] TYPE(val) -> string");
       as_record_set_str(rec, key2bin_name(key), StringValueCStr(val));
       break;
 
     case T_ARRAY:
-      log_debug("[Utils][foreach_hash2record] TYPE(val) -> array");
       tmp_list = array2as_list(val);
       as_record_set_list(rec, key2bin_name(key), (as_list *)tmp_list);
       break;
 
     case T_HASH:
-      log_debug("[Utils][foreach_hash2record] TYPE(val) -> hash");
       tmp_map = hash2as_hashmap(val);
       as_record_set_map(rec, key2bin_name(key), (as_map *)tmp_map );
       break;
 
     case T_FLOAT:
-      log_debug("[Utils][foreach_hash2record] TYPE(val) -> float");
       as_record_set_double(rec, key2bin_name(key), NUM2DBL(val));
       break;
 
@@ -296,6 +357,8 @@ as_hashmap * hash2as_hashmap(VALUE hash) {
   VALUE hmap = Data_Wrap_Struct(Record, NULL, map_deallocate, map);
 
   rb_hash_foreach(hash, foreach_hash2as_hashmap, hmap);
+
+  log_debug("Converted ruby hash into as_hashmap");
 
   return map;
 }
@@ -360,8 +423,6 @@ static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE hmap) {
 // convert as_hashmap * map into ruby hash
 //
 VALUE as_hashmap2hash(as_hashmap * map) {
-  pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
-
   VALUE name;
   VALUE val;
   VALUE hash = rb_hash_new();
@@ -385,7 +446,7 @@ VALUE as_hashmap2hash(as_hashmap * map) {
 
   as_hashmap_iterator_destroy(&it);
 
-  pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
+  log_debug("Converted as_hashmap into ruby hash");
 
   return hash;
 }
@@ -492,6 +553,16 @@ VALUE value_to_s(VALUE val) {
   if ( TYPE(val) == T_STRING ) return val;
 
   return rb_funcall(val, rb_intern("to_s"), 0);
+}
+
+// ----------------------------------------------------------------------------------
+//
+// call to_s on val and retrun as c string
+//
+char * value_to_s_cstr(VALUE val) {
+  VALUE tmp = rb_funcall(val, rb_intern("to_s"), 0);
+
+  return StringValueCStr(tmp);
 }
 
 // ----------------------------------------------------------------------------------
@@ -810,6 +881,8 @@ as_query * query_obj2as_query(VALUE query_obj) {
     as_query_orderby(query, StringValueCStr(order_bin), FIX2INT(order_type));
   }
 
+  log_debug("Converted ruby AerospikeC::Query to as_query");
+
   return query;
 }
 
@@ -841,6 +914,8 @@ void * rb_policy2as_policy(VALUE rb_policy) {
     rb_raise(ParseError, "[Utils][rb_policy2as_policy] unknown policy type: %s", val_inspect(type));
   }
 
+  log_debug("Converted ruby AerospikeC::Policy into as_policy");
+
   return policy;
 }
 
@@ -864,7 +939,8 @@ void * get_policy(VALUE options) {
 // enable ruby garbage collector
 //
 VALUE enable_rb_GC() {
-  rb_funcall(rb_mGC, rb_intern("enable"), 0);
+  log_debug("Enabling ruby GC");
+  return rb_funcall(rb_mGC, rb_intern("enable"), 0);
 }
 
 // ----------------------------------------------------------------------------------
@@ -872,5 +948,6 @@ VALUE enable_rb_GC() {
 // disable ruby garbage collector
 //
 VALUE disable_rb_GC() {
-  rb_funcall(rb_mGC, rb_intern("disable"), 0);
+  log_debug("Disabling ruby GC");
+  return rb_funcall(rb_mGC, rb_intern("disable"), 0);
 }

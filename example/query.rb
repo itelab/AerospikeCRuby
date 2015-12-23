@@ -34,7 +34,7 @@ tasks << client.create_index("test", "query_test", "string_bin", "test_query_tes
 
 puts "building indexes...."
 tasks.each do |task|
-  task.wait_till_completed
+  task.wait_till_completed(50)
 end
 
 def build_data(client)
@@ -79,7 +79,7 @@ aggregate_udf = File.expand_path(File.join(File.dirname(__FILE__), "lua/aggregat
 
 puts "registering aggregate_udf.lua"
 task = client.register_udf(aggregate_udf, "aggregate_udf.lua")
-task.wait_till_completed
+task.wait_till_completed(50)
 puts "registering aggregate_udf.lua done."
 
 rs = client.execute_udf_on_query(q_range, "aggregate_udf", "mycount")
@@ -88,7 +88,7 @@ puts "alias:"
 rs = client.aggregate(q_range, "aggregate_udf", "mycount")
 puts rs.inspect
 
-5000.times do
+5.times do
   rs = client.execute_udf_on_query(q_eql, "aggregate_udf", "other_bin_min", [50])
   puts rs.inspect
 end
@@ -96,13 +96,13 @@ end
 puts "------------- background_execute_udf_on_query:"
 query_task = client.background_execute_udf_on_query(q_range, "aggregate_udf", "mycount")
 puts query_task.inspect
-query_task.wait_till_completed
+query_task.wait_till_completed(50)
 puts query_task.done?
 
 puts "alias:"
 query_task = client.bg_aggregate(q_range, "aggregate_udf", "mycount")
 puts query_task.inspect
-query_task.wait_till_completed
+query_task.wait_till_completed(50)
 puts query_task.done?
 
 #

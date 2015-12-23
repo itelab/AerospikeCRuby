@@ -2,6 +2,7 @@
 
 VALUE Key;
 
+// ----------------------------------------------------------------------------------
 //
 // key to char * key_name
 //
@@ -24,6 +25,7 @@ static char * arg_to_cstr(VALUE key) {
   }
 }
 
+// ----------------------------------------------------------------------------------
 //
 // free memory method
 //
@@ -39,6 +41,7 @@ static VALUE key_allocate(VALUE self) {
   return Data_Wrap_Struct(self, NULL, key_deallocate, k);
 }
 
+// ----------------------------------------------------------------------------------
 //
 // def initialize
 //
@@ -59,8 +62,18 @@ static void key_initialize(VALUE self, VALUE as_namespace, VALUE set, VALUE key)
   rb_iv_set(self, "@namespace", as_namespace);
   rb_iv_set(self, "@set", set);
   rb_iv_set(self, "@key", key);
+}
 
-  log_debug("[AerospikeC::Key][initialize] initializing key");
+// ----------------------------------------------------------------------------------
+//
+// def initialize
+//
+static VALUE key_info(VALUE self) {
+  VALUE ns  = rb_iv_get(self, "@namespace");
+  VALUE set = rb_iv_get(self, "@set");
+  VALUE key = rb_iv_get(self, "@key");
+
+  return rb_sprintf("%s:%s:%s", StringValueCStr(ns), StringValueCStr(set), StringValueCStr(key));
 }
 
 
@@ -78,6 +91,7 @@ void init_aerospike_c_key(VALUE AerospikeC) {
   // methods
   //
   rb_define_method(Key, "initialize", RB_FN_ANY()key_initialize, 3);
+  rb_define_method(Key, "key_info", RB_FN_ANY()key_info, 0);
 
   //
   // attr_reader

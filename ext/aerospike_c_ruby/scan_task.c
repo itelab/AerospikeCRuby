@@ -46,6 +46,9 @@ static VALUE scan_initialize(VALUE self, VALUE scan_id, VALUE client) {
 // def check_status
 //
 static VALUE check_status(VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   VALUE client = rb_iv_get(self, "@client");
 
   as_error err;
@@ -72,7 +75,7 @@ static VALUE check_status(VALUE self) {
   rb_hash_aset(status, rb_str_new2("status_id"), stat_id);
   rb_hash_aset(status, rb_str_new2("progress"), prog);
 
-  log_info("[AerospikeC::ScanTask][check_status] success");
+  log_info_with_time("[ScanTask][check_status] success", &tm);
 
   return status;
 }
