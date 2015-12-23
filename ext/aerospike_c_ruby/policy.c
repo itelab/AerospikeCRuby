@@ -120,11 +120,11 @@ static void options2buffer(VALUE self, VALUE options, options_buffer * buffer) {
 //  * ruby initialize
 //
 static void free_policy_read(as_policy_read * policy) {
-  free(policy);
+  xfree(policy);
 }
 
 static void init_policy_read(VALUE self, VALUE options) {
-  as_policy_read * policy = (as_policy_read *) malloc (sizeof(as_policy_read));
+  as_policy_read * policy = (as_policy_read *) ruby_xmalloc (sizeof(as_policy_read));
   if (! policy) rb_raise(MemoryError, err_memory_info());
   as_policy_read_init(policy);
 
@@ -161,11 +161,11 @@ static VALUE read_policy_initialize(int argc, VALUE * argv, VALUE self) {
 //  * ruby initialize
 //
 static void free_policy_write(as_policy_write * policy) {
-  free(policy);
+  xfree(policy);
 }
 
 static void init_policy_write(VALUE self, VALUE options) {
-  as_policy_write * policy = (as_policy_write *) malloc (sizeof(as_policy_write));
+  as_policy_write * policy = (as_policy_write *) ruby_xmalloc (sizeof(as_policy_write));
   if (! policy) rb_raise(MemoryError, err_memory_info());
   as_policy_write_init(policy);
 
@@ -203,11 +203,11 @@ static VALUE write_policy_initialize(int argc, VALUE * argv, VALUE self) {
 //  * ruby initialize
 //
 static void free_policy_remove(as_policy_remove * policy) {
-  free(policy);
+  xfree(policy);
 }
 
 static void init_policy_remove(VALUE self, VALUE options) {
-  as_policy_remove * policy = (as_policy_remove *) malloc (sizeof(as_policy_remove));
+  as_policy_remove * policy = (as_policy_remove *) ruby_xmalloc (sizeof(as_policy_remove));
   if (! policy) rb_raise(MemoryError, err_memory_info());
   as_policy_remove_init(policy);
 
@@ -245,11 +245,11 @@ static VALUE remove_policy_initialize(int argc, VALUE * argv, VALUE self) {
 //  * ruby initialize
 //
 static void free_policy_apply(as_policy_apply * policy) {
-  free(policy);
+  xfree(policy);
 }
 
 static void init_policy_apply(VALUE self, VALUE options) {
-  as_policy_apply * policy = (as_policy_apply *) malloc (sizeof(as_policy_apply));
+  as_policy_apply * policy = (as_policy_apply *) ruby_xmalloc (sizeof(as_policy_apply));
   if (! policy) rb_raise(MemoryError, err_memory_info());
   as_policy_apply_init(policy);
 
@@ -284,11 +284,11 @@ static VALUE apply_policy_initialize(int argc, VALUE * argv, VALUE self) {
 //  * ruby initialize
 //
 static void free_policy_query(as_policy_query * policy) {
-  free(policy);
+  xfree(policy);
 }
 
 static void init_policy_query(VALUE self, VALUE options) {
-  as_policy_query * policy = (as_policy_query *) malloc (sizeof(as_policy_query));
+  as_policy_query * policy = (as_policy_query *) ruby_xmalloc (sizeof(as_policy_query));
   if (! policy) rb_raise(MemoryError, err_memory_info());
   as_policy_query_init(policy);
 

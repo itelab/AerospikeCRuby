@@ -745,7 +745,7 @@ as_query * query_obj2as_query(VALUE query_obj) {
   VALUE set  = rb_iv_get(query_obj, "@set");
   VALUE bins = rb_iv_get(query_obj, "@bins");
 
-  as_query * query = (as_query *) malloc ( sizeof(as_query) ) ;
+  as_query * query = (as_query *) ruby_xmalloc ( sizeof(as_query) ) ;
   as_query_init(query, StringValueCStr(ns), StringValueCStr(set));
 
   // only one where clause possible in aerospike-c-client v3.1.24

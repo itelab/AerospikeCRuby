@@ -33,7 +33,7 @@ static void key_deallocate(as_key * key) {
 }
 
 static VALUE key_allocate(VALUE self) {
-  as_key * k = (as_key *) malloc ( sizeof(as_key) );
+  as_key * k = (as_key *) ruby_xmalloc ( sizeof(as_key) );
   if (! k) rb_raise(MemoryError, "[AerospikeC::Key][initialize] Error while allocating memory for aerospike key");
 
   return Data_Wrap_Struct(self, NULL, key_deallocate, k);

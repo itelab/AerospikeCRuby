@@ -6,7 +6,7 @@ VALUE IndexTask;
 // free memory method
 //
 void index_task_deallocate(as_index_task * task) {
-  free(task);
+  xfree(task);
 }
 
 //

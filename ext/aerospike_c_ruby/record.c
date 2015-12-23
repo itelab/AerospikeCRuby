@@ -18,7 +18,7 @@ static void rec_deallocate(as_record * rec) {
 }
 
 static VALUE rec_allocate(VALUE self) {
-  as_record * rec = (as_record *) malloc( sizeof(as_record) );
+  as_record * rec = (as_record *) ruby_xmalloc( sizeof(as_record) );
   if (! rec) rb_raise(MemoryError, "[AerospikeC::Record][initialize] Error while allocating memory for aerospike record");
 
   return Data_Wrap_Struct(self, NULL, rec_deallocate, rec);

@@ -12,7 +12,7 @@ static void llist_free(as_ldt * llist) {
 }
 
 static VALUE llist_allocate(VALUE self) {
-  as_ldt * llist = (as_ldt *) malloc ( sizeof(as_ldt) );
+  as_ldt * llist = (as_ldt *) ruby_xmalloc ( sizeof(as_ldt) );
 
   if (! llist)
     rb_raise(MemoryError, "[AerospikeC::Llist][initialize] Error while allocating memory for aerospike llist");

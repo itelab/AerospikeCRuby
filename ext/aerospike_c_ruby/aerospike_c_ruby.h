@@ -107,7 +107,7 @@
 #define rb_ary_len_int(ary) FIX2INT( rb_funcall(ary, rb_intern("length"), 0) )              //(int)    VALUE -> int
 #define rb_ary_len_long(ary) FIX2LONG( rb_funcall(ary, rb_intern("length"), 0) )            //(long)   VALUE -> long
 
-#define destroy_query(query) as_query_destroy(query); free(query)
+#define destroy_query(query) as_query_destroy(query); xfree(query)
 
 #define rb_foreach_ary_int(ary) for(int i = 0; i < rb_ary_len_int(ary); ++i)
 #define rb_foreach_ary_long(ary) for(long i = 0; i < rb_ary_len_long(ary); ++i)

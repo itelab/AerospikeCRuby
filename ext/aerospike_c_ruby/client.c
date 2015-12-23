@@ -14,7 +14,7 @@ pthread_mutex_t G_CALLBACK_MUTEX = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 // client allocate
 //
 static VALUE client_allocate(VALUE self) {
-  aerospike * as = (aerospike *) malloc ( sizeof(aerospike) );
+  aerospike * as = (aerospike *) ruby_xmalloc ( sizeof(aerospike) );
 
   return Data_Wrap_Struct(self, NULL, client_deallocate, as);
 }
@@ -87,9 +87,7 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
   rb_scan_args(argc, argv, "21", &key, &hash, &options);
 
   // default values for optional arguments
-  if ( NIL_P(options) ) {
-    options = rb_hash_new();
-  }
+  if ( NIL_P(options) ) options = rb_hash_new();
 
   VALUE option_tmp = rb_hash_aref(options, ttl_sym);
   if ( option_tmp != Qnil ) {
@@ -255,9 +253,7 @@ static VALUE delete_record(int argc, VALUE * argv, VALUE self) {
 
   rb_scan_args(argc, argv, "11", &key, &options);
 
-  if ( NIL_P(options) ) {
-    options = rb_hash_new();
-  }
+  if ( NIL_P(options) ) options = rb_hash_new();
 
   as_key * k = get_key_struct(key);
   as_policy_remove * policy = get_policy(options);
@@ -321,9 +317,7 @@ static VALUE key_exists(int argc, VALUE * argv, VALUE self) {
 
   rb_scan_args(argc, argv, "11", &key, &options);
 
-  if ( NIL_P(options) ) {
-    options = rb_hash_new();
-  }
+  if ( NIL_P(options) ) options = rb_hash_new();
 
   as_key * k = get_key_struct(key);
   as_policy_read * policy = get_policy(options);
@@ -331,9 +325,7 @@ static VALUE key_exists(int argc, VALUE * argv, VALUE self) {
   if ( ( status = aerospike_key_exists(as, &err, policy, k, &rec) ) != AEROSPIKE_OK ) {
     as_record_destroy(rec);
 
-    if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      return Qfalse;
-    }
+    if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) return Qfalse;
 
     raise_as_error(err);
   }
@@ -368,13 +360,10 @@ static VALUE get_header(int argc, VALUE * argv, VALUE self) {
 
   rb_scan_args(argc, argv, "11", &key, &options);
 
-  if ( NIL_P(options) ) {
-    options = rb_hash_new();
-  }
+  if ( NIL_P(options) ) options = rb_hash_new();
 
   as_key * k = get_key_struct(key);
   as_policy_read * policy = get_policy(options);
-
 
   VALUE header = rb_hash_new();
 
@@ -718,9 +707,7 @@ static VALUE create_index(int argc, VALUE * argv, VALUE self) {
   rb_scan_args(argc, argv, "51", &ns, &set, &bin, &name, &data_type, &options);
 
   // default values for optional arguments
-  if ( NIL_P(options) ) {
-    options = rb_hash_new();
-  }
+  if ( NIL_P(options) ) options = rb_hash_new();
 
   int d_type;
 
@@ -734,14 +721,13 @@ static VALUE create_index(int argc, VALUE * argv, VALUE self) {
     rb_raise(OptionError, "[AerospikeC::Client][create_index] data_type must be :string or :numeric");
   }
 
-  as_index_task * task = (as_index_task *) malloc( sizeof(as_index_task) );
+  as_index_task * task = (as_index_task *) ruby_xmalloc( sizeof(as_index_task) );
   if (! task) rb_raise(MemoryError, "[AerospikeC::Client][create_index] Error while allocating memory for aerospike task");
 
 
   if ( aerospike_index_create(as, &err, task, NULL, StringValueCStr(ns), StringValueCStr(set),
-                              StringValueCStr(bin), StringValueCStr(name), d_type) != AEROSPIKE_OK ) {
+                              StringValueCStr(bin), StringValueCStr(name), d_type) != AEROSPIKE_OK )
     raise_as_error(err);
-  }
 
   VALUE index_task_struct = Data_Wrap_Struct(IndexTask, NULL, index_task_deallocate, task);
 
@@ -773,13 +759,10 @@ static VALUE drop_index(int argc, VALUE * argv, VALUE self) {
   rb_scan_args(argc, argv, "21", &ns, &name, &options);
 
   // default values for optional arguments
-  if ( NIL_P(options) ) {
-    options = rb_hash_new();
-  }
+  if ( NIL_P(options) ) options = rb_hash_new();
 
-  if ( aerospike_index_remove(as, &err, NULL, StringValueCStr(ns), StringValueCStr(name)) != AEROSPIKE_OK ) {
+  if ( aerospike_index_remove(as, &err, NULL, StringValueCStr(ns), StringValueCStr(name)) != AEROSPIKE_OK )
     raise_as_error(err);
-  }
 
   return Qtrue;
 }
@@ -848,9 +831,8 @@ static VALUE register_udf(int argc, VALUE * argv, VALUE self) {
   rb_scan_args(argc, argv, "22", &path_to_file, &server_path, &language, &options);
 
   // default values for optional arguments
-  if ( NIL_P(options) ) {
-    options = rb_hash_new();
-  }
+  if ( NIL_P(options) ) options = rb_hash_new();
+
   if ( NIL_P(language) ) {
     language = lua_sym;
   }
@@ -919,13 +901,10 @@ static VALUE drop_udf(int argc, VALUE * argv, VALUE self) {
   rb_scan_args(argc, argv, "11", &server_path, &options);
 
   // default values for optional arguments
-  if ( NIL_P(options) ) {
-    options = rb_hash_new();
-  }
+  if ( NIL_P(options) ) options = rb_hash_new();
 
-  if ( aerospike_udf_remove(as, &err, NULL, StringValueCStr(server_path)) != AEROSPIKE_OK ) {
+  if ( aerospike_udf_remove(as, &err, NULL, StringValueCStr(server_path)) != AEROSPIKE_OK )
     raise_as_error(err);
-  }
 
   log_info("[AerospikeC::Client][drop_udf] success");
 
@@ -956,16 +935,13 @@ static VALUE list_udf(int argc, VALUE * argv, VALUE self) {
   rb_scan_args(argc, argv, "01", &options);
 
   // default values for optional arguments
-  if ( NIL_P(options) ) {
-    options = rb_hash_new();
-  }
+  if ( NIL_P(options) ) options = rb_hash_new();
 
   as_udf_files files;
   as_udf_files_init(&files, 0);
 
-  if ( aerospike_udf_list(as, &err, NULL, &files) != AEROSPIKE_OK ) {
+  if ( aerospike_udf_list(as, &err, NULL, &files) != AEROSPIKE_OK )
     raise_as_error(err);
-  }
 
   VALUE udfs = rb_ary_new();
 
@@ -1021,15 +997,11 @@ static VALUE execute_udf(int argc, VALUE * argv, VALUE self) {
   rb_scan_args(argc, argv, "32", &key, &module_name, &func_name, &udf_args, &options);
 
   // default values for optional arguments
-  if ( NIL_P(options) ) {
-    options = rb_hash_new();
-  }
-  if ( NIL_P(udf_args) ) {
-    udf_args = rb_ary_new();
-  }
+  if ( NIL_P(options) ) options = rb_hash_new();
+  if ( NIL_P(udf_args) ) udf_args = rb_ary_new();
 
-  as_key * k = get_key_struct(key);
-  as_arraylist * args = array2as_list(udf_args);
+  as_key * k               = get_key_struct(key);
+  as_arraylist * args      = array2as_list(udf_args);
   as_policy_apply * policy = get_policy(options);
 
   as_val * res = NULL;
@@ -1271,12 +1243,8 @@ static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) 
   rb_scan_args(argc, argv, "42", &ns, &set, &module_name, &func_name, &udf_args, &options);
 
   // default values for optional arguments
-  if ( NIL_P(options) ) {
-    options = rb_hash_new();
-  }
-  if ( NIL_P(udf_args) ) {
-    udf_args = rb_ary_new();
-  }
+  if ( NIL_P(options) ) options = rb_hash_new();
+  if ( NIL_P(udf_args) ) udf_args = rb_ary_new();
 
   as_arraylist * args = array2as_list(udf_args);
   as_policy_write * policy = get_policy(options);
@@ -1288,9 +1256,8 @@ static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) 
 
   uint64_t scanid = 0;
 
-  if ( aerospike_scan_background(as, &err, policy, &scan, &scanid) != AEROSPIKE_OK ) {
+  if ( aerospike_scan_background(as, &err, policy, &scan, &scanid) != AEROSPIKE_OK )
     raise_as_error(err);
-  }
 
   VALUE scan_id = ULONG2NUM(scanid);
 
@@ -1316,18 +1283,15 @@ static VALUE execute_query_callback_protected(VALUE rdata) {
 }
 
 static bool execute_query_callback(as_val * val, VALUE query_data) {
-  if ( val == NULL ) {
-    return false;
-  }
+  if ( val == NULL ) return false;
 
   pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
 
   int state = 0;
   VALUE result = rb_protect(execute_query_callback_protected, (VALUE)(val), &state);
 
-  if (!state) {
+  if (!state)
     rb_ary_push(query_data, result);
-  }
 
   pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
 
