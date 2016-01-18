@@ -101,6 +101,7 @@
 #define query_sym               ID2SYM(rb_intern("query"))              // :query
 #define module_sym              ID2SYM(rb_intern("module"))             // :module
 #define ldt_proxy_sym           ID2SYM(rb_intern("ldt_proxy"))          // :ldt_proxy
+;
 
 #define as_val_int_2_val(val) LONG2FIX( as_integer_get( as_integer_fromval(val) ) )          //(int)    as_val * -> VALUE
 #define as_val_str_2_val(val) rb_str_new2( as_string_tostring( as_string_fromval(val) ) )   //(string) as_val * -> VALUE
@@ -114,7 +115,16 @@
 #define rb_foreach_ary_long(ary) for(long i = 0; i < rb_ary_len_long(ary); ++i)
 
 #define RB_LLIST_WORAROUND_BIN rb_str_new2("_rblliststat_")
+;
 
+#define rb_mJSON() rb_const_get(rb_cObject, rb_intern("JSON"))
+
+#define DEFAULT_GEO_JSON_ELSE "GEO_JSON_NULL_VALUE"
+#define RB_COORDINATES_STR rb_str_new2("coordinates")
+#define RB_POLYGON_STR rb_str_new2("Polygon")
+#define RB_POINT_STR rb_str_new2("Point")
+#define RB_CIRCLE_STR rb_str_new2("AeroCircle")
+;
 
 // ---------------------------------------------------
 // definitions
@@ -130,6 +140,7 @@ void init_aerospike_c_policy(VALUE AerospikeC);     // policy.c
 void init_aerospike_c_llist(VALUE AerospikeC);      // llist.c
 void init_aerospike_c_ldt_proxy(VALUE AerospikeC);  // ldt_proxy.c
 void init_aerospike_c_exceptions(AerospikeC);       // exceptions.c
+void init_aerospike_c_geo_json(VALUE AerospikeC);   // geo_json.c
 
 // query_task.c
 void init_aerospike_c_query_task(VALUE AerospikeC);
@@ -152,9 +163,10 @@ void log_info_with_time_v2(const char * msg, struct timeval * tm, VALUE val, VAL
 
 void start_timing(struct timeval * tm);
 
-aerospike * get_client_struct(VALUE client);
-as_key *    get_key_struct(VALUE key);
-as_record * get_record_struct(VALUE rec);
+aerospike *  get_client_struct(VALUE client);
+as_key *     get_key_struct(VALUE key);
+as_record *  get_record_struct(VALUE rec);
+as_geojson * get_geo_json_struct(VALUE rb_geo);
 
 void raise_as_err(as_error err);
 
@@ -196,6 +208,8 @@ void * get_policy(VALUE options);
 VALUE enable_rb_GC();
 VALUE disable_rb_GC();
 
+VALUE as_geojson_2_val(as_geojson * geo);
+
 // ---------------------------------------------------
 //
 // extern variables
@@ -205,6 +219,7 @@ extern VALUE Client;
 extern VALUE Record;
 extern VALUE Key;
 extern VALUE Operation;
+extern VALUE GeoJson;
 
 extern VALUE Logger;
 

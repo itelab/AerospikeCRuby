@@ -1,4 +1,5 @@
 require "aerospike_c_ruby/version"
+require "json"
 
 module AerospikeCRuby
 end

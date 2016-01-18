@@ -145,6 +145,16 @@ as_record * get_record_struct(VALUE rec) {
 
 // ----------------------------------------------------------------------------------
 //
+// unwrap GeoJson VALUE struct into as_geojson *
+//
+as_geojson * get_geo_json_struct(VALUE rb_geo) {
+  as_geojson * geo;
+  Data_Get_Struct(rb_geo, as_geojson, geo);
+  return geo;
+}
+
+// ----------------------------------------------------------------------------------
+//
 // raise RuntimeError with as_error info
 //
 void raise_as_error(as_error err) {
@@ -304,6 +314,13 @@ static int foreach_hash2record(VALUE key, VALUE val, VALUE record) {
 
     case T_FLOAT:
       as_record_set_double(rec, key2bin_name(key), NUM2DBL(val));
+      break;
+
+    case T_DATA:
+      if ( rb_funcall(val, rb_intern("is_a?"), 1, GeoJson) == Qtrue ) {
+        as_record_set_geojson(rec, key2bin_name(key), get_geo_json_struct(val));
+      }
+
       break;
 
     default:
@@ -618,6 +635,10 @@ VALUE as_val2rb_val(as_val * value) {
 
     case AS_DOUBLE:
       return as_val_dbl_2_val(value);
+      break;
+
+    case AS_GEOJSON:
+      return as_geojson_2_val(value);
       break;
 
     case AS_UNDEF:
@@ -950,4 +971,15 @@ VALUE enable_rb_GC() {
 VALUE disable_rb_GC() {
   log_debug("Disabling ruby GC");
   return rb_funcall(rb_mGC, rb_intern("disable"), 0);
+}
+
+
+// ----------------------------------------------------------------------------------
+//
+// convert as_geojson to VALUE
+//
+VALUE as_geojson_2_val(as_geojson * geo) {
+  char * json = as_geojson_getorelse(geo, DEFAULT_GEO_JSON_ELSE);
+
+  return rb_funcall(GeoJson, rb_intern("new"), 1, rb_str_new2(json));
 }
