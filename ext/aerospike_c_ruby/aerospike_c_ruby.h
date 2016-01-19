@@ -73,6 +73,7 @@
 #define asc_sym                 ID2SYM(rb_intern("asc"))                // :asc
 #define desc_sym                ID2SYM(rb_intern("desc"))               // :desc
 #define order_sym               ID2SYM(rb_intern("order"))              // :order
+;
 #define lua_path_sym            ID2SYM(rb_intern("lua_path"))           // :lua_path
 #define password_sym            ID2SYM(rb_intern("password"))           // :password
 #define logger_sym              ID2SYM(rb_intern("logger"))             // :logger
@@ -101,9 +102,13 @@
 #define query_sym               ID2SYM(rb_intern("query"))              // :query
 #define module_sym              ID2SYM(rb_intern("module"))             // :module
 #define ldt_proxy_sym           ID2SYM(rb_intern("ldt_proxy"))          // :ldt_proxy
+#define geo_json_sym            ID2SYM(rb_intern("geo_json"))           // :geo_json
+#define geo_contains_sym        ID2SYM(rb_intern("geo_contains"))       // :geo_contains
+#define geo_within_sym          ID2SYM(rb_intern("geo_within"))         // :geo_within
+#define geo_sphere_sym          ID2SYM(rb_intern("geo_sphere"))         // :geo_sphere
 ;
 
-#define as_val_int_2_val(val) LONG2FIX( as_integer_get( as_integer_fromval(val) ) )          //(int)    as_val * -> VALUE
+#define as_val_int_2_val(val) LONG2FIX( as_integer_get( as_integer_fromval(val) ) )         //(int)    as_val * -> VALUE
 #define as_val_str_2_val(val) rb_str_new2( as_string_tostring( as_string_fromval(val) ) )   //(string) as_val * -> VALUE
 #define as_val_dbl_2_val(val) rb_float_new( as_double_get( as_double_fromval(val) ) )       //(double) as_val * -> VALUE
 #define rb_ary_len_int(ary) FIX2INT( rb_funcall(ary, rb_intern("length"), 0) )              //(int)    VALUE -> int

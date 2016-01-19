@@ -3,8 +3,9 @@
 VALUE GeoJson;
 
 #define NEW_JSON(json) rb_funcall(self, rb_intern("new"), 1, (json));
-#define get_coordinates(point) rb_funcall((point), rb_intern("coordinates"), 0)
-#define get_json() rb_funcall(self, rb_intern("json"), 0)
+#define geo_json_get_coordinates(point) rb_funcall((point), rb_intern("coordinates"), 0)
+#define geo_json_get_json() rb_funcall(self, rb_intern("json"), 0)
+#define geo_json_get_type() rb_funcall(self, rb_intern("type"), 0)
 ;
 
 // ----------------------------------------------------------------------------------
@@ -63,7 +64,7 @@ static VALUE geo_json_json(VALUE self) {
 static VALUE geo_json_coordinates(VALUE self) {
   VALUE m_JSON = rb_mJSON();
 
-  VALUE self_json = get_json();
+  VALUE self_json = geo_json_get_json();
   VALUE json_hash = rb_funcall(m_JSON, rb_intern("parse"), 1, self_json);
 
   return rb_hash_aref(json_hash, RB_COORDINATES_STR);
@@ -76,7 +77,7 @@ static VALUE geo_json_coordinates(VALUE self) {
 static VALUE geo_json_inspect(VALUE self) {
   VALUE m_JSON = rb_mJSON();
 
-  VALUE json = get_json();
+  VALUE json = geo_json_get_json();
   VALUE json_hash = rb_funcall(m_JSON, rb_intern("parse"), 1, json);
   VALUE json_str = rb_inspect(json_hash);
 
@@ -94,7 +95,7 @@ static VALUE geo_json_inspect(VALUE self) {
 static VALUE geo_json_type(VALUE self) {
   VALUE m_JSON = rb_mJSON();
 
-  VALUE json = get_json();
+  VALUE json = geo_json_get_json();
   VALUE json_hash = rb_funcall(m_JSON, rb_intern("parse"), 1, json);
   VALUE type = rb_hash_aref(json_hash, rb_str_new2("type"));
 
@@ -106,9 +107,7 @@ static VALUE geo_json_type(VALUE self) {
 // def polygon?
 //
 static VALUE geo_json_is_polygon(VALUE self) {
-  VALUE type = rb_funcall(self, rb_intern("type"), 0);
-
-  return rb_funcall(type, rb_intern("=="), 1, RB_POLYGON_STR);
+  return rb_funcall(geo_json_get_type(), rb_intern("=="), 1, RB_POLYGON_STR);
 }
 
 // ----------------------------------------------------------------------------------
@@ -116,9 +115,7 @@ static VALUE geo_json_is_polygon(VALUE self) {
 // def point?
 //
 static VALUE geo_json_is_point(VALUE self) {
-  VALUE type = rb_funcall(self, rb_intern("type"), 0);
-
-  return rb_funcall(type, rb_intern("=="), 1, RB_POINT_STR);
+  return rb_funcall(geo_json_get_type(), rb_intern("=="), 1, RB_POINT_STR);
 }
 
 // ----------------------------------------------------------------------------------
@@ -126,9 +123,7 @@ static VALUE geo_json_is_point(VALUE self) {
 // def circle?
 //
 static VALUE geo_json_is_circle(VALUE self) {
-  VALUE type = rb_funcall(self, rb_intern("type"), 0);
-
-  return rb_funcall(type, rb_intern("=="), 1, RB_CIRCLE_STR);
+  return rb_funcall(geo_json_get_type(), rb_intern("=="), 1, RB_CIRCLE_STR);
 }
 
 // ----------------------------------------------------------------------------------
@@ -172,7 +167,7 @@ static VALUE geo_json_polygon(VALUE self, VALUE cords) {
       if ( rb_funcall(point, rb_intern("is_a?"), 1, GeoJson) != Qtrue )
         rb_raise(OptionError, "[AerospikeC::GeoJson][polygon] point in Polygon must be Array or AerospikeC::GeoJson object");
 
-      VALUE point_cords = get_coordinates(point);
+      VALUE point_cords = geo_json_get_coordinates(point);
 
       VALUE point_point_ary = rb_ary_new();
       rb_ary_push(point_point_ary, rb_ary_entry(point_cords, 0));
@@ -190,7 +185,7 @@ static VALUE geo_json_polygon(VALUE self, VALUE cords) {
 
 // ----------------------------------------------------------------------------------
 //
-// def GeoJson.polygon_ary
+// def GeoJson.polygon_array
 //
 static VALUE geo_json_polygon_array(VALUE self, VALUE cords) {
   VALUE json = rb_hash_new();
@@ -223,7 +218,7 @@ static VALUE geo_json_polygon_obj(VALUE self, VALUE cords) {
 
   rb_foreach_ary_int(cords) {
     VALUE point = rb_ary_entry(cords, i);
-    VALUE point_cords = get_coordinates(point);
+    VALUE point_cords = geo_json_get_coordinates(point);
 
     VALUE point_point_ary = rb_ary_new();
     rb_ary_push(point_point_ary, rb_ary_entry(point_cords, 0));
@@ -255,7 +250,7 @@ static VALUE geo_json_circle(VALUE self, VALUE point, VALUE radius) {
     if ( rb_funcall(point, rb_intern("is_a?"), 1, GeoJson) != Qtrue )
       rb_raise(OptionError, "[AerospikeC::GeoJson][circle] point must be Array or AerospikeC::GeoJson object");
 
-    VALUE point_cords = get_coordinates(point);
+    VALUE point_cords = geo_json_get_coordinates(point);
 
     VALUE point_point_ary = rb_ary_new();
     rb_ary_push(point_point_ary, rb_ary_entry(point_cords, 0));
@@ -296,7 +291,7 @@ static VALUE geo_json_circle_obj(VALUE self, VALUE point, VALUE radius) {
   rb_hash_aset(json, rb_str_new2("type"), RB_CIRCLE_STR);
 
   VALUE circle_ary = rb_ary_new();
-  VALUE point_cords = get_coordinates(point);
+  VALUE point_cords = geo_json_get_coordinates(point);
 
   VALUE point_point_ary = rb_ary_new();
   rb_ary_push(point_point_ary, rb_ary_entry(point_cords, 0));
@@ -329,6 +324,7 @@ static VALUE geo_json_circle_point(VALUE self, VALUE lng, VALUE lat, VALUE radiu
 }
 
 // ----------------------------------------------------------------------------------
+//
 // Init
 //
 void init_aerospike_c_geo_json(VALUE AerospikeC) {

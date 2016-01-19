@@ -763,6 +763,9 @@ static VALUE create_index(int argc, VALUE * argv, VALUE self) {
   else if ( data_type == string_sym ) {
     d_type = AS_INDEX_STRING;
   }
+  else if  ( data_type == geo_sphere_sym ) {
+    d_type = AS_INDEX_GEO2DSPHERE;
+  }
   else {
     rb_raise(OptionError, "[AerospikeC::Client][create_index] data_type must be :string or :numeric");
   }

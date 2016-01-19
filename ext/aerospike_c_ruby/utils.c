@@ -880,6 +880,18 @@ as_query * query_obj2as_query(VALUE query_obj) {
 
     as_query_where(query, StringValueCStr(query_bin), as_integer_range( FIX2LONG(min), FIX2LONG(max) ) );
   }
+  else if ( filter_type == geo_within_sym ) { // geo_within
+    VALUE val = rb_hash_aref(filter, value_sym);
+
+    as_geojson * geo = get_geo_json_struct(val);
+    as_query_where(query, StringValueCStr(query_bin), as_geo_within(geo->value));
+  }
+  else if ( filter_type == geo_contains_sym ) { // geo_contains
+    VALUE val = rb_hash_aref(filter, value_sym);
+
+    as_geojson * geo = get_geo_json_struct(val);
+    as_query_where(query, StringValueCStr(query_bin), as_geo_contains(geo->value));
+  }
   else {
     VALUE tmp = rb_hash_aref(filter, filter_type_sym);
     destroy_query(query);

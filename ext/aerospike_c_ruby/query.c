@@ -95,6 +95,44 @@ static VALUE range(VALUE self, VALUE bin, VALUE min, VALUE max) {
 
 // ----------------------------------------------------------------------------------
 //
+// geo_contains!(bin, geo)
+//
+static VALUE geo_contains(VALUE self, VALUE bin, VALUE geo) {
+  if ( TYPE(geo) != T_DATA || rb_funcall(geo, rb_intern("is_a?"), 1, GeoJson) != Qtrue )
+    rb_raise(OptionError, "[AerospikeC::Query][geo_contains] must be AerospikeC::GeoJson obj");
+
+  VALUE filter = rb_hash_new();
+
+  rb_hash_aset(filter, filter_type_sym, geo_contains_sym);
+  rb_hash_aset(filter, bin_sym, value_to_s(bin));
+  rb_hash_aset(filter, value_sym, geo);
+
+  rb_iv_set(self, "@filter", filter);
+
+  return self;
+}
+
+// ----------------------------------------------------------------------------------
+//
+// geo_within!(bin, geo)
+//
+static VALUE geo_within(VALUE self, VALUE bin, VALUE geo) {
+  if ( TYPE(geo) != T_DATA || rb_funcall(geo, rb_intern("is_a?"), 1, GeoJson) != Qtrue )
+    rb_raise(OptionError, "[AerospikeC::Query][geo_within] must be AerospikeC::GeoJson obj");
+
+  VALUE filter = rb_hash_new();
+
+  rb_hash_aset(filter, filter_type_sym, geo_within_sym);
+  rb_hash_aset(filter, bin_sym, value_to_s(bin));
+  rb_hash_aset(filter, value_sym, geo);
+
+  rb_iv_set(self, "@filter", filter);
+
+  return self;
+}
+
+// ----------------------------------------------------------------------------------
+//
 // order_by!(bin, type)
 //
 // params:
@@ -211,8 +249,12 @@ void init_aerospike_c_query(VALUE AerospikeC) {
   // methods
   //
   rb_define_method(Query, "initialize", RB_FN_ANY()query_initialize, -1);
+
   rb_define_method(Query, "eql!", RB_FN_ANY()eql, 2);
   rb_define_method(Query, "range!", RB_FN_ANY()range, 3);
+  rb_define_method(Query, "geo_contains!", RB_FN_ANY()geo_contains, 2);
+  rb_define_method(Query, "geo_within!", RB_FN_ANY()geo_within, 2);
+
   rb_define_method(Query, "order_by!", RB_FN_ANY()order_by, 2);
   rb_define_method(Query, "bins<<", RB_FN_ANY()add_bin, 1);
   rb_define_method(Query, "policy=", RB_FN_ANY()set_policy, 1);
