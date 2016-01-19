@@ -40,16 +40,16 @@ describe AerospikeC::Record do
     expect(@rec.length).to eq(@bins.length)
   end
 
-  it "#bins= set new bins" do
-    new_bins = {"int" => 1, "str" => "str"}
-    @rec.bins = new_bins
-    expect(@rec.bins).to eq(new_bins)
+  # it "#bins= set new bins" do
+  #   new_bins = {"int" => 1, "str" => "str"}
+  #   @rec.bins = new_bins
+  #   expect(@rec.bins).to eq(new_bins)
 
-    key = AerospikeC::Key.new("test", "test", "test")
+  #   key = AerospikeC::Key.new("test", "test", "test")
 
-    @client.put(key, @rec)
-    expect(@client.get(key)).to eq(new_bins)
-  end
+  #   @client.put(key, @rec)
+  #   expect(@client.get(key)).to eq(new_bins)
+  # end
 
   it "has ttl default 0" do
     expect(@rec.ttl).to eq(0)

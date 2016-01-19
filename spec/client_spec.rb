@@ -330,7 +330,7 @@ describe AerospikeC::Client do
         begin
           @client.operate(@key, val)
         rescue => e
-          expect(e.inspect).to eq("#<RuntimeError: [AerospikeC::Client][operate] use AerospikeC::Operation class to perform operations>")
+          expect(e.inspect).to eq("#<AerospikeC::OptionError: [AerospikeC::Client][operate] use AerospikeC::Operation class to perform operations>")
         end
       end
     end
@@ -379,7 +379,7 @@ describe AerospikeC::Client do
 
     it "creates index", slow: true do
       expect(@task.wait_till_completed(100)).to eq(true)
-      expect(@client.list_indexes.last).to include("indexname"=>"test_test_test_bin_idx")
+      expect(@client.list_indexes.first).to include("indexname"=>"test_test_test_bin_idx")
     end
 
     it "drops_index", slow: true do
@@ -517,7 +517,8 @@ describe AerospikeC::Client do
         begin
           @client.query(val)
         rescue => e
-          expect(e.inspect).to eq("#<RuntimeError: [AerospikeC::Client][query] use AerospikeC::Query class to perform queries>")
+          expect(e).to be_kind_of(AerospikeC::OptionError)
+          expect(e.inspect).to eq("#<AerospikeC::OptionError: [AerospikeC::Client][query] use AerospikeC::Query class to perform queries>")
         end
       end
     end
