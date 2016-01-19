@@ -41,7 +41,12 @@ static void geo_json_initialize(VALUE self, VALUE json) {
   as_geojson * geo;
   Data_Get_Struct(self, as_geojson, geo);
 
-  as_geojson_init(geo, StringValueCStr(rb_json_str), false);
+  char * c_str      = StringValueCStr(rb_json_str);
+  char * c_json_str = (char *) malloc ( strlen(c_str) + 1 );
+
+  strcpy(c_json_str, c_str);
+
+  as_geojson_init(geo, c_json_str, true);
 }
 
 // ----------------------------------------------------------------------------------
@@ -52,7 +57,7 @@ static VALUE geo_json_json(VALUE self) {
   as_geojson * geo;
   Data_Get_Struct(self, as_geojson, geo);
 
-  char * json = as_geojson_getorelse(geo, DEFAULT_GEO_JSON_ELSE);
+  char * json = geo->value;
 
   return rb_str_new2(json);
 }

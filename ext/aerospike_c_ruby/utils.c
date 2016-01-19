@@ -884,13 +884,21 @@ as_query * query_obj2as_query(VALUE query_obj) {
     VALUE val = rb_hash_aref(filter, value_sym);
 
     as_geojson * geo = get_geo_json_struct(val);
-    as_query_where(query, StringValueCStr(query_bin), as_geo_within(geo->value));
+
+    char buffer[1024];
+    snprintf(buffer, sizeof(buffer), geo->value);
+
+    as_query_where(query, StringValueCStr(query_bin), as_geo_within(buffer));
   }
   else if ( filter_type == geo_contains_sym ) { // geo_contains
     VALUE val = rb_hash_aref(filter, value_sym);
 
     as_geojson * geo = get_geo_json_struct(val);
-    as_query_where(query, StringValueCStr(query_bin), as_geo_contains(geo->value));
+
+    char buffer[1024];
+    snprintf(buffer, sizeof(buffer), geo->value);
+
+    as_query_where(query, StringValueCStr(query_bin), as_geo_contains(buffer));
   }
   else {
     VALUE tmp = rb_hash_aref(filter, filter_type_sym);
