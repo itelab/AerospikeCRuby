@@ -215,6 +215,22 @@ VALUE disable_rb_GC();
 
 VALUE as_geojson_2_val(as_geojson * geo);
 
+as_integer * rb_copy_as_integer(as_integer * value);
+as_integer * rb_copy_as_integer_from_val(as_val * value);
+as_double * rb_copy_as_double(as_double * value);
+as_double * rb_copy_as_double_from_val(as_val * value);
+as_string * rb_copy_as_string(as_string * value);
+as_string * rb_copy_as_string_from_val(as_val * value);
+as_geojson * rb_copy_as_geojson(as_geojson * value);
+as_geojson * rb_copy_as_geojson_from_val(as_val * value);
+as_arraylist * rb_copy_as_arraylist(as_arraylist * value);
+as_arraylist * rb_copy_as_arraylist_from_val(as_val * value);
+as_hashmap * rb_copy_as_hashmap(as_hashmap * value);
+as_hashmap * rb_copy_as_hashmap_from_val(as_val * value);
+as_val * rb_copy_as_val(as_val * value);
+
+as_record * rb_copy_as_record(as_record * record);
+
 // ---------------------------------------------------
 //
 // extern variables

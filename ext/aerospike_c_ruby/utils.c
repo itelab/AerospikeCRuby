@@ -1003,3 +1003,210 @@ VALUE as_geojson_2_val(as_geojson * geo) {
 
   return rb_funcall(GeoJson, rb_intern("new"), 1, rb_str_new2(json));
 }
+
+// ----------------------------------------------------------------------------------
+//
+// copy as_integer and save it on cheap
+//
+as_integer * rb_copy_as_integer(as_integer * value) {
+  return as_integer_new(value->value);
+}
+
+// ----------------------------------------------------------------------------------
+//
+// copy as_integer and save it on cheap
+//
+as_integer * rb_copy_as_integer_from_val(as_val * value) {
+  return as_integer_new(as_integer_fromval(value)->value);
+}
+
+// ----------------------------------------------------------------------------------
+//
+// copy as_double and save it on cheap
+//
+as_double * rb_copy_as_double(as_double * value) {
+  return as_double_new(value->value);
+}
+
+// ----------------------------------------------------------------------------------
+//
+// copy as_double and save it on cheap
+//
+as_double * rb_copy_as_double_from_val(as_val * value) {
+  return as_double_new(as_double_fromval(value)->value);
+}
+
+// ----------------------------------------------------------------------------------
+//
+// copy as_string and save it on cheap
+//
+as_string * rb_copy_as_string(as_string * value) {
+  char * new_value = (char *) malloc ( sizeof(char *) * ( strlen(value->value) + 1 ) );
+  strcpy(new_value, value->value);
+  return as_string_new(new_value, true);
+}
+
+// ----------------------------------------------------------------------------------
+//
+// copy as_string and save it on cheap
+//
+as_string * rb_copy_as_string_from_val(as_val * value) {
+  as_string * sval = as_string_fromval(value);
+  char * new_value = (char *) malloc ( sizeof(char *) * ( strlen(sval->value) + 1 ) );
+  strcpy(new_value, sval->value);
+  return as_string_new(new_value, true);
+}
+
+// ----------------------------------------------------------------------------------
+//
+// copy as_geojson and save it on cheap
+//
+as_geojson * rb_copy_as_geojson(as_geojson * value) {
+  char * new_value = (char *) malloc ( sizeof(char *) * ( strlen(value->value) + 1 ) );
+  strcpy(new_value, value->value);
+  return as_geojson_new(new_value, true);
+}
+
+// ----------------------------------------------------------------------------------
+//
+// copy as_geojson and save it on cheap
+//
+as_geojson * rb_copy_as_geojson_from_val(as_val * value) {
+  as_geojson * sval = as_geojson_fromval(value);
+  char * new_value = (char *) malloc ( sizeof(char *) * ( strlen(sval->value) + 1 ) );
+  strcpy(new_value, sval->value);
+  return as_geojson_new(new_value, true);
+}
+
+// ----------------------------------------------------------------------------------
+//
+// copy as_arraylist and save it on cheap
+//
+as_arraylist * rb_copy_as_arraylist(as_arraylist * value) {
+  as_arraylist_iterator it;
+  as_arraylist_iterator_init(&it, value);
+
+  as_arraylist * new_value = as_arraylist_new(value->capacity, 0);
+
+  while ( as_arraylist_iterator_has_next(&it) ) {
+    as_val * val = as_arraylist_iterator_next(&it);
+    as_arraylist_append(new_value, rb_copy_as_val(val));
+  }
+
+  return new_value;
+}
+
+// ----------------------------------------------------------------------------------
+//
+// copy as_arraylist and save it on cheap
+//
+as_arraylist * rb_copy_as_arraylist_from_val(as_val * value) {
+  return rb_copy_as_arraylist(as_list_fromval(value));
+}
+
+// ----------------------------------------------------------------------------------
+//
+// copy as_hashmap and save it on cheap
+//
+as_hashmap * rb_copy_as_hashmap(as_hashmap * value) {
+  as_hashmap_iterator it;
+  as_hashmap_iterator_init(&it, value);
+
+  as_hashmap * new_value = as_hashmap_new(value->count);
+
+  while ( as_hashmap_iterator_has_next(&it) ) {
+    as_pair * val_pair = as_pair_fromval(as_hashmap_iterator_next(&it));
+
+    as_val * key = val_pair->_1;
+    as_val * k_value = val_pair->_2;
+
+    as_hashmap_set(new_value, rb_copy_as_val(key), rb_copy_as_val(k_value));
+  }
+
+  return new_value;
+}
+
+// ----------------------------------------------------------------------------------
+//
+// copy as_hashmap and save it on cheap
+//
+as_hashmap * rb_copy_as_hashmap_from_val(as_val * value) {
+  return rb_copy_as_hashmap(as_map_fromval(value));
+}
+
+// ----------------------------------------------------------------------------------
+//
+// copy as_val and save it on cheap
+//
+as_val * rb_copy_as_val(as_val * value) {
+  size_t value_type = as_val_type(value);
+
+  if ( value_type == AS_INTEGER ) {
+    return (as_val *) rb_copy_as_integer_from_val(value);
+  }
+  else if ( value_type == AS_DOUBLE ) {
+    return (as_val *) rb_copy_as_double_from_val(value);
+  }
+  else if ( value_type == AS_STRING ) {
+    return (as_val *) rb_copy_as_string_from_val(value);
+  }
+  else if ( value_type == AS_GEOJSON ) {
+    return (as_val *) rb_copy_as_geojson_from_val(value);
+  }
+  else if ( value_type == AS_LIST ) {
+    return (as_val *) rb_copy_as_arraylist_from_val(value);
+  }
+  else if ( value_type == AS_MAP ) {
+    return (as_val *) rb_copy_as_hashmap_from_val(value);
+  }
+  else {
+    return NULL;
+  }
+}
+
+// ----------------------------------------------------------------------------------
+//
+// copy record and save it on cheap
+//
+as_record * rb_copy_as_record(as_record * record) {
+  // init with previous capacity
+  as_record * new_record = NULL;
+  new_record = as_record_new(record->bins.capacity);
+  if (! new_record) rb_raise(MemoryError, "[AerospikeC::Utils] Error while allocating memory for aerospike record");
+
+  as_record_iterator it;
+  as_record_iterator_init(&it, record);
+
+  while ( as_record_iterator_has_next(&it) ) {
+    as_bin * bin = as_record_iterator_next(&it);
+    char *   name = as_bin_get_name(bin);
+    as_val * value = (as_val *) as_bin_get_value(bin);
+
+    size_t value_type = as_val_type(value);
+
+    // copy
+    if ( value_type == AS_NIL ) {
+      as_record_set_nil(new_record, name);
+    }
+    else if ( value_type == AS_INTEGER ) {
+      as_record_set_integer(new_record, name, rb_copy_as_integer_from_val(value));
+    }
+    else if ( value_type == AS_DOUBLE ) {
+      as_record_set_as_double(new_record, name, rb_copy_as_double_from_val(value));
+    }
+    else if ( value_type == AS_STRING ) {
+      as_record_set_string(new_record, name, rb_copy_as_string_from_val(value));
+    }
+    else if ( value_type == AS_GEOJSON ) {
+      as_record_set_geojson(new_record, name, rb_copy_as_geojson_from_val(value));
+    }
+    else if ( value_type == AS_LIST ) {
+      as_record_set_list(new_record, name, (as_list *)rb_copy_as_arraylist_from_val(value) );
+    }
+    else if ( value_type == AS_MAP ) {
+      as_record_set_map(new_record, name, (as_map *)rb_copy_as_hashmap_from_val(value));
+    }
+  }
+
+  return new_record;
+}

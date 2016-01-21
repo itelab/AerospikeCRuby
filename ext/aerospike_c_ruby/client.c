@@ -1381,26 +1381,38 @@ static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) 
 // callback method for execute_query
 // push into array only if non error
 //
-static VALUE execute_query_callback_protected(VALUE rdata) {
-  as_val * val = (as_val *) rdata;
+// static VALUE execute_query_callback_protected(VALUE rdata) {
+//   as_val * val = (as_val *) rdata;
 
-  as_record * record = as_rec_fromval(val);
+//   as_record * record = as_rec_fromval(val);
 
-  return record2hash(record);
-}
+//   return record2hash(record);
+// }
 
-static bool execute_query_callback(as_val * val, VALUE query_data) {
+static bool execute_query_callback(as_val * val, query_item * query_data) {
   if ( val == NULL ) return false;
+
+  query_item * new_item = (query_item *) malloc ( sizeof(query_item) );
+  if (! new_item) return true;
+
+  init_query_item(new_item);
+
+  new_item->rec = rb_copy_as_record( as_rec_fromval(val) );
+  if (! new_item->rec) return true;
 
   pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
 
-  int state = 0;
-  VALUE result = rb_protect(execute_query_callback_protected, (VALUE)(val), &state);
+  if ( query_data->next == NULL ) {
+    query_data->next = new_item;
+  }
+  else {
+    query_data->lastsaved->next = new_item;
+  }
 
-  if (!state)
-    rb_ary_push(query_data, result);
+  query_data->lastsaved = new_item;
 
   pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
+
 
   return true;
 }
@@ -1420,24 +1432,59 @@ static bool execute_query_callback(as_val * val, VALUE query_data) {
 //    1. data returned from query
 //
 static VALUE execute_query_begin(VALUE rdata) {
-  query_method_options * args = (query_method_options *) rdata;
+  query_list * args = (query_list *) rdata;
   as_error err;
 
-  disable_rb_GC();
+  // disable_rb_GC();
 
   if ( aerospike_query_foreach(args->as, &err, args->policy, args->query, args->callback, args->query_data) != AEROSPIKE_OK )
     raise_as_error(err);
 
-  return args->query_data;
+  query_item * it = args->query_data;
+
+  while ( it != NULL ) {
+    query_item * item = it;
+
+    if ( item->rec != NULL ) {
+      VALUE rec = record2hash(item->rec);
+      rb_ary_push(args->result, rec);
+      as_record_destroy(item->rec);
+    }
+
+    it = item->next;
+    args->query_data = it;
+
+    free(item);
+  }
+
+  args->query_data = NULL;
+
+
+  return args->result;
 }
 
 static VALUE execute_query_ensure(VALUE rdata) {
-  query_method_options * args = (query_method_options *) rdata;
+  query_list * args = (query_list *) rdata;
 
   destroy_query(args->query);
-  enable_rb_GC();
 
-  return args->query_data;
+  query_item * it = args->query_data;
+
+  while ( it != NULL ) {
+    query_item * item = it;
+
+    if ( item->rec != NULL )
+      as_record_destroy(item->rec);
+
+    it = item->next;
+    args->query_data = it;
+
+    free(item);
+  }
+
+  args->query_data = NULL;
+
+  return args->result;
 }
 
 static VALUE execute_query(VALUE self, VALUE query_obj) {
@@ -1453,15 +1500,18 @@ static VALUE execute_query(VALUE self, VALUE query_obj) {
   as_query * query         = query_obj2as_query(query_obj);
   as_policy_query * policy = get_query_policy(query_obj);
 
-  VALUE query_data = rb_ary_new();
+  query_item * query_data = (query_item *) malloc ( sizeof(query_item) );
+  if (! query_data) rb_raise(MemoryError, "[AerospikeC::Client][query] Error while allocating memory for query result");
+  init_query_item(query_data);
 
-  query_method_options q_args;
+  query_list q_args;
 
   q_args.as         = as;
   q_args.policy     = policy;
   q_args.query      = query;
   q_args.query_data = query_data;
   q_args.callback   = execute_query_callback;
+  q_args.result     = rb_ary_new();
 
   VALUE result = rb_ensure(execute_query_begin, (VALUE)(&q_args), execute_query_ensure, (VALUE)(&q_args));
 

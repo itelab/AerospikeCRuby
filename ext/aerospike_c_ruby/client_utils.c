@@ -177,3 +177,9 @@ void check_for_llist_workaround(VALUE self, VALUE key, VALUE hash) {
     rb_hash_aset(hash, bin_name, llist);
   }
 }
+
+void init_query_item(struct query_item_s * item) {
+  item->next = NULL;
+  item->lastsaved = NULL;
+  item->rec = NULL;
+}
