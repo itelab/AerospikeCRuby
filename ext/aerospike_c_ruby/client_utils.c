@@ -178,8 +178,88 @@ void check_for_llist_workaround(VALUE self, VALUE key, VALUE hash) {
   }
 }
 
+// ----------------------------------------------------------------------------------
+//
+// init query item with nulls
+//
 void init_query_item(struct query_item_s * item) {
-  item->next = NULL;
+  item->next      = NULL;
   item->lastsaved = NULL;
-  item->rec = NULL;
+  item->rec       = NULL;
+  item->val       = NULL;
+}
+
+// ----------------------------------------------------------------------------------
+// !!!
+// LOCKED
+// !!!
+// setting next for query item
+//
+void set_query_item_next(struct query_item_s * item, struct query_item_s * new_item) {
+  pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
+
+  if ( item->next == NULL ) {
+    item->next = new_item;
+  }
+  else {
+    item->lastsaved->next = new_item;
+  }
+
+  item->lastsaved = new_item;
+
+  pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
+}
+
+// ----------------------------------------------------------------------------------
+//
+// setting query list result and destroying query data
+//
+void set_query_result_and_destroy(query_list * args) {
+  query_item * it = args->query_data;
+
+  while ( it != NULL ) {
+    query_item * item = it;
+
+    if ( item->rec != NULL ) {
+      rb_ary_push(args->result, record2hash(item->rec));
+      as_record_destroy(item->rec);
+    }
+
+    if ( item->val != NULL ) {
+      rb_ary_push(args->result, as_val2rb_val(item->val));
+      rb_as_val_destroy(item->val);
+    }
+
+    it = item->next;
+    args->query_data = it;
+
+    free(item);
+  }
+
+  args->query_data = NULL;
+}
+
+// ----------------------------------------------------------------------------------
+//
+// destroying query data in query_list
+//
+void query_result_destroy(query_list * args) {
+  query_item * it = args->query_data;
+
+  while ( it != NULL ) {
+    query_item * item = it;
+
+    if ( item->rec != NULL )
+      as_record_destroy(item->rec);
+
+    if ( item->val != NULL )
+      rb_as_val_destroy(item->val);
+
+    it = item->next;
+    args->query_data = it;
+
+    free(item);
+  }
+
+  args->query_data = NULL;
 }

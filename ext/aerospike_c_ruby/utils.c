@@ -1210,3 +1210,30 @@ as_record * rb_copy_as_record(as_record * record) {
 
   return new_record;
 }
+
+// ----------------------------------------------------------------------------------
+//
+// destroy as_val
+//
+void rb_as_val_destroy(as_val * value) {
+  size_t value_type = as_val_type(value);
+
+  if ( value_type == AS_INTEGER ) {
+    as_integer_destroy(as_integer_fromval(value));
+  }
+  else if ( value_type == AS_DOUBLE ) {
+    as_double_destroy(as_double_fromval(value));
+  }
+  else if ( value_type == AS_STRING ) {
+    as_string_destroy(as_string_fromval(value));
+  }
+  else if ( value_type == AS_GEOJSON ) {
+    as_geojson_destroy(as_geojson_fromval(value));
+  }
+  else if ( value_type == AS_LIST ) {
+    as_arraylist_destroy( (as_arraylist *)as_list_fromval(value) );
+  }
+  else if ( value_type == AS_MAP ) {
+    as_hashmap_destroy( (as_hashmap *)as_map_fromval(value) );
+  }
+}
