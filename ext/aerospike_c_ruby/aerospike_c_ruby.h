@@ -230,7 +230,6 @@ as_hashmap * rb_copy_as_hashmap_from_val(as_val * value);
 as_val * rb_copy_as_val(as_val * value);
 
 as_record * rb_copy_as_record(as_record * record);
-void rb_as_val_destroy(as_val * value);
 
 // ---------------------------------------------------
 //

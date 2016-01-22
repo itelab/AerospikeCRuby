@@ -95,16 +95,15 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
   rb_scan_args(argc, argv, "21", &key, &hash, &options);
 
   // default values for optional arguments
-  if ( NIL_P(options) ) options = rb_hash_new();
-
-  VALUE option_tmp = rb_hash_aref(options, ttl_sym);
-  if ( option_tmp != Qnil ) {
-    if ( TYPE(option_tmp) != T_FIXNUM ) { // check ttl option
-      rb_raise(OptionError, "[AerospikeC::Client][put] ttl must be an integer, options: %s", val_inspect(options));
-    }
+  if ( NIL_P(options) ) {
+    options = rb_hash_new();
+    rb_hash_aset(options, ttl_sym, rb_zero);
   }
   else {
-    rb_hash_aset(options, ttl_sym, rb_zero);
+    VALUE option_tmp = rb_hash_aref(options, ttl_sym);
+
+    if ( TYPE(option_tmp) != T_FIXNUM ) // check ttl option
+      rb_raise(OptionError, "[AerospikeC::Client][put] ttl must be an integer, options: %s", val_inspect(options));
   }
 
   VALUE new_rec;

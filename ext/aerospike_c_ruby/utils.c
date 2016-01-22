@@ -681,34 +681,6 @@ as_val * rb_val2as_val(VALUE value) {
   }
 }
 
-void as_val_free(as_val * value) {
-  switch ( as_val_type(value) ) {
-    case AS_NIL:
-      return;
-      break;
-
-    case AS_INTEGER:
-      as_integer_destroy( as_integer_fromval(value) );
-      break;
-
-    case AS_STRING:
-      as_string_destroy( as_string_fromval(value) );
-      break;
-
-    case AS_LIST:
-      as_list_destroy( as_list_fromval(value) );
-      break;
-
-    case AS_MAP:
-      as_map_destroy( as_map_fromval(value) );
-      break;
-
-    case AS_DOUBLE:
-      as_double_destroy( as_double_fromval(value) );
-      break;
-  }
-}
-
 // ----------------------------------------------------------------------------------
 //
 // call ruby inspect on val, and convert it into char *
@@ -1141,27 +1113,27 @@ as_hashmap * rb_copy_as_hashmap_from_val(as_val * value) {
 as_val * rb_copy_as_val(as_val * value) {
   size_t value_type = as_val_type(value);
 
-  if ( value_type == AS_INTEGER ) {
-    return (as_val *) rb_copy_as_integer_from_val(value);
+  switch ( value_type ) {
+    case AS_INTEGER:
+      return (as_val *) rb_copy_as_integer_from_val(value);
+
+    case AS_DOUBLE:
+      return (as_val *) rb_copy_as_double_from_val(value);
+
+    case AS_STRING:
+      return (as_val *) rb_copy_as_string_from_val(value);
+
+    case AS_GEOJSON:
+      return (as_val *) rb_copy_as_geojson_from_val(value);
+
+    case AS_LIST:
+      return (as_val *) rb_copy_as_arraylist_from_val(value);
+
+    case AS_MAP:
+      return (as_val *) rb_copy_as_hashmap_from_val(value);
   }
-  else if ( value_type == AS_DOUBLE ) {
-    return (as_val *) rb_copy_as_double_from_val(value);
-  }
-  else if ( value_type == AS_STRING ) {
-    return (as_val *) rb_copy_as_string_from_val(value);
-  }
-  else if ( value_type == AS_GEOJSON ) {
-    return (as_val *) rb_copy_as_geojson_from_val(value);
-  }
-  else if ( value_type == AS_LIST ) {
-    return (as_val *) rb_copy_as_arraylist_from_val(value);
-  }
-  else if ( value_type == AS_MAP ) {
-    return (as_val *) rb_copy_as_hashmap_from_val(value);
-  }
-  else {
-    return NULL;
-  }
+
+  return false;
 }
 
 // ----------------------------------------------------------------------------------
@@ -1184,27 +1156,34 @@ as_record * rb_copy_as_record(as_record * record) {
 
     size_t value_type = as_val_type(value);
 
-    // copy
-    if ( value_type == AS_NIL ) {
-      as_record_set_nil(new_record, name);
-    }
-    else if ( value_type == AS_INTEGER ) {
-      as_record_set_integer(new_record, name, rb_copy_as_integer_from_val(value));
-    }
-    else if ( value_type == AS_DOUBLE ) {
-      as_record_set_as_double(new_record, name, rb_copy_as_double_from_val(value));
-    }
-    else if ( value_type == AS_STRING ) {
-      as_record_set_string(new_record, name, rb_copy_as_string_from_val(value));
-    }
-    else if ( value_type == AS_GEOJSON ) {
-      as_record_set_geojson(new_record, name, rb_copy_as_geojson_from_val(value));
-    }
-    else if ( value_type == AS_LIST ) {
-      as_record_set_list(new_record, name, (as_list *)rb_copy_as_arraylist_from_val(value) );
-    }
-    else if ( value_type == AS_MAP ) {
-      as_record_set_map(new_record, name, (as_map *)rb_copy_as_hashmap_from_val(value));
+    switch ( value_type ) {
+      case AS_NIL:
+        as_record_set_nil(new_record, name);
+        break;
+
+      case AS_INTEGER:
+        as_record_set_integer(new_record, name, rb_copy_as_integer_from_val(value));
+        break;
+
+      case AS_DOUBLE:
+        as_record_set_as_double(new_record, name, rb_copy_as_double_from_val(value));
+        break;
+
+      case AS_STRING:
+        as_record_set_string(new_record, name, rb_copy_as_string_from_val(value));
+        break;
+
+      case AS_GEOJSON:
+        as_record_set_geojson(new_record, name, rb_copy_as_geojson_from_val(value));
+        break;
+
+      case AS_LIST:
+        as_record_set_list(new_record, name, (as_list *)rb_copy_as_arraylist_from_val(value) );
+        break;
+
+      case AS_MAP:
+        as_record_set_map(new_record, name, (as_map *)rb_copy_as_hashmap_from_val(value));
+        break;
     }
   }
 
@@ -1215,25 +1194,32 @@ as_record * rb_copy_as_record(as_record * record) {
 //
 // destroy as_val
 //
-void rb_as_val_destroy(as_val * value) {
+void as_val_free(as_val * value) {
   size_t value_type = as_val_type(value);
 
-  if ( value_type == AS_INTEGER ) {
-    as_integer_destroy(as_integer_fromval(value));
-  }
-  else if ( value_type == AS_DOUBLE ) {
-    as_double_destroy(as_double_fromval(value));
-  }
-  else if ( value_type == AS_STRING ) {
-    as_string_destroy(as_string_fromval(value));
-  }
-  else if ( value_type == AS_GEOJSON ) {
-    as_geojson_destroy(as_geojson_fromval(value));
-  }
-  else if ( value_type == AS_LIST ) {
-    as_arraylist_destroy( (as_arraylist *)as_list_fromval(value) );
-  }
-  else if ( value_type == AS_MAP ) {
-    as_hashmap_destroy( (as_hashmap *)as_map_fromval(value) );
+  switch ( value_type ) {
+    case AS_INTEGER:
+      as_integer_destroy(as_integer_fromval(value));
+      return;
+
+    case AS_DOUBLE:
+      as_double_destroy(as_double_fromval(value));
+      return;
+
+    case AS_STRING:
+      as_string_destroy(as_string_fromval(value));
+      return;
+
+    case AS_GEOJSON:
+      as_geojson_destroy(as_geojson_fromval(value));
+      return;
+
+    case AS_LIST:
+      as_arraylist_destroy( (as_arraylist *)as_list_fromval(value) );
+      return;
+
+    case AS_MAP:
+      as_hashmap_destroy( (as_hashmap *)as_map_fromval(value) );
+      return;
   }
 }
