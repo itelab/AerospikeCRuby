@@ -7,7 +7,7 @@ client.delete(key)
 llist_conf_udf = File.expand_path(File.join(File.dirname(__FILE__), "lua/llist_conf_udf.lua"))
 
 task = client.register_udf(llist_conf_udf, "llist_conf_udf.lua")
-task.wait_till_completed
+task.wait_till_completed(50)
 
 
 bin_name = "some_bin_name"

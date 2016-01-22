@@ -483,11 +483,17 @@ static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
     tmp = rb_funcall(element, rb_intern("set"), 0);
     char * c_set = StringValueCStr( tmp );
 
-    tmp = rb_funcall(element, rb_intern("key"), 0);
-    char * c_key = StringValueCStr( tmp );
-
     as_batch_read_record * record = as_batch_read_reserve(&records);
-    as_key_init(&record->key, c_namespace, c_set, c_key);
+
+    tmp = rb_funcall(element, rb_intern("key"), 0);
+
+    if ( TYPE(tmp) != T_FIXNUM ) {
+      char * c_key = StringValueCStr( tmp );
+      as_key_init(&record->key, c_namespace, c_set, c_key);
+    }
+    else {
+      as_key_init_int64(&record->key, c_namespace, c_set, FIX2LONG(tmp));
+    }
 
     if ( specific_bins == Qnil ) {
       record->read_all_bins = true;

@@ -88,7 +88,7 @@ static VALUE geo_json_inspect(VALUE self) {
 
   VALUE str = rb_str_new2("#<AerospikeC::GeoJson ");
   rb_funcall(str, rb_intern("<<"), 1, json_str);
-  rb_funcall(str, rb_intern("<<"), 1, rb_str_new2(">"));
+  rb_str_cat2(str, ">");
 
   return str;
 }
