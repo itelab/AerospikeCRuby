@@ -4,9 +4,9 @@
   Aerospike ruby client, using aerospike-c-client
 
   Written and tested with:
-    * aerospike          - 3.6.2
-    * aerospike-c-client - 3.1.24
-    * ruby version       - 2.2.2
+    * aerospike          - 3.7.1
+    * aerospike-c-client - 4.0.0
+    * ruby version       - 2.2.3
     * Ubuntu             - 15.04
 
 ********************************************************************/
