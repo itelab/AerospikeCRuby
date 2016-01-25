@@ -2,6 +2,7 @@
 
 Query is a class for usage with [Client #query](client.md#query) methods.
 Queries need indexes on queried bins.
+
 Aerospike reference: http://www.aerospike.com/docs/guide/query.html
 
 ```ruby
@@ -15,6 +16,8 @@ With a new operation, you can use any of the methods specified below:
   - [#initialize](#initialize)
   - [#eql!](#eql!)
   - [#range!](#range!)
+  - [#geo_contains!](#geo_contains!)
+  - [#geo_within!](#geo_within!)
   - [#order_by!](#order_by!)
   - [#namespace](#namespace)
   - [#set](#set)
@@ -89,6 +92,51 @@ q_range.range!("int_bin", 5, 10)
 
 <!--===============================================================================-->
 <hr/>
+<!-- geo_contains! -->
+<a name="geo_contains!"></a>
+
+### geo_contains!(bin, geo)
+
+Parameters:
+
+- `bin` - bin with geo index
+- `geo` - [AerospikeC::GeoJson](geo_json.md) object
+
+Retrun `self`
+
+Example:
+
+```ruby
+point = AerospikeC::GeoJson.point(1, 5)
+q_geo = AerospikeC::Query.new("test", "geo_json")
+q_geo.geo_contains!("geo_bin", point)
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- geo_within! -->
+<a name="geo_within!"></a>
+
+### geo_within!(bin, geo)
+
+Parameters:
+
+- `bin` - bin with geo index
+- `geo` - [AerospikeC::GeoJson](geo_json.md) object
+
+Retrun `self`
+
+Example:
+
+```ruby
+circle = AerospikeC::GeoJson.circle([0, 0], 100 * 1000)
+q_geo = AerospikeC::Query.new("test", "geo_json")
+q_geo.geo_within!("geo_bin", circle)
+```
+
+
+<!--===============================================================================-->
+<hr/>
 <!-- order_by! -->
 <a name="order_by!"></a>
 
@@ -100,9 +148,6 @@ Parameters:
 - `type` - symbol, order type, `:asc` or `:desc`
 
 Retrun `self`
-
-@TODO order_by should order response but its behavoiur with [Client #query](client.md#query) is undefined for now
-
 
 
 <!--===============================================================================-->
