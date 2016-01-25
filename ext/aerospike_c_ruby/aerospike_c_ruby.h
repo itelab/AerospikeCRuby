@@ -37,6 +37,7 @@
 #include <aerospike/aerospike_scan.h>
 #include <aerospike/aerospike_query.h>
 #include <aerospike/as_ldt.h>
+#include <aerospike/as_password.h>
 
 
 // ---------------------------------------------------
@@ -106,6 +107,7 @@
 #define geo_contains_sym        ID2SYM(rb_intern("geo_contains"))       // :geo_contains
 #define geo_within_sym          ID2SYM(rb_intern("geo_within"))         // :geo_within
 #define geo_sphere_sym          ID2SYM(rb_intern("geo_sphere"))         // :geo_sphere
+#define cost_sym                ID2SYM(rb_intern("cost"))               // :cost
 ;
 
 #define as_val_int_2_val(val) LONG2FIX( as_integer_get( as_integer_fromval(val) ) )         //(int)    as_val * -> VALUE
@@ -146,6 +148,7 @@ void init_aerospike_c_llist(VALUE AerospikeC);      // llist.c
 void init_aerospike_c_ldt_proxy(VALUE AerospikeC);  // ldt_proxy.c
 void init_aerospike_c_exceptions(AerospikeC);       // exceptions.c
 void init_aerospike_c_geo_json(VALUE AerospikeC);   // geo_json.c
+void init_aerospike_c_password(VALUE AerospikeC);   // password.c
 
 // query_task.c
 void init_aerospike_c_query_task(VALUE AerospikeC);
@@ -265,6 +268,7 @@ extern VALUE AsError;
 extern VALUE MemoryError;
 extern VALUE ParseError;
 extern VALUE OptionError;
+extern VALUE PasswordEngine;
 
 extern pthread_mutex_t G_CALLBACK_MUTEX;
 
