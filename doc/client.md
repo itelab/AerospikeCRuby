@@ -503,7 +503,7 @@ Parameters:
 - `set`       - string, set to be indexed
 - `bin`       - string, bin or complex position name to be indexed
 - `name`      - string, name of the index
-- `data_type` - symbol, data type of index, `:string`, `:numeric` or `:geosphere`
+- `data_type` - symbol, data type of index, `:string`, `:numeric` or `:geo_sphere`
 - `options`:
 
   - @TODO options policy
