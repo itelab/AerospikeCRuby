@@ -1277,9 +1277,12 @@ static VALUE execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
 
   // default values for optional arguments
   if ( NIL_P(options) ) options = rb_hash_new();
-  if ( NIL_P(udf_args) ) udf_args = rb_ary_new();
 
-  as_arraylist * args = array2as_list(udf_args);
+  as_arraylist * args = NULL;
+  if ( !(NIL_P(udf_args)) ) {
+    args = array2as_list(udf_args);
+  }
+
 
   as_scan scan;
   as_scan_init(&scan, StringValueCStr(ns), StringValueCStr(set));
@@ -1348,9 +1351,12 @@ static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) 
 
   // default values for optional arguments
   if ( NIL_P(options) ) options = rb_hash_new();
-  if ( NIL_P(udf_args) ) udf_args = rb_ary_new();
 
-  as_arraylist * args = array2as_list(udf_args);
+  as_arraylist * args = NULL;
+  if ( !(NIL_P(udf_args)) ) {
+    args = array2as_list(udf_args);
+  }
+
   as_policy_write * policy = get_policy(options);
 
   as_scan scan;
@@ -1591,7 +1597,7 @@ static VALUE execute_udf_on_query_begin(VALUE rdata) {
 static VALUE execute_udf_on_query_ensure(VALUE rdata) {
   query_list * args = (query_list *) rdata;
 
-  destroy_query(args->query);
+  as_query_destroy(args->query);
   as_arraylist_destroy(args->args);
   query_result_destroy(args);
 
@@ -1615,9 +1621,12 @@ static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
   if ( is_aerospike_c_query_obj != Qtrue )
     rb_raise(OptionError, "[AerospikeC::Client][aggregate] use AerospikeC::Query class to perform queries");
 
-  if ( NIL_P(udf_args) ) udf_args = rb_ary_new();
+  as_arraylist * args = NULL;
 
-  as_arraylist * args      = array2as_list(udf_args);
+  if ( !(NIL_P(udf_args)) ) {
+    args = array2as_list(udf_args);
+  }
+
   as_query * query         = query_obj2as_query(query_obj);
   as_policy_query * policy = get_query_policy(query_obj);
 
@@ -1686,9 +1695,11 @@ static VALUE background_execute_udf_on_query(int argc, VALUE * argv, VALUE self)
     rb_raise(OptionError, "[AerospikeC::Client][bg_aggregate] use AerospikeC::Query class to perform queries");
   }
 
-  if ( NIL_P(udf_args) ) udf_args = rb_ary_new();
+  as_arraylist * args = NULL;
+  if ( !(NIL_P(udf_args)) ) {
+    args = array2as_list(udf_args);
+  }
 
-  as_arraylist * args = array2as_list(udf_args);
   as_query * query    = query_obj2as_query(query_obj);
 
   char * c_module_name = StringValueCStr(module_name);

@@ -806,20 +806,23 @@ as_query * query_obj2as_query(VALUE query_obj) {
   VALUE set  = rb_iv_get(query_obj, "@set");
   VALUE bins = rb_iv_get(query_obj, "@bins");
 
-  as_query * query = (as_query *) ruby_xmalloc ( sizeof(as_query) ) ;
-  as_query_init(query, StringValueCStr(ns), StringValueCStr(set));
+  as_query * query = as_query_new(StringValueCStr(ns), StringValueCStr(set));
+  // as_query_init(query, StringValueCStr(ns), StringValueCStr(set));
 
   // only one where clause possible in aerospike-c-client v3.1.24
   as_query_where_init(query, 1);
 
   int len = rb_ary_len_int(bins);
-  as_query_select_init(query, len);
 
-  // ----------------
-  // select
-  for (int i = 0; i < len; ++i) {
-    VALUE bin = rb_ary_entry(bins, i);
-    as_query_select(query, StringValueCStr(bin));
+  if ( len > 0 ) {
+    as_query_select_init(query, len);
+
+    // ----------------
+    // select
+    for (int i = 0; i < len; ++i) {
+      VALUE bin = rb_ary_entry(bins, i);
+      as_query_select(query, StringValueCStr(bin));
+    }
   }
 
   VALUE filter      = rb_iv_get(query_obj, "@filter");
@@ -854,8 +857,8 @@ as_query * query_obj2as_query(VALUE query_obj) {
 
     as_geojson * geo = get_geo_json_struct(val);
 
-    char buffer[1024];
-    snprintf(buffer, sizeof(buffer), geo->value);
+    char * buffer = (char *) malloc ( strlen(geo->value) + 1 );
+    strcpy(buffer, geo->value);
 
     as_query_where(query, StringValueCStr(query_bin), as_geo_within(buffer));
   }
@@ -864,8 +867,8 @@ as_query * query_obj2as_query(VALUE query_obj) {
 
     as_geojson * geo = get_geo_json_struct(val);
 
-    char buffer[1024];
-    snprintf(buffer, sizeof(buffer), geo->value);
+    char * buffer = (char *) malloc ( strlen(geo->value) + 1 );
+    strcpy(buffer, geo->value);
 
     as_query_where(query, StringValueCStr(query_bin), as_geo_contains(buffer));
   }
@@ -878,17 +881,20 @@ as_query * query_obj2as_query(VALUE query_obj) {
   VALUE order_by = rb_iv_get(query_obj, "@order");
 
   len = rb_ary_len_int(order_by);
-  as_query_orderby_inita(query, len);
 
-  // ----------------
-  // order
-  for (int i = 0; i < len; ++i) {
-    VALUE order = rb_ary_entry(order_by, i);
+  if ( len > 0 ) {
+    as_query_orderby_inita(query, len);
 
-    VALUE order_bin  = rb_hash_aref(order, bin_sym);
-    VALUE order_type = rb_hash_aref(order, order_sym);
+    // ----------------
+    // order
+    for (int i = 0; i < len; ++i) {
+      VALUE order = rb_ary_entry(order_by, i);
 
-    as_query_orderby(query, StringValueCStr(order_bin), FIX2INT(order_type));
+      VALUE order_bin  = rb_hash_aref(order, bin_sym);
+      VALUE order_type = rb_hash_aref(order, order_sym);
+
+      as_query_orderby(query, StringValueCStr(order_bin), FIX2INT(order_type));
+    }
   }
 
   // log_debug("Converted ruby AerospikeC::Query to as_query");
