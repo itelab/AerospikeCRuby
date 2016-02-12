@@ -657,27 +657,24 @@ as_val * rb_val2as_val(VALUE value) {
   switch( TYPE(value) ) {
     case T_NIL:
       return NULL;
-      break;
 
     case T_FIXNUM:
       return as_integer_new(FIX2LONG(value));
-      break;
+
+    case T_FLOAT:
+      return as_double_new(NUM2DBL(value));
 
     case T_STRING:
       return as_string_new(StringValueCStr(value), false);
-      break;
 
     case T_ARRAY:
       return array2as_list(value);
-      break;
 
     case T_HASH:
       return hash2as_hashmap(value);
-      break;
 
     default:
       rb_raise(ParseError, "[Utils][rb_val2as_val] Unsupported alue type: %s", rb_val_type_as_str(value));
-      break;
   }
 }
 
@@ -971,9 +968,7 @@ VALUE disable_rb_GC() {
 // convert as_geojson to VALUE
 //
 VALUE as_geojson_2_val(as_geojson * geo) {
-  char * json = as_geojson_getorelse(geo, DEFAULT_GEO_JSON_ELSE);
-
-  return rb_funcall(GeoJson, rb_intern("new"), 1, rb_str_new2(json));
+  return rb_funcall(GeoJson, rb_intern("new"), 1, rb_str_new2(geo->value));
 }
 
 // ----------------------------------------------------------------------------------

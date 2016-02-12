@@ -1494,26 +1494,26 @@ static VALUE execute_query(VALUE self, VALUE query_obj) {
 //
 // callback method for execute_udf_on_query
 // push into array only if non error
-//
-static VALUE execute_udf_on_query_callback_protected(VALUE rdata) {
-  as_val * val = (as_val *) rdata;
+// //
+// static VALUE execute_udf_on_query_callback_protected(VALUE rdata) {
+//   as_val * val = (as_val *) rdata;
 
-  VALUE tmp;
-  as_record * record;
+//   VALUE tmp;
+//   as_record * record;
 
-  switch ( as_val_type(val) ) {
-    case AS_REC:
-      record = as_rec_fromval(val);
-      tmp = record2hash(record);
-      break;
+//   switch ( as_val_type(val) ) {
+//     case AS_REC:
+//       record = as_rec_fromval(val);
+//       tmp = record2hash(record);
+//       break;
 
-    default:
-      tmp = as_val2rb_val(val);
-      break;
-  }
+//     default:
+//       tmp = as_val2rb_val(val);
+//       break;
+//   }
 
-  return tmp;
-}
+//   return tmp;
+// }
 
 static bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
   if ( val == NULL ) return false;
@@ -1542,7 +1542,8 @@ static bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
     }
   }
   else { // is value
-    new_item->val = rb_copy_as_val(val);
+    as_val_reserve(val);
+    new_item->val = val;
 
     if (! new_item->val) {
       pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
