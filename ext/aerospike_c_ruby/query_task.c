@@ -3,7 +3,7 @@
 VALUE QueryTask;
 
 void query_task_deallocate(as_query * query) {
-  destroy_query(query);
+  as_query_destroy(query);
 }
 
 //

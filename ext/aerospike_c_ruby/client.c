@@ -1457,7 +1457,7 @@ static VALUE execute_query_begin(VALUE rdata) {
 static VALUE execute_query_ensure(VALUE rdata) {
   query_list * args = (query_list *) rdata;
 
-  destroy_query(args->query);
+  as_query_destroy(args->query);
   query_result_destroy(args);
 
   return args->result;
@@ -1598,7 +1598,7 @@ static VALUE execute_udf_on_query_ensure(VALUE rdata) {
   query_list * args = (query_list *) rdata;
 
   as_query_destroy(args->query);
-  as_arraylist_destroy(args->args);
+  // as_arraylist_destroy(args->args);
   query_result_destroy(args);
 
   return args->result;
@@ -1710,7 +1710,7 @@ static VALUE background_execute_udf_on_query(int argc, VALUE * argv, VALUE self)
   uint64_t query_id = 0;
 
   if (aerospike_query_background(as, &err, NULL, query, &query_id) != AEROSPIKE_OK) {
-    destroy_query(query);
+    as_query_destroy(query);
     as_arraylist_destroy(args);
     raise_as_error(err);
   }
