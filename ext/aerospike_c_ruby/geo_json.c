@@ -133,6 +133,25 @@ static VALUE geo_json_is_circle(VALUE self) {
 
 // ----------------------------------------------------------------------------------
 //
+// def ==(value)
+//
+static VALUE geo_json_compare(VALUE self, VALUE value) {
+  if ( TYPE(value) == T_STRING ) {
+    return rb_funcall(geo_json_json(self), rb_intern("=="), 1, value);
+  }
+  else if ( TYPE(value) == T_HASH ) {
+    return rb_funcall(geo_json_json(self), rb_intern("=="), 1, rb_funcall(value, rb_intern("to_json"), 0));
+  }
+  else if ( rb_funcall(value, rb_intern("is_a?"), 1, GeoJson) == Qtrue ) {
+    return rb_funcall(geo_json_json(self), rb_intern("=="), 1, geo_json_json(value));
+  }
+  else {
+    return Qfalse;
+  }
+}
+
+// ----------------------------------------------------------------------------------
+//
 // def GeoJson.point
 //
 static VALUE geo_json_point(VALUE self, VALUE x, VALUE y) {
@@ -328,6 +347,8 @@ static VALUE geo_json_circle_point(VALUE self, VALUE lng, VALUE lat, VALUE radiu
   return NEW_JSON(json);
 }
 
+
+
 // ----------------------------------------------------------------------------------
 //
 // Init
@@ -350,6 +371,7 @@ void init_aerospike_c_geo_json(VALUE AerospikeC) {
   rb_define_method(GeoJson, "point?", RB_FN_ANY()geo_json_is_point, 0);
   rb_define_method(GeoJson, "polygon?", RB_FN_ANY()geo_json_is_polygon, 0);
   rb_define_method(GeoJson, "circle?", RB_FN_ANY()geo_json_is_circle, 0);
+  rb_define_method(GeoJson, "==", RB_FN_ANY()geo_json_compare, 1);
 
   //
   // class methods
