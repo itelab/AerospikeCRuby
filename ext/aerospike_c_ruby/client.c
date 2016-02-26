@@ -105,8 +105,8 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
     if ( NIL_P(option_tmp) )
       rb_hash_aset(options, ttl_sym, rb_zero);
 
-    if ( TYPE(option_tmp) != T_FIXNUM ) // check ttl option
-      rb_raise(OptionError, "[AerospikeC::Client][put] ttl must be an integer, options: %s", val_inspect(options));
+    // if ( TYPE(option_tmp) != T_FIXNUM ) // check ttl option
+    //   rb_raise(OptionError, "[AerospikeC::Client][put] ttl must be an integer, options: %s", val_inspect(options));
   }
 
   VALUE new_rec;
