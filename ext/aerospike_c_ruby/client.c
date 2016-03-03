@@ -548,6 +548,7 @@ static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
 //   key - AeropsikeC::Key object
 //   options - hash of options:
 //     ttl: time to live record (default: 0)
+//     policy: AerospikeC::Policy for operate
 //
 //  ------
 //  RETURN:
@@ -589,7 +590,9 @@ static VALUE touch(int argc, VALUE * argv, VALUE self) {
 
   ops.ttl = FIX2INT( rb_hash_aref(options, ttl_sym) );
 
-  if ( ( status = aerospike_key_operate(as, &err, NULL, k, &ops, &rec) ) != AEROSPIKE_OK ) {
+  as_policy_operate * policy = get_policy(options);
+
+  if ( ( status = aerospike_key_operate(as, &err, policy, k, &ops, &rec) ) != AEROSPIKE_OK ) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
       log_warn("[Client][touch] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
@@ -616,26 +619,38 @@ static VALUE touch(int argc, VALUE * argv, VALUE self) {
 //
 // perform given operations on record in one call
 //
-// def operate(key, operations)
+// def operate(key, operations, options = {})
 //
 // params:
 //   key - AeropsikeC::Key object
 //   operations - AeropsikeC::Operation object
+//   options:
+//     policy: AerospikeC::Policy for operate
 //
 //  ------
 //  RETURN:
 //    1. hash representing record
 //    2. nil when AEROSPIKE_ERR_RECORD_NOT_FOUND
 //
-// @TODO options policy
 //
-static VALUE operate(VALUE self, VALUE key, VALUE operations) {
+static VALUE operate(int argc, VALUE * argv, VALUE self) {
   struct timeval tm;
   start_timing(&tm);
 
   as_error err;
   as_status status;
   aerospike * as = get_client_struct(self);
+
+  VALUE key;
+  VALUE operations;
+  VALUE options;
+
+  rb_scan_args(argc, argv, "21", &key, &operations, &options);
+
+  if ( NIL_P(options) ) {
+    options = rb_hash_new();
+  }
+
   as_key * k     = get_key_struct(key);
 
   VALUE is_aerospike_c_operation = rb_funcall(operations, rb_intern("is_a?"), 1, rb_const_get(AerospikeC, rb_intern("Operation")));
@@ -646,8 +661,9 @@ static VALUE operate(VALUE self, VALUE key, VALUE operations) {
   as_operations * ops = rb_operations2as_operations(operations);
 
   as_record * rec = NULL;
+  as_policy_operate * policy = get_policy(options);
 
-  if ( ( status = aerospike_key_operate(as, &err, NULL, k, ops, &rec) ) != AEROSPIKE_OK ) {
+  if ( ( status = aerospike_key_operate(as, &err, policy, k, ops, &rec) ) != AEROSPIKE_OK ) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
       log_warn("[Client][operate] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
@@ -1770,7 +1786,7 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   rb_define_method(Client, "touch", RB_FN_ANY()touch, -1);
 
   // operations
-  rb_define_method(Client, "operate", RB_FN_ANY()operate, 2);
+  rb_define_method(Client, "operate", RB_FN_ANY()operate, -1);
   rb_define_method(Client, "operation", RB_FN_ANY()operation_obj, 0);
 
   // indexes

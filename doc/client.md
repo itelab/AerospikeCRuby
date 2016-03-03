@@ -410,7 +410,7 @@ Parameters:
 
   - `:ttl` - time to live record (default: 0, which means server will use namespace default)
 
-  - @TODO options policy
+  - `:policy` - [AerospikeC::OperatePolicy](policy.md#operate_policy) object
 
 Return:
 - `hash` representing record header
@@ -435,7 +435,7 @@ client.touch(key, ttl: 70) # => {"gen" => 2, "expire_in" => 70}
 <!-- operate -->
 <a name="operate"></a>
 
-### operate(key, operations)
+### operate(key, operations, options = {})
 
 Perform many operations on record in single server call.
 
@@ -443,6 +443,9 @@ Parameters:
 
 - `key`        - [AerospikeC::Key](key.md) object
 - `operations` - [AerospikeC::Operation](operation.md) object
+- `options`:
+
+  - `:policy` - [AerospikeC::OperatePolicy](policy.md#operate_policy) object
 
 Return:
 

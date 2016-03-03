@@ -6,6 +6,7 @@ VALUE WritePolicy;
 VALUE RemovePolicy;
 VALUE ApplyPolicy;
 VALUE QueryPolicy;
+VALUE OperatePolicy;
 
 // ----------------------------------------------------------------------------------
 //
@@ -314,6 +315,49 @@ static VALUE query_policy_initialize(int argc, VALUE * argv, VALUE self) {
 
 // ----------------------------------------------------------------------------------
 //
+// AerospikeC::OperatePolicy
+//
+//  * init,
+//  * free,
+//  * ruby initialize
+//
+static void free_policy_operate(as_policy_operate * policy) {
+  xfree(policy);
+}
+
+static void init_policy_operate(VALUE self, VALUE options) {
+  as_policy_operate * policy = (as_policy_operate *) ruby_xmalloc (sizeof(as_policy_operate));
+  if (! policy) rb_raise(MemoryError, err_memory_info());
+  as_policy_operate_init(policy);
+
+  options_buffer buffer;
+  options2buffer(self, options, &buffer);
+
+  policy->consistency_level = buffer.consistency_level;
+  policy->commit_level = buffer.commit_level;
+  policy->gen          = buffer.gen;
+  policy->key          = buffer.key;
+  policy->retry        = buffer.retry;
+  policy->timeout      = buffer.timeout;
+  policy->replica      = buffer.replica;
+
+  VALUE policy_struct = Data_Wrap_Struct(Policy, NULL, free_policy_operate, policy);
+
+  rb_iv_set(self, "policy", policy_struct);
+}
+
+static VALUE operate_policy_initialize(int argc, VALUE * argv, VALUE self) {
+  VALUE options;
+
+  rb_scan_args(argc, argv, "01", &options);
+
+  VALUE super_args[2] = { operate_sym, options };
+
+  rb_call_super(2, super_args);
+}
+
+// ----------------------------------------------------------------------------------
+//
 // AerospikeC::Policy
 //
 // initialize(type, options = {})
@@ -344,6 +388,9 @@ static VALUE policy_initialize(int argc, VALUE * argv, VALUE self) {
   }
   else if ( type == query_sym ) {
     init_policy_query(self, options);
+  }
+  else if ( type == operate_sym ) {
+    init_policy_operate(self, options);
   }
   else {
     rb_raise(OptionError, "[AerospikeC::Policy][initialize] unknown policy type");
@@ -427,4 +474,7 @@ void init_aerospike_c_policy(VALUE AerospikeC) {
 
   QueryPolicy = rb_define_class_under(AerospikeC, "QueryPolicy", Policy);
   rb_define_method(QueryPolicy, "initialize", RB_FN_ANY()query_policy_initialize, -1);
+
+  OperatePolicy = rb_define_class_under(AerospikeC, "OperatePolicy", Policy);
+  rb_define_method(OperatePolicy, "initialize", RB_FN_ANY()operate_policy_initialize, -1);
 }

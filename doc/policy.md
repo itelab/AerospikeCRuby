@@ -16,6 +16,7 @@ Policy classes:
 - [RemovePolicy](#remove_policy)
 - [ApplyPolicy](#apply_policy)
 - [QueryPolicy](#query_policy)
+- [OperatePolicy](#operate_policy)
 
 [Policy options:](#options)
 - [:commit_level](#commit_level)
@@ -92,6 +93,22 @@ Uses options:
 ### QueryPolicy
 
 Uses options:
+- [:timeout](#timeout)
+
+<!--===============================================================================-->
+<hr />
+<!-- operate_policy -->
+<a name="operate_policy"></a>
+
+### OperatePolicy
+
+Uses options:
+- [:consistency_level](#consistency_level)
+- [:commit_level](#commit_level)
+- [:replica](#replica)
+- [:gen](#gen)
+- [:key](#key)
+- [:retry](#retry)
 - [:timeout](#timeout)
 
 

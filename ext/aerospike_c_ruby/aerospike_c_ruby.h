@@ -110,6 +110,7 @@
 #define geo_sphere_sym          ID2SYM(rb_intern("geo_sphere"))         // :geo_sphere
 #define cost_sym                ID2SYM(rb_intern("cost"))               // :cost
 #define count_sym               ID2SYM(rb_intern("count"))              // :count
+#define operate_sym             ID2SYM(rb_intern("operate"))            // :operate
 ;
 
 #define list_append_sym         ID2SYM(rb_intern("list_append"))        // :list_append
@@ -278,6 +279,7 @@ extern VALUE ReadPolicy;
 extern VALUE RemovePolicy;
 extern VALUE ApplyPolicy;
 extern VALUE QueryPolicy;
+extern VALUE OperatePolicy;
 
 extern VALUE Llist;
 extern VALUE LdtProxy;
