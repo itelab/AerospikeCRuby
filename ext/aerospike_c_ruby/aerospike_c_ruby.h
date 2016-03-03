@@ -74,6 +74,7 @@
 #define asc_sym                 ID2SYM(rb_intern("asc"))                // :asc
 #define desc_sym                ID2SYM(rb_intern("desc"))               // :desc
 #define order_sym               ID2SYM(rb_intern("order"))              // :order
+#define at_sym                  ID2SYM(rb_intern("at"))                 // :at
 ;
 #define lua_path_sym            ID2SYM(rb_intern("lua_path"))           // :lua_path
 #define password_sym            ID2SYM(rb_intern("password"))           // :password
@@ -108,6 +109,22 @@
 #define geo_within_sym          ID2SYM(rb_intern("geo_within"))         // :geo_within
 #define geo_sphere_sym          ID2SYM(rb_intern("geo_sphere"))         // :geo_sphere
 #define cost_sym                ID2SYM(rb_intern("cost"))               // :cost
+#define count_sym               ID2SYM(rb_intern("count"))              // :count
+;
+
+#define list_append_sym         ID2SYM(rb_intern("list_append"))        // :list_append
+#define list_set_sym            ID2SYM(rb_intern("list_set"))           // :list_set
+#define list_trim_sym           ID2SYM(rb_intern("list_trim"))          // :list_trim
+#define list_clear_sym          ID2SYM(rb_intern("list_clear"))         // :list_clear
+#define list_pop_sym            ID2SYM(rb_intern("list_pop"))           // :list_pop
+#define list_pop_range_sym      ID2SYM(rb_intern("list_pop_range"))     // :list_pop_range
+#define list_pop_range_from_sym ID2SYM(rb_intern("list_pop_range_from"))// :list_pop_range_from
+#define list_remove_sym            ID2SYM(rb_intern("list_remove"))           // :list_remove
+#define list_remove_range_sym      ID2SYM(rb_intern("list_remove_range"))     // :list_remove_range
+#define list_remove_range_from_sym ID2SYM(rb_intern("list_remove_range_from"))// :list_remove_range_from
+#define list_get_sym            ID2SYM(rb_intern("list_get"))           // :list_get
+#define list_get_range_sym      ID2SYM(rb_intern("list_get_range"))     // :list_get_range
+#define list_get_range_from_sym ID2SYM(rb_intern("list_get_range_from"))// :list_get_range_from
 ;
 
 #define as_val_int_2_val(val) LONG2FIX( as_integer_get( as_integer_fromval(val) ) )         //(int)    as_val * -> VALUE
@@ -139,7 +156,6 @@
 void init_aerospike_c_client(VALUE AerospikeC);     // client.c
 void init_aerospike_c_key   (VALUE AerospikeC);     // key.c
 void init_aerospike_c_record(VALUE AerospikeC);     // record.c
-void init_aerospike_c_operation(VALUE AerospikeC);  // operation.c
 void init_aerospike_c_udf_task(VALUE AerospikeC);   // udf_task.c
 void init_aerospike_c_scan_task(VALUE AerospikeC);  // scan_task.c
 void init_aerospike_c_query(VALUE AerospikeC);      // query.c
@@ -234,15 +250,17 @@ as_val * rb_copy_as_val(as_val * value);
 
 as_record * rb_copy_as_record(as_record * record);
 
+as_operations * rb_operations2as_operations(VALUE operations);
+
 // ---------------------------------------------------
 //
 // extern variables
 //
+extern VALUE AerospikeC;
 extern VALUE Client;
 
 extern VALUE Record;
 extern VALUE Key;
-extern VALUE Operation;
 extern VALUE GeoJson;
 
 extern VALUE Logger;

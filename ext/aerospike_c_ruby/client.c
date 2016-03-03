@@ -638,63 +638,16 @@ static VALUE operate(VALUE self, VALUE key, VALUE operations) {
   aerospike * as = get_client_struct(self);
   as_key * k     = get_key_struct(key);
 
-  VALUE is_aerospike_c_operation = rb_funcall(operations, rb_intern("is_a?"), 1, Operation);
+  VALUE is_aerospike_c_operation = rb_funcall(operations, rb_intern("is_a?"), 1, rb_const_get(AerospikeC, rb_intern("Operation")));
   if ( is_aerospike_c_operation != Qtrue ) {
     rb_raise(OptionError, "[AerospikeC::Client][operate] use AerospikeC::Operation class to perform operations");
   }
 
-  VALUE rb_ops = rb_iv_get(operations, "@operations");
-
-  int ops_count = rb_ary_len_int(rb_ops);
-
-  as_operations ops;
-  as_operations_inita(&ops, ops_count);
-  ops.ttl = FIX2INT( rb_iv_get(operations, "@ttl") );
-
-  for (int i = 0; i < ops_count; ++i) {
-    VALUE op = rb_ary_entry(rb_ops, i);
-
-    VALUE rb_bin = rb_hash_aref(op, bin_sym);
-    char * bin_name = StringValueCStr(rb_bin);
-
-    VALUE val = rb_hash_aref(op, value_sym);
-    VALUE operation_type = rb_hash_aref(op, operation_sym);
-
-    if ( operation_type == touch_sym ) {
-      as_operations_add_touch(&ops);
-    }
-    else if ( operation_type == read_sym ) {
-      as_operations_add_read(&ops, bin_name);
-    }
-    else if ( operation_type == increment_sym ) {
-      as_operations_add_incr(&ops, bin_name, FIX2LONG(val));
-    }
-    else if ( operation_type == append_sym ) {
-      as_operations_add_append_str(&ops, bin_name, StringValueCStr(val));
-    }
-    else if ( operation_type == prepend_sym ) {
-      as_operations_add_prepend_str(&ops, bin_name, StringValueCStr(val));
-    }
-    else if ( operation_type == write_sym ) {
-      if ( TYPE(val) == T_FIXNUM ) {
-        as_operations_add_write_int64(&ops, bin_name, FIX2LONG(val));
-      }
-      else if ( TYPE(val) == T_STRING ) {
-        as_operations_add_write_str(&ops, bin_name, StringValueCStr(val));
-      }
-      else {
-        VALUE tmp = value_to_s(val);
-        as_operations_add_write_str(&ops, bin_name, StringValueCStr(tmp));
-      }
-    }
-    else {
-      rb_raise(ParseError, "[AerospikeC::Client][operate] uknown operation type: %s", val_inspect(operation_type));
-    }
-  }
+  as_operations * ops = rb_operations2as_operations(operations);
 
   as_record * rec = NULL;
 
-  if ( ( status = aerospike_key_operate(as, &err, NULL, k, &ops, &rec) ) != AEROSPIKE_OK ) {
+  if ( ( status = aerospike_key_operate(as, &err, NULL, k, ops, &rec) ) != AEROSPIKE_OK ) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
       log_warn("[Client][operate] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
@@ -707,7 +660,7 @@ static VALUE operate(VALUE self, VALUE key, VALUE operations) {
   VALUE record = record2hash(rec);
 
   as_record_destroy(rec);
-  as_operations_destroy(&ops);
+  as_operations_destroy(ops);
 
   log_info_with_time_v("[Client][operate] success", &tm, rb_funcall(key, rb_intern("key_info"), 0));
 
@@ -724,7 +677,7 @@ static VALUE operate(VALUE self, VALUE key, VALUE operations) {
 //
 static VALUE operation_obj(VALUE self) {
   log_info("[Client] Getting new Operation object");
-  return rb_funcall(Operation, rb_intern("new"), 0);
+  return rb_funcall(rb_const_get(AerospikeC, rb_intern("Operation")), rb_intern("new"), 0);
 }
 
 // ----------------------------------------------------------------------------------

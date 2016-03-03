@@ -18,7 +18,7 @@ ops.write!("new_bin_int", 10).write!("new_bin_str", "nowy")
 ops.read!("int")
 ops.read!("string")
 ops.read!("new_bin_int")
-ops.read!("new_bin_str")
+ops.read!("new_bin_str").touch!
 
 puts ops.inspect
 
@@ -27,3 +27,21 @@ puts client.get(key).inspect
 
 rec = client.operate(key, ops)
 puts rec.inspect
+
+puts "\n-----\n"
+
+client.delete(key)
+
+bins = {
+  "tab" => [1]
+}
+
+client.put(key, bins)
+puts client.get(key).inspect
+
+ops = AerospikeC::Operation.new # eql to client.operation
+ops.list_append!("tab", {id: 1, msg: "hello world"})
+
+rec = client.operate(key, ops)
+puts "----> after operate:"
+puts client.get(key).inspect

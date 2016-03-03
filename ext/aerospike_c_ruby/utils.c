@@ -1224,3 +1224,146 @@ void as_val_free(as_val * value) {
       return;
   }
 }
+
+// ----------------------------------------------------------------------------------
+//
+// convert AerospikeC::Operation to as_operations *
+//
+as_operations * rb_operations2as_operations(VALUE operations) {
+  VALUE rb_ops = rb_iv_get(operations, "@operations");
+
+  int ops_count = rb_ary_len_int(rb_ops);
+
+  as_operations * ops = as_operations_new(ops_count);
+  ops->ttl = FIX2INT( rb_iv_get(operations, "@ttl") );
+
+  for (int i = 0; i < ops_count; ++i) {
+    VALUE op = rb_ary_entry(rb_ops, i);
+
+    VALUE rb_bin = rb_hash_aref(op, bin_sym);
+    char * bin_name;
+
+    if ( rb_bin != Qnil ) {
+      bin_name = StringValueCStr(rb_bin);
+    }
+
+    VALUE val = rb_hash_aref(op, value_sym);
+    VALUE operation_type = rb_hash_aref(op, operation_sym);
+
+    // touch
+    if ( operation_type == touch_sym ) {
+      as_operations_add_touch(ops);
+    }
+
+    // read bin
+    else if ( operation_type == read_sym ) {
+      as_operations_add_read(ops, bin_name);
+    }
+
+    // increment int
+    else if ( operation_type == increment_sym ) {
+      as_operations_add_incr(ops, bin_name, FIX2LONG(val));
+    }
+
+    // append string
+    else if ( operation_type == append_sym ) {
+      as_operations_add_append_str(ops, bin_name, StringValueCStr(val));
+    }
+
+    // prepend string
+    else if ( operation_type == prepend_sym ) {
+      as_operations_add_prepend_str(ops, bin_name, StringValueCStr(val));
+    }
+
+    // write bin
+    else if ( operation_type == write_sym ) {
+      if ( TYPE(val) == T_FIXNUM ) {
+        as_operations_add_write_int64(ops, bin_name, FIX2LONG(val));
+      }
+      else if ( TYPE(val) == T_STRING ) {
+        as_operations_add_write_str(ops, bin_name, StringValueCStr(val));
+      }
+      else {
+        VALUE tmp = value_to_s(val);
+        as_operations_add_write_str(ops, bin_name, StringValueCStr(tmp));
+      }
+    }
+
+    // append list
+    else if ( operation_type == list_append_sym ) {
+      as_operations_add_list_append(ops, bin_name, rb_val2as_val(val));
+    }
+
+    // set at index list
+    else if ( operation_type == list_set_sym ) {
+      VALUE tmp = rb_hash_aref(op, at_sym);
+      as_operations_add_list_set(ops, bin_name, FIX2LONG(tmp), rb_val2as_val(val));
+    }
+
+    // trim values not in range <index, count>
+    else if ( operation_type == list_trim_sym ) {
+      VALUE tmp = rb_hash_aref(op, count_sym);
+      as_operations_add_list_trim(ops, bin_name, FIX2LONG(val), FIX2LONG(tmp));
+    }
+
+    // clear list
+    else if ( operation_type == list_clear_sym ) {
+      as_operations_add_list_clear(ops, bin_name);
+    }
+
+    // pop from list
+    else if ( operation_type == list_pop_sym ) {
+      as_operations_add_list_pop(ops, bin_name, FIX2LONG(val));
+    }
+
+    // pop_range from list
+    else if ( operation_type == list_pop_range_sym ) {
+      VALUE tmp = rb_hash_aref(op, count_sym);
+      as_operations_add_list_pop_range(ops, bin_name, FIX2LONG(val), FIX2LONG(tmp));
+    }
+
+    // pop range from list starting at index
+    else if ( operation_type == list_pop_range_from_sym ) {
+      as_operations_add_list_pop_range_from(ops, bin_name, FIX2LONG(val));
+    }
+
+    // remove from list
+    else if ( operation_type == list_remove_sym ) {
+      as_operations_add_list_remove(ops, bin_name, FIX2LONG(val));
+    }
+
+    // remove_range from list
+    else if ( operation_type == list_remove_range_sym ) {
+      VALUE tmp = rb_hash_aref(op, count_sym);
+      as_operations_add_list_remove_range(ops, bin_name, FIX2LONG(val), FIX2LONG(tmp));
+    }
+
+    // remove range from list starting at index
+    else if ( operation_type == list_remove_range_from_sym ) {
+      as_operations_add_list_remove_range_from(ops, bin_name, FIX2LONG(val));
+    }
+
+    // get from list
+    else if ( operation_type == list_get_sym ) {
+      as_operations_add_list_get(ops, bin_name, FIX2LONG(val));
+    }
+
+    // get_range from list
+    else if ( operation_type == list_get_range_sym ) {
+      VALUE tmp = rb_hash_aref(op, count_sym);
+      as_operations_add_list_get_range(ops, bin_name, FIX2LONG(val), FIX2LONG(tmp));
+    }
+
+    // get range from list starting at index
+    else if ( operation_type == list_get_range_from_sym ) {
+      as_operations_add_list_get_range_from(ops, bin_name, FIX2LONG(val));
+    }
+
+    // uknown operation
+    else {
+      rb_raise(ParseError, "[AerospikeC::Client][operate] uknown operation type: %s", val_inspect(operation_type));
+    }
+  }
+
+  return ops;
+}

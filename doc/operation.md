@@ -16,6 +16,20 @@ With a new operation, you can use any of the methods specified below:
   - [#write!](#write!)
   - [#operations](#operations)
   - [#<<](#<<)
+  - [#count](#count)
+  - [#list_append!](#list_append!)
+  - [#list_set!](#list_set!)
+  - [#list_trim!](#list_trim!)
+  - [#list_clear!](#list_clear!)
+  - [#list_pop!](#list_pop!)
+  - [#list_pop_range!](#list_pop_range!)
+  - [#list_pop_range_from!](#list_pop_range_from!)
+  - [#list_remove!](#list_remove!)
+  - [#list_remove_range!](#list_remove_range!)
+  - [#list_remove_range_from!](#list_remove_range_from!)
+  - [#list_get!](#list_get!)
+  - [#list_get_range!](#list_get_range!)
+  - [#list_get_range_from!](#list_get_range_from!)
 
 <a name="methods"></a>
 ## Methods
@@ -263,4 +277,353 @@ operation.operations # => []
 
 operation << {:operation=>:touch}
 operation.operations # => [{:operation=>:touch}]
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- count -->
+<a name="count"></a>
+
+### count
+
+`alias: size, length`
+
+Operations count
+
+Example:
+
+```ruby
+operation = AerospikeC::Operation.new
+operation.write!("new_int_bin", 10).touch!.read!("int")
+operation.count # => 3
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- list_append! -->
+<a name="list_append!"></a>
+
+### list_append!(bin, val)
+
+Append value to the list
+
+Parameters:
+
+- `bin` - name of the bin with list
+- `val` - value to append
+
+Returns `self`
+
+Example:
+
+```ruby
+operation = AerospikeC::Operation.new
+
+operation.list_append!("tab_bin", 10)
+operation.operations # => [{:operation=>:list_append, :bin=>"tab_bin", :value=>10}]
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- list_set! -->
+<a name="list_set!"></a>
+
+### list_set!(bin, val, index)
+
+Set value at given index
+
+Parameters:
+
+- `bin` - name of the bin with list
+- `val` - value to set
+- `index` - index to set value on
+
+Returns `self`
+
+Example:
+
+```ruby
+operation = AerospikeC::Operation.new
+
+operation.list_set!("tab_bin", 10, 1)
+operation.operations # => [{:operation=>:list_set, :bin=>"tab_bin", :value=>10, :at=>1}]
+```
+
+
+<!--===============================================================================-->
+<hr/>
+<!-- list_trim! -->
+<a name="list_trim!"></a>
+
+### list_trim!(bin, index, count)
+
+Remove values not in range (index, count)
+
+Parameters:
+
+- `bin` - name of the bin with list
+- `index` - index of list
+- `count` - count of values
+
+Returns `self`
+
+Example:
+
+```ruby
+operation = AerospikeC::Operation.new
+
+operation.list_trim!("tab_bin", 10, 5)
+operation.operations # => [{:operation=>:list_trim, :bin=>"tab_bin", :value=>10, :count=>5}]
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- list_clear! -->
+<a name="list_clear!"></a>
+
+### list_clear!(bin)
+
+Clear list
+
+Parameters:
+
+- `bin` - name of the bin with list
+
+Returns `self`
+
+Example:
+
+```ruby
+operation = AerospikeC::Operation.new
+
+operation.list_clear!("tab_bin")
+operation.operations # => [{:operation=>:list_clear, :bin=>"tab_bin"}]
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- list_pop! -->
+<a name="list_pop!"></a>
+
+### list_pop!(bin, index)
+
+Pop from list
+
+Parameters:
+
+- `bin` - name of the bin with list
+- `index` - index to pop from
+
+Returns `self`
+
+Example:
+
+```ruby
+operation = AerospikeC::Operation.new
+
+operation.list_pop!("tab_bin", 3)
+operation.operations # => [{:operation=>:list_pop, :bin=>"tab_bin", :value=>3}]
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- list_pop_range! -->
+<a name="list_pop_range!"></a>
+
+### list_pop_range!(bin, index, count)
+
+Pop range from list
+
+Parameters:
+
+- `bin` - name of the bin with list
+- `index` - index to pop from
+- `count` - how many from index
+
+Returns `self`
+
+Example:
+
+```ruby
+operation = AerospikeC::Operation.new
+
+operation.list_pop_range!("tab_bin", 3, 4)
+operation.operations # => [{:operation=>:list_pop_range, :bin=>"tab_bin", :value=>3, :count=>4}]
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- list_pop_range_from! -->
+<a name="list_pop_range_from!"></a>
+
+### list_pop_range_from!(bin, index)
+
+Pop range from list, starting at index
+
+Parameters:
+
+- `bin` - name of the bin with list
+- `index` - index to start range from
+
+Returns `self`
+
+Example:
+
+```ruby
+operation = AerospikeC::Operation.new
+
+operation.list_pop_range_from!("tab_bin", 3)
+operation.operations # => [{:operation=>:list_pop_range_from, :bin=>"tab_bin", :value=>3}]
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- list_remove! -->
+<a name="list_remove!"></a>
+
+### list_remove!(bin, index)
+
+Pop from list
+
+Parameters:
+
+- `bin` - name of the bin with list
+- `index` - index to remove from
+
+Returns `self`
+
+Example:
+
+```ruby
+operation = AerospikeC::Operation.new
+
+operation.list_remove!("tab_bin", 3)
+operation.operations # => [{:operation=>:list_remove, :bin=>"tab_bin", :value=>3}]
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- list_remove_range! -->
+<a name="list_remove_range!"></a>
+
+### list_remove_range!(bin, index, count)
+
+Pop range from list
+
+Parameters:
+
+- `bin` - name of the bin with list
+- `index` - index to remove from
+- `count` - how many from index
+
+Returns `self`
+
+Example:
+
+```ruby
+operation = AerospikeC::Operation.new
+
+operation.list_remove_range!("tab_bin", 3, 4)
+operation.operations # => [{:operation=>:list_remove_range, :bin=>"tab_bin", :value=>3, :count=>4}]
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- list_remove_range_from! -->
+<a name="list_remove_range_from!"></a>
+
+### list_remove_range_from!(bin, index)
+
+Pop range from list, starting at index
+
+Parameters:
+
+- `bin` - name of the bin with list
+- `index` - index to start range from
+
+Returns `self`
+
+Example:
+
+```ruby
+operation = AerospikeC::Operation.new
+
+operation.list_remove_range_from!("tab_bin", 3)
+operation.operations # => [{:operation=>:list_remove_range_from, :bin=>"tab_bin", :value=>3}]
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- list_get! -->
+<a name="list_get!"></a>
+
+### list_get!(bin, index)
+
+Pop from list
+
+Parameters:
+
+- `bin` - name of the bin with list
+- `index` - index to get from
+
+Returns `self`
+
+Example:
+
+```ruby
+operation = AerospikeC::Operation.new
+
+operation.list_get!("tab_bin", 3)
+operation.operations # => [{:operation=>:list_get, :bin=>"tab_bin", :value=>3}]
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- list_get_range! -->
+<a name="list_get_range!"></a>
+
+### list_get_range!(bin, index, count)
+
+Pop range from list
+
+Parameters:
+
+- `bin` - name of the bin with list
+- `index` - index to get from
+- `count` - how many from index
+
+Returns `self`
+
+Example:
+
+```ruby
+operation = AerospikeC::Operation.new
+
+operation.list_get_range!("tab_bin", 3, 4)
+operation.operations # => [{:operation=>:list_get_range, :bin=>"tab_bin", :value=>3, :count=>4}]
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- list_get_range_from! -->
+<a name="list_get_range_from!"></a>
+
+### list_get_range_from!(bin, index)
+
+Pop range from list, starting at index
+
+Parameters:
+
+- `bin` - name of the bin with list
+- `index` - index to start range from
+
+Returns `self`
+
+Example:
+
+```ruby
+operation = AerospikeC::Operation.new
+
+operation.list_get_range_from!("tab_bin", 3)
+operation.operations # => [{:operation=>:list_get_range_from, :bin=>"tab_bin", :value=>3}]
 ```
