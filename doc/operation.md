@@ -432,7 +432,7 @@ operation.operations # => [{:operation=>:list_pop, :bin=>"tab_bin", :value=>3}]
 
 ### list_pop_range!(bin, index, count)
 
-Pop range from list
+Pop range from list. Negative index counts from end of list.
 
 Parameters:
 
@@ -458,7 +458,7 @@ operation.operations # => [{:operation=>:list_pop_range, :bin=>"tab_bin", :value
 
 ### list_pop_range_from!(bin, index)
 
-Pop range from list, starting at index
+Pop range from list, starting at index. Negative index counts from end of list.
 
 Parameters:
 
@@ -508,7 +508,7 @@ operation.operations # => [{:operation=>:list_remove, :bin=>"tab_bin", :value=>3
 
 ### list_remove_range!(bin, index, count)
 
-Pop range from list
+Pop range from list. Negative index counts from end of list.
 
 Parameters:
 
@@ -534,7 +534,7 @@ operation.operations # => [{:operation=>:list_remove_range, :bin=>"tab_bin", :va
 
 ### list_remove_range_from!(bin, index)
 
-Pop range from list, starting at index
+Pop range from list, starting at index. Negative index counts from end of list.
 
 Parameters:
 
@@ -584,7 +584,7 @@ operation.operations # => [{:operation=>:list_get, :bin=>"tab_bin", :value=>3}]
 
 ### list_get_range!(bin, index, count)
 
-Pop range from list
+Pop range from list. Negative index counts from end of list.
 
 Parameters:
 
@@ -610,7 +610,7 @@ operation.operations # => [{:operation=>:list_get_range, :bin=>"tab_bin", :value
 
 ### list_get_range_from!(bin, index)
 
-Pop range from list, starting at index
+Pop range from list, starting at index. Negative index counts from end of list.
 
 Parameters:
 
