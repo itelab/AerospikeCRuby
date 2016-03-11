@@ -320,6 +320,18 @@ class AerospikeC::Operation
   end
 
 
+  #-----------------------------------------------------------------------------
+  ##@brief      get list size
+  ##
+  ##@param      bin   bin name
+  ##
+  ##@return     self
+  ##
+  def list_size!(bin)
+    @operations << { operation: :list_size, bin: bin_name(bin) }
+  end
+
+
   #----------------------------------------------------------------------------
   ##                            private
   ##

@@ -117,6 +117,7 @@
 #define list_set_sym            ID2SYM(rb_intern("list_set"))           // :list_set
 #define list_trim_sym           ID2SYM(rb_intern("list_trim"))          // :list_trim
 #define list_clear_sym          ID2SYM(rb_intern("list_clear"))         // :list_clear
+#define list_size_sym           ID2SYM(rb_intern("list_size"))          // :list_size
 #define list_pop_sym            ID2SYM(rb_intern("list_pop"))           // :list_pop
 #define list_pop_range_sym      ID2SYM(rb_intern("list_pop_range"))     // :list_pop_range
 #define list_pop_range_from_sym ID2SYM(rb_intern("list_pop_range_from"))// :list_pop_range_from

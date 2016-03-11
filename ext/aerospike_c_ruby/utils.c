@@ -1362,6 +1362,11 @@ as_operations * rb_operations2as_operations(VALUE operations) {
       as_operations_add_list_get_range_from(ops, bin_name, FIX2LONG(val));
     }
 
+    // get list size
+    else if ( operation_type == list_size_sym ) {
+      as_operations_add_list_size(ops, bin_name);
+    }
+
     // uknown operation
     else {
       rb_raise(ParseError, "[AerospikeC::Client][operate] uknown operation type: %s", val_inspect(operation_type));

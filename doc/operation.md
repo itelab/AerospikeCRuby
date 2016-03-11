@@ -30,6 +30,7 @@ With a new operation, you can use any of the methods specified below:
   - [#list_get!](#list_get!)
   - [#list_get_range!](#list_get_range!)
   - [#list_get_range_from!](#list_get_range_from!)
+  - [#list_size!](#list_size!)
 
 <a name="methods"></a>
 ## Methods
@@ -626,4 +627,28 @@ operation = AerospikeC::Operation.new
 
 operation.list_get_range_from!("tab_bin", 3)
 operation.operations # => [{:operation=>:list_get_range_from, :bin=>"tab_bin", :value=>3}]
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- list_size! -->
+<a name="list_size!"></a>
+
+### list_size!(bin)
+
+Get list size
+
+Parameters:
+
+- `bin` - name of the bin with list
+
+Returns `self`
+
+Example:
+
+```ruby
+operation = AerospikeC::Operation.new
+
+operation.list_size!("tab_bin")
+operation.operations # => [{:operation=>:list_size, :bin=>"tab_bin"}]
 ```

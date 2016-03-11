@@ -921,7 +921,7 @@ static VALUE register_udf(int argc, VALUE * argv, VALUE self) {
 //
 // drop udf for given server_path
 //
-// def register_udf(server_path, options = {})
+// def drop_udf(server_path, options = {})
 //
 // params:
 //   server_path - where is udf on the server (name)
