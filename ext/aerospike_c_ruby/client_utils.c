@@ -95,7 +95,7 @@ void options2config(as_config * config, VALUE options, VALUE self) {
     if ( TYPE(option_tmp) != T_FIXNUM )
       rb_raise(OptionError, "[AerospikeC::Client][initialize] options :max_threads must be an integer");
 
-    config->max_threads = FIX2INT(option_tmp);
+    config->max_conns_per_node = FIX2INT(option_tmp);
   }
 
   option_tmp = rb_hash_aref(options, conn_timeout_sym);
