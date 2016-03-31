@@ -5,7 +5,7 @@ Gem::Specification.new do |s|
   s.summary     = "aerospike_c_ruby"
   s.description = "aerospike_c_ruby"
   s.authors     = ["Adam Stomski"]
-  s.email       = 'adam.stomski@gmail.com'
+  s.email       = 'office@itelab.eu'
 
   s.files       = Dir["{lib}/**/*", "Rakefile", "README.md", 'ext/**/*.c', 'ext/**/*.h']
   s.test_files  = Dir["spec/**/*"]
