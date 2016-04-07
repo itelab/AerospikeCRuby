@@ -89,7 +89,7 @@ void log_info_with_time_v(const char * msg, struct timeval * tm, VALUE val) {
 
   switch_color_code();
 
-  VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s (%.4f ms)\e[0m \e[1m%s, %s\e[0m", color_code, "<AerospikeC>", elapsedTime, msg, val_inspect(val));
+  VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s (%.4f ms)\e[0m \e[1m%s, %"PRIsVALUE"\e[0m", color_code, "<AerospikeC>", elapsedTime, msg, val);
   rb_funcall(Logger, rb_intern("info"), 1, rb_msg);
 }
 
@@ -104,7 +104,7 @@ void log_info_with_time_v2(const char * msg, struct timeval * tm, VALUE val, VAL
 
   switch_color_code();
 
-  VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s (%.4f ms)\e[0m \e[1m%s, %s, %s\e[0m", color_code, "<AerospikeC>", elapsedTime, msg, val_inspect(val), val_inspect(val2));
+  VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s (%.4f ms)\e[0m \e[1m%s, %"PRIsVALUE", %"PRIsVALUE"\e[0m", color_code, "<AerospikeC>", elapsedTime, msg, val, val2);
   rb_funcall(Logger, rb_intern("info"), 1, rb_msg);
 }
 

@@ -75,7 +75,7 @@ static VALUE key_info(VALUE self) {
   VALUE set = rb_str_new2(k->set);
   VALUE key = rb_iv_get(self, "@key");
 
-  return rb_sprintf("%s:%s:%s", StringValueCStr(ns), StringValueCStr(set), val_inspect(key));
+  return rb_sprintf("%"PRIsVALUE":%"PRIsVALUE":%"PRIsVALUE"", ns, set, key);
 }
 
 // ----------------------------------------------------------------------------------
