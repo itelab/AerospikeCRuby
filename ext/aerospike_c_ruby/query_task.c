@@ -1,6 +1,6 @@
 #include <aerospike_c_ruby.h>
 
-VALUE QueryTask;
+VALUE rb_aero_QueryTask;
 
 void query_task_deallocate(as_query * query) {
   as_query_destroy(query);
@@ -66,19 +66,19 @@ void init_aerospike_c_query_task(VALUE AerospikeC) {
   //
   // class AerospikeC::QueryTask < Object
   //
-  QueryTask = rb_define_class_under(AerospikeC, "QueryTask", rb_cObject);
+  rb_aero_QueryTask = rb_define_class_under(AerospikeC, "QueryTask", rb_cObject);
 
   // //
   // // methods
   // //
-  rb_define_method(QueryTask, "initialize", RB_FN_ANY()query_initialize, 3);
-  rb_define_method(QueryTask, "done?", RB_FN_ANY()is_done, 0);
-  rb_define_method(QueryTask, "wait_till_completed", RB_FN_ANY()wait_till_completed, -1);
+  rb_define_method(rb_aero_QueryTask, "initialize", RB_FN_ANY()query_initialize, 3);
+  rb_define_method(rb_aero_QueryTask, "done?", RB_FN_ANY()is_done, 0);
+  rb_define_method(rb_aero_QueryTask, "wait_till_completed", RB_FN_ANY()wait_till_completed, -1);
 
   //
   // attr_reader
   //
-  rb_define_attr(QueryTask, "name", 1, 0);
-  rb_define_attr(QueryTask, "done", 1, 0);
-  rb_define_attr(QueryTask, "query_id", 1, 0);
+  rb_define_attr(rb_aero_QueryTask, "name", 1, 0);
+  rb_define_attr(rb_aero_QueryTask, "done", 1, 0);
+  rb_define_attr(rb_aero_QueryTask, "query_id", 1, 0);
 }

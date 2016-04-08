@@ -164,7 +164,7 @@ void init_aerospike_c_query(VALUE AerospikeC);      // query.c
 void init_aerospike_c_policy(VALUE AerospikeC);     // policy.c
 void init_aerospike_c_llist(VALUE AerospikeC);      // llist.c
 void init_aerospike_c_ldt_proxy(VALUE AerospikeC);  // ldt_proxy.c
-void init_aerospike_c_exceptions(AerospikeC);       // exceptions.c
+void init_aerospike_c_exceptions(VALUE AerospikeC); // exceptions.c
 void init_aerospike_c_geo_json(VALUE AerospikeC);   // geo_json.c
 void init_aerospike_c_password(VALUE AerospikeC);   // password.c
 
@@ -258,38 +258,38 @@ as_operations * rb_operations2as_operations(VALUE operations);
 //
 // extern variables
 //
-extern VALUE AerospikeC;
-extern VALUE Client;
+extern VALUE rb_aero_AerospikeC;
+extern VALUE rb_aero_Client;
 
-extern VALUE Record;
-extern VALUE Key;
-extern VALUE GeoJson;
+extern VALUE rb_aero_Record;
+extern VALUE rb_aero_Key;
+extern VALUE rb_aero_GeoJson;
 
-extern VALUE Logger;
+extern VALUE rb_aero_Logger;
 
-extern VALUE IndexTask;
-extern VALUE UdfTask;
-extern VALUE ScanTask;
-extern VALUE QueryTask;
+extern VALUE rb_aero_IndexTask;
+extern VALUE rb_aero_UdfTask;
+extern VALUE rb_aero_ScanTask;
+extern VALUE rb_aero_QueryTask;
 
-extern VALUE Query;
+extern VALUE rb_aero_Query;
 
-extern VALUE Policy;
-extern VALUE WritePolicy;
-extern VALUE ReadPolicy;
-extern VALUE RemovePolicy;
-extern VALUE ApplyPolicy;
-extern VALUE QueryPolicy;
-extern VALUE OperatePolicy;
+extern VALUE rb_aero_Policy;
+extern VALUE rb_aero_WritePolicy;
+extern VALUE rb_aero_ReadPolicy;
+extern VALUE rb_aero_RemovePolicy;
+extern VALUE rb_aero_ApplyPolicy;
+extern VALUE rb_aero_QueryPolicy;
+extern VALUE rb_aero_OperatePolicy;
 
-extern VALUE Llist;
-extern VALUE LdtProxy;
+extern VALUE rb_aero_Llist;
+extern VALUE rb_aero_LdtProxy;
 
-extern VALUE AsError;
-extern VALUE MemoryError;
-extern VALUE ParseError;
-extern VALUE OptionError;
-extern VALUE PasswordEngine;
+extern VALUE rb_aero_AsError;
+extern VALUE rb_aero_MemoryError;
+extern VALUE rb_aero_ParseError;
+extern VALUE rb_aero_OptionError;
+extern VALUE rb_aero_PasswordEngine;
 
 extern pthread_mutex_t G_CALLBACK_MUTEX;
 

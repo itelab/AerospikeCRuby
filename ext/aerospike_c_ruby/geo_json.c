@@ -1,6 +1,6 @@
 #include <aerospike_c_ruby.h>
 
-VALUE GeoJson;
+VALUE rb_aero_GeoJson;
 
 #define NEW_JSON(json) rb_funcall(self, rb_intern("new"), 1, (json));
 #define geo_json_get_coordinates(point) rb_funcall((point), rb_intern("coordinates"), 0)
@@ -19,7 +19,7 @@ static void geo_json_deallocate(as_geojson * key) {
 
 static VALUE geo_json_allocate(VALUE self) {
   as_geojson * geo = (as_geojson *) ruby_xmalloc ( sizeof(as_geojson) );
-  if (! geo) rb_raise(MemoryError, "[AerospikeC::GeoJson][initialize] Error while allocating memory for aerospike geo_json");
+  if (! geo) rb_raise(rb_aero_MemoryError, "[AerospikeC::GeoJson][initialize] Error while allocating memory for aerospike geo_json");
 
   return Data_Wrap_Struct(self, NULL, geo_json_deallocate, geo);
 }
@@ -142,7 +142,7 @@ static VALUE geo_json_compare(VALUE self, VALUE value) {
   else if ( TYPE(value) == T_HASH ) {
     return rb_funcall(geo_json_json(self), rb_intern("=="), 1, rb_funcall(value, rb_intern("to_json"), 0));
   }
-  else if ( rb_funcall(value, rb_intern("is_a?"), 1, GeoJson) == Qtrue ) {
+  else if ( rb_funcall(value, rb_intern("is_a?"), 1, rb_aero_GeoJson) == Qtrue ) {
     return rb_funcall(geo_json_json(self), rb_intern("=="), 1, geo_json_json(value));
   }
   else {
@@ -173,7 +173,7 @@ static VALUE geo_json_point(VALUE self, VALUE x, VALUE y) {
 //
 static VALUE geo_json_polygon(VALUE self, VALUE cords) {
   if ( TYPE(cords) != T_ARRAY )
-    rb_raise(OptionError, "[AerospikeC::GeoJson][polygon] cords must be an Array");
+    rb_raise(rb_aero_OptionError, "[AerospikeC::GeoJson][polygon] cords must be an Array");
 
   VALUE json = rb_hash_new();
   rb_hash_aset(json, rb_str_new2("type"), RB_POLYGON_STR);
@@ -188,8 +188,8 @@ static VALUE geo_json_polygon(VALUE self, VALUE cords) {
       rb_ary_push(polygon_point_ary, point);
     }
     else if ( TYPE(point) == T_DATA ) {
-      if ( rb_funcall(point, rb_intern("is_a?"), 1, GeoJson) != Qtrue )
-        rb_raise(OptionError, "[AerospikeC::GeoJson][polygon] point in Polygon must be Array or AerospikeC::GeoJson object");
+      if ( rb_funcall(point, rb_intern("is_a?"), 1, rb_aero_GeoJson) != Qtrue )
+        rb_raise(rb_aero_OptionError, "[AerospikeC::GeoJson][polygon] point in Polygon must be Array or AerospikeC::GeoJson object");
 
       VALUE point_cords = geo_json_get_coordinates(point);
 
@@ -271,8 +271,8 @@ static VALUE geo_json_circle(VALUE self, VALUE point, VALUE radius) {
     rb_ary_push(circle_ary, point);
   }
   else if ( TYPE(point) == T_DATA ) {
-    if ( rb_funcall(point, rb_intern("is_a?"), 1, GeoJson) != Qtrue )
-      rb_raise(OptionError, "[AerospikeC::GeoJson][circle] point must be Array or AerospikeC::GeoJson object");
+    if ( rb_funcall(point, rb_intern("is_a?"), 1, rb_aero_GeoJson) != Qtrue )
+      rb_raise(rb_aero_OptionError, "[AerospikeC::GeoJson][circle] point must be Array or AerospikeC::GeoJson object");
 
     VALUE point_cords = geo_json_get_coordinates(point);
 
@@ -357,31 +357,31 @@ void init_aerospike_c_geo_json(VALUE AerospikeC) {
   //
   // class AerospikeC::GeoJson < Object
   //
-  GeoJson = rb_define_class_under(AerospikeC, "GeoJson", rb_cObject);
-  rb_define_alloc_func(GeoJson, geo_json_allocate);
+  rb_aero_GeoJson = rb_define_class_under(AerospikeC, "GeoJson", rb_cObject);
+  rb_define_alloc_func(rb_aero_GeoJson, geo_json_allocate);
 
   //
   // methods
   //
-  rb_define_method(GeoJson, "initialize", RB_FN_ANY()geo_json_initialize, 1);
-  rb_define_method(GeoJson, "json", RB_FN_ANY()geo_json_json, 0);
-  rb_define_method(GeoJson, "coordinates", RB_FN_ANY()geo_json_coordinates, 0);
-  rb_define_method(GeoJson, "inspect", RB_FN_ANY()geo_json_inspect, 0);
-  rb_define_method(GeoJson, "type", RB_FN_ANY()geo_json_type, 0);
-  rb_define_method(GeoJson, "point?", RB_FN_ANY()geo_json_is_point, 0);
-  rb_define_method(GeoJson, "polygon?", RB_FN_ANY()geo_json_is_polygon, 0);
-  rb_define_method(GeoJson, "circle?", RB_FN_ANY()geo_json_is_circle, 0);
-  rb_define_method(GeoJson, "==", RB_FN_ANY()geo_json_compare, 1);
+  rb_define_method(rb_aero_GeoJson, "initialize", RB_FN_ANY()geo_json_initialize, 1);
+  rb_define_method(rb_aero_GeoJson, "json", RB_FN_ANY()geo_json_json, 0);
+  rb_define_method(rb_aero_GeoJson, "coordinates", RB_FN_ANY()geo_json_coordinates, 0);
+  rb_define_method(rb_aero_GeoJson, "inspect", RB_FN_ANY()geo_json_inspect, 0);
+  rb_define_method(rb_aero_GeoJson, "type", RB_FN_ANY()geo_json_type, 0);
+  rb_define_method(rb_aero_GeoJson, "point?", RB_FN_ANY()geo_json_is_point, 0);
+  rb_define_method(rb_aero_GeoJson, "polygon?", RB_FN_ANY()geo_json_is_polygon, 0);
+  rb_define_method(rb_aero_GeoJson, "circle?", RB_FN_ANY()geo_json_is_circle, 0);
+  rb_define_method(rb_aero_GeoJson, "==", RB_FN_ANY()geo_json_compare, 1);
 
   //
   // class methods
   //
-  rb_define_singleton_method(GeoJson, "point", RB_FN_ANY()geo_json_point, 2);
-  rb_define_singleton_method(GeoJson, "polygon", RB_FN_ANY()geo_json_polygon, 1);
-  rb_define_singleton_method(GeoJson, "polygon_array", RB_FN_ANY()geo_json_polygon_array, 1);
-  rb_define_singleton_method(GeoJson, "polygon_obj", RB_FN_ANY()geo_json_polygon_obj, 1);
-  rb_define_singleton_method(GeoJson, "circle", RB_FN_ANY()geo_json_circle, 2);
-  rb_define_singleton_method(GeoJson, "circle_array", RB_FN_ANY()geo_json_circle_array, 2);
-  rb_define_singleton_method(GeoJson, "circle_obj", RB_FN_ANY()geo_json_circle_obj, 2);
-  rb_define_singleton_method(GeoJson, "circle_point", RB_FN_ANY()geo_json_circle_point, 3);
+  rb_define_singleton_method(rb_aero_GeoJson, "point", RB_FN_ANY()geo_json_point, 2);
+  rb_define_singleton_method(rb_aero_GeoJson, "polygon", RB_FN_ANY()geo_json_polygon, 1);
+  rb_define_singleton_method(rb_aero_GeoJson, "polygon_array", RB_FN_ANY()geo_json_polygon_array, 1);
+  rb_define_singleton_method(rb_aero_GeoJson, "polygon_obj", RB_FN_ANY()geo_json_polygon_obj, 1);
+  rb_define_singleton_method(rb_aero_GeoJson, "circle", RB_FN_ANY()geo_json_circle, 2);
+  rb_define_singleton_method(rb_aero_GeoJson, "circle_array", RB_FN_ANY()geo_json_circle_array, 2);
+  rb_define_singleton_method(rb_aero_GeoJson, "circle_obj", RB_FN_ANY()geo_json_circle_obj, 2);
+  rb_define_singleton_method(rb_aero_GeoJson, "circle_point", RB_FN_ANY()geo_json_circle_point, 3);
 }

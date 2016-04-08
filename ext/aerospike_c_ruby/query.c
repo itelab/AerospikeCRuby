@@ -1,6 +1,6 @@
 #include <aerospike_c_ruby.h>
 
-VALUE Query;
+VALUE rb_aero_Query;
 
 //
 // def initialize(namespace, set, bins = [])
@@ -17,7 +17,7 @@ static VALUE query_initialize(int argc, VALUE * argv, VALUE self) {
     bins = rb_ary_new();
   }
   else {
-    if ( TYPE(bins) != T_ARRAY) rb_raise(OptionError, "[AerospikeC::Query][initialize] bins must be an array: %s", rb_val_type_as_str(bins));
+    if ( TYPE(bins) != T_ARRAY) rb_raise(rb_aero_OptionError, "[AerospikeC::Query][initialize] bins must be an array: %s", rb_val_type_as_str(bins));
   }
 
   rb_iv_set(self, "@namespace", value_to_s(ns));
@@ -55,7 +55,7 @@ static VALUE eql(VALUE self, VALUE bin, VALUE value) {
       break;
 
     default:
-      rb_raise(OptionError, "[AerospikeC::Query][eql] Unsuporrted value type: %s", rb_val_type_as_str(value));
+      rb_raise(rb_aero_OptionError, "[AerospikeC::Query][eql] Unsuporrted value type: %s", rb_val_type_as_str(value));
       break;
   }
 
@@ -78,8 +78,8 @@ static VALUE eql(VALUE self, VALUE bin, VALUE value) {
 //    1. self (can chain methods)
 //
 static VALUE range(VALUE self, VALUE bin, VALUE min, VALUE max) {
-  if ( TYPE(min) != T_FIXNUM ) rb_raise(OptionError, "[AerospikeC::Query][range] min must be integer");
-  if ( TYPE(max) != T_FIXNUM ) rb_raise(OptionError, "[AerospikeC::Query][range] max must be integer");
+  if ( TYPE(min) != T_FIXNUM ) rb_raise(rb_aero_OptionError, "[AerospikeC::Query][range] min must be integer");
+  if ( TYPE(max) != T_FIXNUM ) rb_raise(rb_aero_OptionError, "[AerospikeC::Query][range] max must be integer");
 
   VALUE filter = rb_hash_new();
 
@@ -98,8 +98,8 @@ static VALUE range(VALUE self, VALUE bin, VALUE min, VALUE max) {
 // geo_contains!(bin, geo)
 //
 static VALUE geo_contains(VALUE self, VALUE bin, VALUE geo) {
-  if ( TYPE(geo) != T_DATA || rb_funcall(geo, rb_intern("is_a?"), 1, GeoJson) != Qtrue )
-    rb_raise(OptionError, "[AerospikeC::Query][geo_contains] must be AerospikeC::GeoJson obj");
+  if ( TYPE(geo) != T_DATA || rb_funcall(geo, rb_intern("is_a?"), 1, rb_aero_GeoJson) != Qtrue )
+    rb_raise(rb_aero_OptionError, "[AerospikeC::Query][geo_contains] must be AerospikeC::GeoJson obj");
 
   VALUE filter = rb_hash_new();
 
@@ -117,8 +117,8 @@ static VALUE geo_contains(VALUE self, VALUE bin, VALUE geo) {
 // geo_within!(bin, geo)
 //
 static VALUE geo_within(VALUE self, VALUE bin, VALUE geo) {
-  if ( TYPE(geo) != T_DATA || rb_funcall(geo, rb_intern("is_a?"), 1, GeoJson) != Qtrue )
-    rb_raise(OptionError, "[AerospikeC::Query][geo_within] must be AerospikeC::GeoJson obj");
+  if ( TYPE(geo) != T_DATA || rb_funcall(geo, rb_intern("is_a?"), 1, rb_aero_GeoJson) != Qtrue )
+    rb_raise(rb_aero_OptionError, "[AerospikeC::Query][geo_within] must be AerospikeC::GeoJson obj");
 
   VALUE filter = rb_hash_new();
 
@@ -145,7 +145,7 @@ static VALUE geo_within(VALUE self, VALUE bin, VALUE geo) {
 //
 static VALUE order_by(VALUE self, VALUE bin, VALUE order) {
   if ( order != asc_sym && order != desc_sym ) {
-    rb_raise(OptionError, "[AerospikeC::Query][order_by] order value: %s, should be :desc or :asc", val_inspect(order));
+    rb_raise(rb_aero_OptionError, "[AerospikeC::Query][order_by] order value: %s, should be :desc or :asc", val_inspect(order));
   }
 
   VALUE q_order = rb_iv_get(self, "@order");
@@ -195,8 +195,8 @@ static VALUE add_bin(VALUE self, VALUE bin) {
 //    1. bins
 //
 static VALUE set_policy(VALUE self, VALUE policy) {
-  if ( rb_funcall(policy, rb_intern("is_a?"), 1, QueryPolicy) == Qfalse )
-    rb_raise(OptionError, "[AerospikeC::Query][policy=] use AerospikeC::QueryPolicy as policy: %s", val_inspect(policy));
+  if ( rb_funcall(policy, rb_intern("is_a?"), 1, rb_aero_QueryPolicy) == Qfalse )
+    rb_raise(rb_aero_OptionError, "[AerospikeC::Query][policy=] use AerospikeC::QueryPolicy as policy: %s", val_inspect(policy));
 
   rb_iv_set(self, "@policy", policy);
 
@@ -243,33 +243,33 @@ void init_aerospike_c_query(VALUE AerospikeC) {
   //
   // class AerospikeC::Query < Object
   //
-  Query = rb_define_class_under(AerospikeC, "Query", rb_cObject);
+  rb_aero_Query = rb_define_class_under(AerospikeC, "Query", rb_cObject);
 
   //
   // methods
   //
-  rb_define_method(Query, "initialize", RB_FN_ANY()query_initialize, -1);
+  rb_define_method(rb_aero_Query, "initialize", RB_FN_ANY()query_initialize, -1);
 
-  rb_define_method(Query, "eql!", RB_FN_ANY()eql, 2);
-  rb_define_method(Query, "range!", RB_FN_ANY()range, 3);
-  rb_define_method(Query, "geo_contains!", RB_FN_ANY()geo_contains, 2);
-  rb_define_method(Query, "geo_within!", RB_FN_ANY()geo_within, 2);
+  rb_define_method(rb_aero_Query, "eql!", RB_FN_ANY()eql, 2);
+  rb_define_method(rb_aero_Query, "range!", RB_FN_ANY()range, 3);
+  rb_define_method(rb_aero_Query, "geo_contains!", RB_FN_ANY()geo_contains, 2);
+  rb_define_method(rb_aero_Query, "geo_within!", RB_FN_ANY()geo_within, 2);
 
-  rb_define_method(Query, "order_by!", RB_FN_ANY()order_by, 2);
-  rb_define_method(Query, "bins<<", RB_FN_ANY()add_bin, 1);
-  rb_define_method(Query, "policy=", RB_FN_ANY()set_policy, 1);
-  rb_define_method(Query, "query_info", RB_FN_ANY()query_info, 0);
+  rb_define_method(rb_aero_Query, "order_by!", RB_FN_ANY()order_by, 2);
+  rb_define_method(rb_aero_Query, "bins<<", RB_FN_ANY()add_bin, 1);
+  rb_define_method(rb_aero_Query, "policy=", RB_FN_ANY()set_policy, 1);
+  rb_define_method(rb_aero_Query, "query_info", RB_FN_ANY()query_info, 0);
 
   //
   // attr_accessor
   //
-  rb_define_attr(Query, "namespace", 1, 1);
-  rb_define_attr(Query, "set", 1, 1);
-  rb_define_attr(Query, "bins", 1, 1);
+  rb_define_attr(rb_aero_Query, "namespace", 1, 1);
+  rb_define_attr(rb_aero_Query, "set", 1, 1);
+  rb_define_attr(rb_aero_Query, "bins", 1, 1);
 
   //
   // attr_reader
   //
-  rb_define_attr(Query, "filter", 1, 0);
-  rb_define_attr(Query, "order", 1, 0);
+  rb_define_attr(rb_aero_Query, "filter", 1, 0);
+  rb_define_attr(rb_aero_Query, "order", 1, 0);
 }

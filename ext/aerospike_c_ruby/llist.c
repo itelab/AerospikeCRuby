@@ -1,6 +1,6 @@
 #include <aerospike_c_ruby.h>
 
-VALUE Llist;
+VALUE rb_aero_Llist;
 
 // ----------------------------------------------------------------------------------
 //
@@ -15,7 +15,7 @@ static VALUE llist_allocate(VALUE self) {
   as_ldt * llist = (as_ldt *) malloc ( sizeof(as_ldt) );
 
   if (! llist)
-    rb_raise(MemoryError, "[AerospikeC::Llist][initialize] Error while allocating memory for aerospike llist");
+    rb_raise(rb_aero_MemoryError, "[AerospikeC::Llist][initialize] Error while allocating memory for aerospike llist");
 
   return Data_Wrap_Struct(self, NULL, llist_free, llist);
 }
@@ -107,7 +107,7 @@ static void llist_initialize(int argc, VALUE * argv, VALUE self) {
 
   if (! as_ldt_init(llist, StringValueCStr(bin_name), AS_LDT_LLIST, conf_module)) {
     llist_free(llist);
-    rb_raise(MemoryError, "[AerospikeC::Llist][initialize] Unable to initialize llist");
+    rb_raise(rb_aero_MemoryError, "[AerospikeC::Llist][initialize] Unable to initialize llist");
   }
 
   rb_iv_set(self, "@bin_name", bin_name);
@@ -451,7 +451,7 @@ static VALUE llist_find_first(int argc, VALUE * argv, VALUE self) {
   if ( NIL_P(options) ) options = rb_hash_new(); // default options
 
   if ( TYPE(count) != T_FIXNUM )
-    rb_raise(OptionError, "[Llist][find_first] count must be integer");
+    rb_raise(rb_aero_OptionError, "[Llist][find_first] count must be integer");
 
   as_policy_apply * policy = get_policy(options);
   as_ldt * llist           = get_ldt_struct(self);
@@ -516,7 +516,7 @@ static VALUE llist_find_last(int argc, VALUE * argv, VALUE self) {
   if ( NIL_P(options) ) options = rb_hash_new(); // default options
 
   if ( TYPE(count) != T_FIXNUM )
-    rb_raise(OptionError, "[Llist][find_last] count must be integer");
+    rb_raise(rb_aero_OptionError, "[Llist][find_last] count must be integer");
 
   as_policy_apply * policy = get_policy(options);
   as_ldt * llist           = get_ldt_struct(self);
@@ -582,7 +582,7 @@ static VALUE llist_find_from(int argc, VALUE * argv, VALUE self) {
   if ( NIL_P(options) ) options = rb_hash_new(); // default options
 
   if ( TYPE(count) != T_FIXNUM )
-    rb_raise(OptionError, "[Llist][find_from] count must be integer");
+    rb_raise(rb_aero_OptionError, "[Llist][find_from] count must be integer");
 
   as_policy_apply * policy = get_policy(options);
   as_val * val             = rb_val2as_val(value);
@@ -705,7 +705,7 @@ static VALUE llist_size(int argc, VALUE * argv, VALUE self) {
 //   if ( NIL_P(options) ) options = rb_hash_new(); // default options
 
 //   if ( TYPE(capacity) != T_FIXNUM )
-//     rb_raise(OptionError, "[Llist][set_capacity] capacity must be integer");
+//     rb_raise(rb_aero_OptionError, "[Llist][set_capacity] capacity must be integer");
 
 //   as_policy_apply * policy = get_policy(options);
 //   as_ldt * llist           = get_ldt_struct(self);
@@ -779,40 +779,40 @@ void init_aerospike_c_llist(VALUE AerospikeC) {
   //
   // class AerospikeC::Llist < Object
   //
-  Llist = rb_define_class_under(AerospikeC, "Llist", rb_cObject);
-  rb_define_alloc_func(Llist, llist_allocate);
+  rb_aero_Llist = rb_define_class_under(AerospikeC, "Llist", rb_cObject);
+  rb_define_alloc_func(rb_aero_Llist, llist_allocate);
 
   //
   // methods
   //
-  rb_define_method(Llist, "initialize", RB_FN_ANY()llist_initialize, -1);
+  rb_define_method(rb_aero_Llist, "initialize", RB_FN_ANY()llist_initialize, -1);
 
-  rb_define_method(Llist, "add", RB_FN_ANY()llist_add, -1);
-  rb_define_method(Llist, "add_all", RB_FN_ANY()llist_add_all, -1);
-  rb_define_method(Llist, "update", RB_FN_ANY()llist_update, -1);
-  rb_define_method(Llist, "update_all", RB_FN_ANY()llist_update_all, -1);
+  rb_define_method(rb_aero_Llist, "add", RB_FN_ANY()llist_add, -1);
+  rb_define_method(rb_aero_Llist, "add_all", RB_FN_ANY()llist_add_all, -1);
+  rb_define_method(rb_aero_Llist, "update", RB_FN_ANY()llist_update, -1);
+  rb_define_method(rb_aero_Llist, "update_all", RB_FN_ANY()llist_update_all, -1);
 
-  rb_define_method(Llist, "scan", RB_FN_ANY()llist_scan, -1);
+  rb_define_method(rb_aero_Llist, "scan", RB_FN_ANY()llist_scan, -1);
 
-  rb_define_method(Llist, "delete", RB_FN_ANY()llist_delete, -1);
+  rb_define_method(rb_aero_Llist, "delete", RB_FN_ANY()llist_delete, -1);
 
-  rb_define_method(Llist, "find", RB_FN_ANY()llist_find, -1);
-  rb_define_method(Llist, "find_first", RB_FN_ANY()llist_find_first, -1);
-  rb_define_method(Llist, "first", RB_FN_ANY()llist_first, -1);
-  rb_define_method(Llist, "find_last", RB_FN_ANY()llist_find_last, -1);
-  rb_define_method(Llist, "last", RB_FN_ANY()llist_last, -1);
-  rb_define_method(Llist, "find_from", RB_FN_ANY()llist_find_from, -1);
+  rb_define_method(rb_aero_Llist, "find", RB_FN_ANY()llist_find, -1);
+  rb_define_method(rb_aero_Llist, "find_first", RB_FN_ANY()llist_find_first, -1);
+  rb_define_method(rb_aero_Llist, "first", RB_FN_ANY()llist_first, -1);
+  rb_define_method(rb_aero_Llist, "find_last", RB_FN_ANY()llist_find_last, -1);
+  rb_define_method(rb_aero_Llist, "last", RB_FN_ANY()llist_last, -1);
+  rb_define_method(rb_aero_Llist, "find_from", RB_FN_ANY()llist_find_from, -1);
 
-  rb_define_method(Llist, "size", RB_FN_ANY()llist_size, -1);
+  rb_define_method(rb_aero_Llist, "size", RB_FN_ANY()llist_size, -1);
 
-  // rb_define_method(Llist, "capacity", RB_FN_ANY()llist_capacity, -1);
-  // rb_define_method(Llist, "capacity=", RB_FN_ANY()llist_set_capacity, -1);
+  // rb_define_method(rb_aero_Llist, "capacity", RB_FN_ANY()llist_capacity, -1);
+  // rb_define_method(rb_aero_Llist, "capacity=", RB_FN_ANY()llist_set_capacity, -1);
 
-  // rb_define_method(Llist, "filter", RB_FN_ANY()llist_filter, -1);
+  // rb_define_method(rb_aero_Llist, "filter", RB_FN_ANY()llist_filter, -1);
 
   //
   // attr_reader
   //
-  rb_define_attr(Llist, "bin_name", 1, 0);
-  rb_define_attr(Llist, "key", 1, 0);
+  rb_define_attr(rb_aero_Llist, "bin_name", 1, 0);
+  rb_define_attr(rb_aero_Llist, "key", 1, 0);
 }

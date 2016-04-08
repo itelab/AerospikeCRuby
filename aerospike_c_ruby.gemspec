@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'aerospike_c_ruby'
-  s.version     = '0.2.3'
+  s.version     = '0.2.4'
   s.date        = '2015-11-20'
   s.summary     = "aerospike_c_ruby"
   s.description = "aerospike_c_ruby"

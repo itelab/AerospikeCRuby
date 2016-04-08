@@ -1,6 +1,6 @@
 #include <aerospike_c_ruby.h>
 
-VALUE PasswordEngine;
+VALUE rb_aero_PasswordEngine;
 
 static VALUE password_create(VALUE self, VALUE pass) {
   char salt[30];
@@ -37,9 +37,9 @@ void init_aerospike_c_password(VALUE AerospikeC) {
   //
   // class AerospikeC::PasswordEngine < Object
   //
-  PasswordEngine = rb_define_class_under(AerospikeC, "PasswordEngine", rb_cString);
+  rb_aero_PasswordEngine = rb_define_class_under(AerospikeC, "PasswordEngine", rb_cString);
 
-  rb_define_singleton_method(PasswordEngine, "create", RB_FN_ANY()password_create, 1);
-  rb_define_singleton_method(PasswordEngine, "gen_salt", RB_FN_ANY()password_gen_salt, 0);
-  rb_define_singleton_method(PasswordEngine, "hash_secret", RB_FN_ANY()password_hash_secret, 2);
+  rb_define_singleton_method(rb_aero_PasswordEngine, "create", RB_FN_ANY()password_create, 1);
+  rb_define_singleton_method(rb_aero_PasswordEngine, "gen_salt", RB_FN_ANY()password_gen_salt, 0);
+  rb_define_singleton_method(rb_aero_PasswordEngine, "hash_secret", RB_FN_ANY()password_hash_secret, 2);
 }

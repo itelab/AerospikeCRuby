@@ -1,6 +1,6 @@
 #include <aerospike_c_ruby.h>
 
-VALUE ScanTask;
+VALUE rb_aero_ScanTask;
 
 VALUE status2ruby_str(as_scan_status status) {
   if ( status == AS_SCAN_STATUS_UNDEF ) {
@@ -16,7 +16,7 @@ VALUE status2ruby_str(as_scan_status status) {
     return rb_str_new2("AS_SCAN_STATUS_COMPLETED");
   }
   else {
-    rb_raise(ParseError, "[AerospikeC::ScanTask][status] undefined ScanTask status");
+    rb_raise(rb_aero_ParseError, "[AerospikeC::ScanTask][status] undefined ScanTask status");
   }
 }
 
@@ -99,28 +99,28 @@ void init_aerospike_c_scan_task(VALUE AerospikeC) {
   //
   // class AerospikeC::ScanTask < Object
   //
-  ScanTask = rb_define_class_under(AerospikeC, "ScanTask", rb_cObject);
+  rb_aero_ScanTask = rb_define_class_under(AerospikeC, "ScanTask", rb_cObject);
 
   //
   // consts
   //
-  rb_define_const(ScanTask, "AS_SCAN_PRIORITY_AUTO",    INT2FIX(AS_SCAN_PRIORITY_AUTO));
-  rb_define_const(ScanTask, "AS_SCAN_PRIORITY_LOW",     INT2FIX(AS_SCAN_PRIORITY_LOW));
-  rb_define_const(ScanTask, "AS_SCAN_PRIORITY_MEDIUM",  INT2FIX(AS_SCAN_PRIORITY_MEDIUM));
-  rb_define_const(ScanTask, "AS_SCAN_PRIORITY_HIGH",    INT2FIX(AS_SCAN_PRIORITY_HIGH));
+  rb_define_const(rb_aero_ScanTask, "AS_SCAN_PRIORITY_AUTO",    INT2FIX(AS_SCAN_PRIORITY_AUTO));
+  rb_define_const(rb_aero_ScanTask, "AS_SCAN_PRIORITY_LOW",     INT2FIX(AS_SCAN_PRIORITY_LOW));
+  rb_define_const(rb_aero_ScanTask, "AS_SCAN_PRIORITY_MEDIUM",  INT2FIX(AS_SCAN_PRIORITY_MEDIUM));
+  rb_define_const(rb_aero_ScanTask, "AS_SCAN_PRIORITY_HIGH",    INT2FIX(AS_SCAN_PRIORITY_HIGH));
 
   //
   // methods
   //
-  rb_define_method(ScanTask, "initialize", RB_FN_ANY()scan_initialize, 2);
-  rb_define_method(ScanTask, "check_status", RB_FN_ANY()check_status, 0);
-  rb_define_method(ScanTask, "completed?", RB_FN_ANY()is_completed, 0);
+  rb_define_method(rb_aero_ScanTask, "initialize", RB_FN_ANY()scan_initialize, 2);
+  rb_define_method(rb_aero_ScanTask, "check_status", RB_FN_ANY()check_status, 0);
+  rb_define_method(rb_aero_ScanTask, "completed?", RB_FN_ANY()is_completed, 0);
 
   //
   // attr_reader
   //
-  rb_define_attr(ScanTask, "scan_id", 1, 0);
-  rb_define_attr(ScanTask, "status", 1, 0);
-  rb_define_attr(ScanTask, "status_id", 1, 0);
-  rb_define_attr(ScanTask, "progress", 1, 0);
+  rb_define_attr(rb_aero_ScanTask, "scan_id", 1, 0);
+  rb_define_attr(rb_aero_ScanTask, "status", 1, 0);
+  rb_define_attr(rb_aero_ScanTask, "status_id", 1, 0);
+  rb_define_attr(rb_aero_ScanTask, "progress", 1, 0);
 }

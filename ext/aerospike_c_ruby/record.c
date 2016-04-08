@@ -1,6 +1,6 @@
 #include <aerospike_c_ruby.h>
 
-VALUE Record;
+VALUE rb_aero_Record;
 
 //
 // get bin @bins
@@ -19,7 +19,7 @@ static void rec_deallocate(as_record * rec) {
 
 static VALUE rec_allocate(VALUE self) {
   as_record * rec = (as_record *) ruby_xmalloc( sizeof(as_record) );
-  if (! rec) rb_raise(MemoryError, "[AerospikeC::Record][initialize] Error while allocating memory for aerospike record");
+  if (! rec) rb_raise(rb_aero_MemoryError, "[AerospikeC::Record][initialize] Error while allocating memory for aerospike record");
 
   return Data_Wrap_Struct(self, NULL, rec_deallocate, rec);
 }
@@ -41,7 +41,7 @@ static void rec_initialize(int argc, VALUE * argv, VALUE self) {
   }
   else {
     if ( TYPE(rb_hash_aref(options, ttl_sym)) != T_FIXNUM ) { // check ttl option
-      rb_raise(OptionError, "[AerospikeC::Record][initialize] ttl must be an integer");
+      rb_raise(rb_aero_OptionError, "[AerospikeC::Record][initialize] ttl must be an integer");
     }
   }
 
@@ -75,7 +75,7 @@ static VALUE length(VALUE self) {
 //   long len = rb_ary_len_long(value);
 
 //   as_record * rec = (as_record *) malloc( sizeof(as_record) );
-//   if (! rec) rb_raise(MemoryError, "[AerospikeC::Record][bins=] Error while allocating memory for aerospike record");
+//   if (! rec) rb_raise(rb_aero_MemoryError, "[AerospikeC::Record][bins=] Error while allocating memory for aerospike record");
 
 //   as_record_init(rec, len);
 //   rec->ttl = FIX2INT( rb_funcall(self, rb_intern("ttl"), 0) );
@@ -94,7 +94,7 @@ static VALUE length(VALUE self) {
 //
 static VALUE set_ttl(VALUE self, VALUE ttl) {
   if ( TYPE(ttl) != T_FIXNUM ) {
-    rb_raise(OptionError, "[AerospikeC::Client][put] ttl must be an integer");
+    rb_raise(rb_aero_OptionError, "[AerospikeC::Client][put] ttl must be an integer");
   }
 
   rb_iv_set(self, "@ttl", ttl);
@@ -110,20 +110,20 @@ void init_aerospike_c_record(VALUE AerospikeC) {
   //
   // class AerospikeC::Record < Object
   //
-  Record = rb_define_class_under(AerospikeC, "Record", rb_cObject);
-  rb_define_alloc_func(Record, rec_allocate);
+  rb_aero_Record = rb_define_class_under(AerospikeC, "Record", rb_cObject);
+  rb_define_alloc_func(rb_aero_Record, rec_allocate);
 
   //
   // methods
   //
-  rb_define_method(Record, "initialize", RB_FN_ANY()rec_initialize, -1);
-  rb_define_method(Record, "length", RB_FN_ANY()length, 0);
-  // rb_define_method(Record, "bins=", RB_FN_ANY()set_bins, 1);
-  rb_define_method(Record, "ttl=", RB_FN_ANY()set_ttl, 1);
+  rb_define_method(rb_aero_Record, "initialize", RB_FN_ANY()rec_initialize, -1);
+  rb_define_method(rb_aero_Record, "length", RB_FN_ANY()length, 0);
+  // rb_define_method(rb_aero_Record, "bins=", RB_FN_ANY()set_bins, 1);
+  rb_define_method(rb_aero_Record, "ttl=", RB_FN_ANY()set_ttl, 1);
 
   //
   // attr_reader
   //
-  rb_define_attr(Record, "bins", 1, 0);
-  rb_define_attr(Record, "ttl", 1, 0);
+  rb_define_attr(rb_aero_Record, "bins", 1, 0);
+  rb_define_attr(rb_aero_Record, "ttl", 1, 0);
 }

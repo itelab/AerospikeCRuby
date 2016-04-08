@@ -1,6 +1,6 @@
 #include <aerospike_c_ruby.h>
 
-VALUE UdfTask;
+VALUE rb_aero_UdfTask;
 
 //
 // def initialize(name, client)
@@ -58,18 +58,18 @@ void init_aerospike_c_udf_task(VALUE AerospikeC) {
   //
   // class AerospikeC::UdfTask < Object
   //
-  UdfTask = rb_define_class_under(AerospikeC, "UdfTask", rb_cObject);
+  rb_aero_UdfTask = rb_define_class_under(AerospikeC, "UdfTask", rb_cObject);
 
   // //
   // // methods
   // //
-  rb_define_method(UdfTask, "initialize", RB_FN_ANY()udf_initialize, 2);
-  rb_define_method(UdfTask, "done?", RB_FN_ANY()is_done, 0);
-  rb_define_method(UdfTask, "wait_till_completed", RB_FN_ANY()wait_till_completed, -1);
+  rb_define_method(rb_aero_UdfTask, "initialize", RB_FN_ANY()udf_initialize, 2);
+  rb_define_method(rb_aero_UdfTask, "done?", RB_FN_ANY()is_done, 0);
+  rb_define_method(rb_aero_UdfTask, "wait_till_completed", RB_FN_ANY()wait_till_completed, -1);
 
   //
   // attr_reader
   //
-  rb_define_attr(UdfTask, "name", 1, 0);
-  rb_define_attr(UdfTask, "done", 1, 0);
+  rb_define_attr(rb_aero_UdfTask, "name", 1, 0);
+  rb_define_attr(rb_aero_UdfTask, "done", 1, 0);
 }

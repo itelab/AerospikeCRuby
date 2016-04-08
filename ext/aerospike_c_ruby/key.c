@@ -1,6 +1,6 @@
 #include <aerospike_c_ruby.h>
 
-VALUE Key;
+VALUE rb_aero_Key;
 
 // ----------------------------------------------------------------------------------
 //
@@ -11,7 +11,7 @@ static char * arg_to_cstr(VALUE key) {
 
   switch ( TYPE(key) ) {
     case T_NIL:
-      rb_raise(OptionError, "[AerospikeC::Key][initialize] argument cannot be nil");
+      rb_raise(rb_aero_OptionError, "[AerospikeC::Key][initialize] argument cannot be nil");
       break;
 
     case T_STRING:
@@ -36,7 +36,7 @@ static void key_deallocate(as_key * key) {
 
 static VALUE key_allocate(VALUE self) {
   as_key * k = (as_key *) ruby_xmalloc ( sizeof(as_key) );
-  if (! k) rb_raise(MemoryError, "[AerospikeC::Key][initialize] Error while allocating memory for aerospike key");
+  if (! k) rb_raise(rb_aero_MemoryError, "[AerospikeC::Key][initialize] Error while allocating memory for aerospike key");
 
   return Data_Wrap_Struct(self, NULL, key_deallocate, k);
 }
@@ -126,20 +126,20 @@ void init_aerospike_c_key(VALUE AerospikeC) {
   //
   // class AerospikeC::Key < Object
   //
-  Key = rb_define_class_under(AerospikeC, "Key", rb_cObject);
-  rb_define_alloc_func(Key, key_allocate);
+  rb_aero_Key = rb_define_class_under(AerospikeC, "Key", rb_cObject);
+  rb_define_alloc_func(rb_aero_Key, key_allocate);
 
   //
   // methods
   //
-  rb_define_method(Key, "initialize", RB_FN_ANY()key_initialize, 3);
-  rb_define_method(Key, "key_info", RB_FN_ANY()key_info, 0);
-  rb_define_method(Key, "namespace", RB_FN_ANY()key_namespace, 0);
-  rb_define_method(Key, "set", RB_FN_ANY()key_set, 0);
-  rb_define_method(Key, "inspect", RB_FN_ANY()key_inspect, 0);
+  rb_define_method(rb_aero_Key, "initialize", RB_FN_ANY()key_initialize, 3);
+  rb_define_method(rb_aero_Key, "key_info", RB_FN_ANY()key_info, 0);
+  rb_define_method(rb_aero_Key, "namespace", RB_FN_ANY()key_namespace, 0);
+  rb_define_method(rb_aero_Key, "set", RB_FN_ANY()key_set, 0);
+  rb_define_method(rb_aero_Key, "inspect", RB_FN_ANY()key_inspect, 0);
 
   //
   // attr_reader
   //
-  rb_define_attr(Key, "key", 1, 0);
+  rb_define_attr(rb_aero_Key, "key", 1, 0);
 }

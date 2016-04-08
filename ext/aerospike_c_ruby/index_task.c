@@ -1,6 +1,6 @@
 #include <aerospike_c_ruby.h>
 
-VALUE IndexTask;
+VALUE rb_aero_IndexTask;
 
 //
 // free memory method
@@ -68,18 +68,18 @@ void init_aerospike_c_index_task(VALUE AerospikeC) {
   //
   // class AerospikeC::IndexTask < Object
   //
-  IndexTask = rb_define_class_under(AerospikeC, "IndexTask", rb_cObject);
+  rb_aero_IndexTask = rb_define_class_under(AerospikeC, "IndexTask", rb_cObject);
 
   //
   // methods
   //
-  rb_define_method(IndexTask, "initialize", RB_FN_ANY()index_initialize, 1);
-  rb_define_method(IndexTask, "done?", RB_FN_ANY()is_done, 0);
-  rb_define_method(IndexTask, "wait_till_completed", RB_FN_ANY()wait_till_completed, -1);
+  rb_define_method(rb_aero_IndexTask, "initialize", RB_FN_ANY()index_initialize, 1);
+  rb_define_method(rb_aero_IndexTask, "done?", RB_FN_ANY()is_done, 0);
+  rb_define_method(rb_aero_IndexTask, "wait_till_completed", RB_FN_ANY()wait_till_completed, -1);
 
   //
   // attr_reader
   //
-  rb_define_attr(IndexTask, "name", 1, 0);
-  rb_define_attr(IndexTask, "done", 1, 0);
+  rb_define_attr(rb_aero_IndexTask, "name", 1, 0);
+  rb_define_attr(rb_aero_IndexTask, "done", 1, 0);
 }

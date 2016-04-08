@@ -18,53 +18,53 @@ static void switch_color_code() {
 //
 void log_debug(const char * msg) {
 #ifdef AEROSPIKE_C_RUBY_DEBUG
-  if ( TYPE(Logger) != T_OBJECT ) return;
+  if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;
 
   switch_color_code();
 
   VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s\e[0m %s", color_code, "<AerospikeC>", msg);
-  rb_funcall(Logger, rb_intern("debug"), 1, rb_msg);
+  rb_funcall(rb_aero_Logger, rb_intern("debug"), 1, rb_msg);
 #endif
 }
 
 void log_info(const char * msg) {
-  if ( TYPE(Logger) != T_OBJECT ) return;
+  if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;
 
   switch_color_code();
 
   VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s\e[0m %s", color_code, "<AerospikeC>", msg);
-  rb_funcall(Logger, rb_intern("info"), 1, rb_msg);
+  rb_funcall(rb_aero_Logger, rb_intern("info"), 1, rb_msg);
 }
 
 void log_warn(const char * msg) {
-  if ( TYPE(Logger) != T_OBJECT ) return;
+  if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;
 
   switch_color_code();
 
   VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s\e[0m %s", color_code, "<AerospikeC>", msg);
-  rb_funcall(Logger, rb_intern("warn"), 1, rb_msg);
+  rb_funcall(rb_aero_Logger, rb_intern("warn"), 1, rb_msg);
 }
 
 void log_error(const char * msg) {
-  if ( TYPE(Logger) != T_OBJECT ) return;
+  if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;
 
   switch_color_code();
 
   VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s\e[0m \e[1m\e[31%s\e[0m", color_code, "<AerospikeC>", msg);
-  rb_funcall(Logger, rb_intern("error"), 1, rb_msg);
+  rb_funcall(rb_aero_Logger, rb_intern("error"), 1, rb_msg);
 }
 
 void log_fatal(const char * msg) {
-  if ( TYPE(Logger) != T_OBJECT ) return;
+  if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;
 
   switch_color_code();
 
   VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s\e[0m \e[1m\e[31%s\e[0m", color_code, "<AerospikeC>", msg);
-  rb_funcall(Logger, rb_intern("fatal"), 1, rb_msg);
+  rb_funcall(rb_aero_Logger, rb_intern("fatal"), 1, rb_msg);
 }
 
 void log_info_with_time(const char * msg, struct timeval * tm) {
-  if ( TYPE(Logger) != T_OBJECT ) return;
+  if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;
 
   struct timeval tm2;
   gettimeofday(&tm2, NULL);
@@ -75,11 +75,11 @@ void log_info_with_time(const char * msg, struct timeval * tm) {
   switch_color_code();
 
   VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s (%.4f ms)\e[0m \e[1m%s\e[0m", color_code, "<AerospikeC>", elapsedTime, msg);
-  rb_funcall(Logger, rb_intern("info"), 1, rb_msg);
+  rb_funcall(rb_aero_Logger, rb_intern("info"), 1, rb_msg);
 }
 
 void log_info_with_time_v(const char * msg, struct timeval * tm, VALUE val) {
-  if ( TYPE(Logger) != T_OBJECT ) return;
+  if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;
 
   struct timeval tm2;
   gettimeofday(&tm2, NULL);
@@ -90,11 +90,11 @@ void log_info_with_time_v(const char * msg, struct timeval * tm, VALUE val) {
   switch_color_code();
 
   VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s (%.4f ms)\e[0m \e[1m%s, %"PRIsVALUE"\e[0m", color_code, "<AerospikeC>", elapsedTime, msg, val);
-  rb_funcall(Logger, rb_intern("info"), 1, rb_msg);
+  rb_funcall(rb_aero_Logger, rb_intern("info"), 1, rb_msg);
 }
 
 void log_info_with_time_v2(const char * msg, struct timeval * tm, VALUE val, VALUE val2) {
-  if ( TYPE(Logger) != T_OBJECT ) return;
+  if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;
 
   struct timeval tm2;
   gettimeofday(&tm2, NULL);
@@ -105,7 +105,7 @@ void log_info_with_time_v2(const char * msg, struct timeval * tm, VALUE val, VAL
   switch_color_code();
 
   VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s (%.4f ms)\e[0m \e[1m%s, %"PRIsVALUE", %"PRIsVALUE"\e[0m", color_code, "<AerospikeC>", elapsedTime, msg, val, val2);
-  rb_funcall(Logger, rb_intern("info"), 1, rb_msg);
+  rb_funcall(rb_aero_Logger, rb_intern("info"), 1, rb_msg);
 }
 
 void start_timing(struct timeval * tm) {
@@ -159,7 +159,7 @@ as_geojson * get_geo_json_struct(VALUE rb_geo) {
 //
 void raise_as_error(as_error err) {
   log_fatal(err.message);
-  rb_raise(AsError, "%s -- Error code: %d, at: [%s:%d]", err.message, err.code, err.file, err.line);
+  rb_raise(rb_aero_AsError, "%s -- Error code: %d, at: [%s:%d]", err.message, err.code, err.file, err.line);
 }
 
 // ----------------------------------------------------------------------------------
@@ -211,7 +211,7 @@ as_arraylist * array2as_list(VALUE ary) {
 
     switch ( TYPE(element) ) {
       case T_NIL:
-        rb_raise(ParseError, "[array2as_list] Array value cannot be nil");
+        rb_raise(rb_aero_ParseError, "[array2as_list] Array value cannot be nil");
         break;
 
       case T_SYMBOL:
@@ -242,7 +242,7 @@ as_arraylist * array2as_list(VALUE ary) {
         break;
 
       default:
-        rb_raise(ParseError, "[array2as_list] Unsupported array value type: %s", rb_val_type_as_str(element));
+        rb_raise(rb_aero_ParseError, "[array2as_list] Unsupported array value type: %s", rb_val_type_as_str(element));
         break;
     }
   }
@@ -317,14 +317,14 @@ static int foreach_hash2record(VALUE key, VALUE val, VALUE record) {
       break;
 
     case T_DATA:
-      if ( rb_funcall(val, rb_intern("is_a?"), 1, GeoJson) == Qtrue ) {
+      if ( rb_funcall(val, rb_intern("is_a?"), 1, rb_aero_GeoJson) == Qtrue ) {
         as_record_set_geojson(rec, key2bin_name(key), get_geo_json_struct(val));
       }
 
       break;
 
     default:
-      rb_raise(ParseError, "[Utils][foreach_hash2record] Unsupported record value type: %s", rb_val_type_as_str(val));
+      rb_raise(rb_aero_ParseError, "[Utils][foreach_hash2record] Unsupported record value type: %s", rb_val_type_as_str(val));
       break;
   }
 
@@ -340,7 +340,7 @@ static char * key2bin_name(VALUE key) {
 
   switch ( TYPE(key) ) { // get bin name from key
     case T_NIL:
-      rb_raise(ParseError, "Record key cannot be nil: %s", val_inspect(key));
+      rb_raise(rb_aero_ParseError, "Record key cannot be nil: %s", val_inspect(key));
       break;
 
     case T_STRING:
@@ -371,7 +371,7 @@ as_hashmap * hash2as_hashmap(VALUE hash) {
 
   as_hashmap * map = as_hashmap_new(len);
 
-  VALUE hmap = Data_Wrap_Struct(Record, NULL, map_deallocate, map);
+  VALUE hmap = Data_Wrap_Struct(rb_aero_Record, NULL, map_deallocate, map);
 
   rb_hash_foreach(hash, foreach_hash2as_hashmap, hmap);
 
@@ -396,7 +396,7 @@ static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE hmap) {
 
   switch ( TYPE(val) ) { // set bin_name = val dependent on type
     case T_NIL:
-      rb_raise(ParseError, "Hash value cannot be nil: %s", val_inspect(val));
+      rb_raise(rb_aero_ParseError, "Hash value cannot be nil: %s", val_inspect(val));
       break;
 
     case T_SYMBOL:
@@ -427,7 +427,7 @@ static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE hmap) {
       break;
 
     default:
-      rb_raise(ParseError, "Unsupported record value type: %s", rb_val_type_as_str(val));
+      rb_raise(rb_aero_ParseError, "Unsupported record value type: %s", rb_val_type_as_str(val));
       break;
   }
 
@@ -604,7 +604,7 @@ VALUE bool2rb_bool(bool val) {
 bool rb_bool2bool(VALUE val) {
   if ( val == Qtrue ) { return true; }
   else if ( val == Qfalse ) { return false; }
-  else { rb_raise(ParseError, "[Utils][rb_bool2bool] Cannot convert %s into bool", rb_val_type_as_str(val)); }
+  else { rb_raise(rb_aero_ParseError, "[Utils][rb_bool2bool] Cannot convert %s into bool", rb_val_type_as_str(val)); }
 }
 
 // ----------------------------------------------------------------------------------
@@ -674,7 +674,7 @@ as_val * rb_val2as_val(VALUE value) {
       return hash2as_hashmap(value);
 
     default:
-      rb_raise(ParseError, "[Utils][rb_val2as_val] Unsupported alue type: %s", rb_val_type_as_str(value));
+      rb_raise(rb_aero_ParseError, "[Utils][rb_val2as_val] Unsupported alue type: %s", rb_val_type_as_str(value));
   }
 }
 
@@ -843,7 +843,7 @@ as_query * query_obj2as_query(VALUE query_obj) {
     }
     else {
       destroy_query(query);
-      rb_raise(ParseError, "[Utils][query_obj2as_query] Unsupported eql value type: %s", val_inspect(val));
+      rb_raise(rb_aero_ParseError, "[Utils][query_obj2as_query] Unsupported eql value type: %s", val_inspect(val));
     }
   }
   else if ( filter_type == range_sym ) { // range
@@ -875,7 +875,7 @@ as_query * query_obj2as_query(VALUE query_obj) {
   else {
     VALUE tmp = rb_hash_aref(filter, filter_type_sym);
     destroy_query(query);
-    rb_raise(ParseError, "[Utils][query_obj2as_query] Unsupported filter type: %s", val_inspect(tmp));
+    rb_raise(rb_aero_ParseError, "[Utils][query_obj2as_query] Unsupported filter type: %s", val_inspect(tmp));
   }
 
   VALUE order_by = rb_iv_get(query_obj, "@order");
@@ -930,7 +930,7 @@ void * rb_policy2as_policy(VALUE rb_policy) {
     Data_Get_Struct(rb_iv_get(rb_policy, "policy"), as_policy_operate, policy);
   }
   else {
-    rb_raise(ParseError, "[Utils][rb_policy2as_policy] unknown policy type: %s", val_inspect(type));
+    rb_raise(rb_aero_ParseError, "[Utils][rb_policy2as_policy] unknown policy type: %s", val_inspect(type));
   }
 
   // log_debug("Converted ruby AerospikeC::Policy into as_policy");
@@ -945,7 +945,7 @@ void * rb_policy2as_policy(VALUE rb_policy) {
 void * get_policy(VALUE options) {
   VALUE option_tmp = rb_hash_aref(options, policy_sym);
 
-  if ( rb_funcall(option_tmp, rb_intern("is_a?"), 1, Policy) == Qtrue ) {
+  if ( rb_funcall(option_tmp, rb_intern("is_a?"), 1, rb_aero_Policy) == Qtrue ) {
     return rb_policy2as_policy(option_tmp);
   }
   else {
@@ -977,7 +977,7 @@ VALUE disable_rb_GC() {
 // convert as_geojson to VALUE
 //
 VALUE as_geojson_2_val(as_geojson * geo) {
-  return rb_funcall(GeoJson, rb_intern("new"), 1, rb_str_new2(geo->value));
+  return rb_funcall(rb_aero_GeoJson, rb_intern("new"), 1, rb_str_new2(geo->value));
 }
 
 // ----------------------------------------------------------------------------------
@@ -1148,7 +1148,7 @@ as_record * rb_copy_as_record(as_record * record) {
   // init with previous capacity
   as_record * new_record = NULL;
   new_record = as_record_new(record->bins.capacity);
-  if (! new_record) rb_raise(MemoryError, "[AerospikeC::Utils] Error while allocating memory for aerospike record");
+  if (! new_record) rb_raise(rb_aero_MemoryError, "[AerospikeC::Utils] Error while allocating memory for aerospike record");
 
   as_record_iterator it;
   as_record_iterator_init(&it, record);
@@ -1369,7 +1369,7 @@ as_operations * rb_operations2as_operations(VALUE operations) {
 
     // uknown operation
     else {
-      rb_raise(ParseError, "[AerospikeC::Client][operate] uknown operation type: %s", val_inspect(operation_type));
+      rb_raise(rb_aero_ParseError, "[AerospikeC::Client][operate] uknown operation type: %s", val_inspect(operation_type));
     }
   }
 

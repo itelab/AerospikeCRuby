@@ -1,8 +1,10 @@
 #include <aerospike_c_ruby.h>
 #include <client_utils.h>
 
-VALUE Client;
-VALUE Logger;
+VALUE rb_aero_Client;
+VALUE rb_aero_Logger;
+
+#define aero_KEY_INFO rb_funcall(key, rb_intern("key_info"), 0)
 
 //
 // Aerospike queries and scans callback runs in parallel
@@ -106,13 +108,13 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
       rb_hash_aset(options, ttl_sym, rb_zero);
 
     // if ( TYPE(option_tmp) != T_FIXNUM ) // check ttl option
-    //   rb_raise(OptionError, "[AerospikeC::Client][put] ttl must be an integer, options: %s", val_inspect(options));
+    //   rb_raise(rb_aero_OptionError, "[AerospikeC::Client][put] ttl must be an integer, options: %s", val_inspect(options));
   }
 
   VALUE new_rec;
 
   if ( TYPE(hash) == T_HASH ) {
-    new_rec = rb_funcall(Record, rb_intern("new"), 1, hash);
+    new_rec = rb_funcall(rb_aero_Record, rb_intern("new"), 1, hash);
   }
   else {
     new_rec = hash;
@@ -137,7 +139,7 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
 
   as_record_destroy(rec);
 
-  log_info_with_time_v("[Client][put] success", &tm, rb_funcall(key, rb_intern("key_info"), 0));
+  log_info_with_time_v("[Client][put] success", &tm, aero_KEY_INFO);
 
   return Qtrue;
 }
@@ -190,7 +192,7 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
   // read specific bins
   if ( specific_bins != Qnil && rb_ary_len_int(specific_bins) > 0 ) {
     if ( TYPE(specific_bins) != T_ARRAY ) {
-      rb_raise(OptionError, "[AerospikeC::Client][get] specific_bins must be an Array");
+      rb_raise(rb_aero_OptionError, "[AerospikeC::Client][get] specific_bins must be an Array");
     }
 
     char ** inputArray = rb_array2inputArray(specific_bins); // convert ruby array to char **
@@ -215,7 +217,7 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
 
     check_for_llist_workaround(self, key, bins);
 
-    log_info_with_time_v("[Client][get] success", &tm, rb_funcall(key, rb_intern("key_info"), 0));
+    log_info_with_time_v("[Client][get] success", &tm, aero_KEY_INFO);
 
     return bins;
   }
@@ -239,7 +241,7 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
 
   check_for_llist_workaround(self, key, bins);
 
-  log_info_with_time_v("[Client][get] success", &tm, rb_funcall(key, rb_intern("key_info"), 0));
+  log_info_with_time_v("[Client][get] success", &tm, aero_KEY_INFO);
 
   return bins;
 }
@@ -287,7 +289,7 @@ static VALUE delete_record(int argc, VALUE * argv, VALUE self) {
     raise_as_error(err);
   }
 
-  log_info_with_time_v("[Client][delete] success", &tm, rb_funcall(key, rb_intern("key_info"), 0));
+  log_info_with_time_v("[Client][delete] success", &tm, aero_KEY_INFO);
 
   return Qtrue;
 }
@@ -307,7 +309,7 @@ static VALUE delete_record(int argc, VALUE * argv, VALUE self) {
 //
 static VALUE set_logger(VALUE self, VALUE logger) {
   log_info("[Client] Setting logger object");
-  Logger = logger;
+  rb_aero_Logger = logger;
   return Qtrue;
 }
 
@@ -350,7 +352,7 @@ static VALUE key_exists(int argc, VALUE * argv, VALUE self) {
     as_record_destroy(rec);
 
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_info_with_time_v("[Client][exists?] success - false", &tm, rb_funcall(key, rb_intern("key_info"), 0));
+      log_info_with_time_v("[Client][exists?] success - false", &tm, aero_KEY_INFO);
       return Qfalse;
     }
 
@@ -358,7 +360,7 @@ static VALUE key_exists(int argc, VALUE * argv, VALUE self) {
   }
   else {
     as_record_destroy(rec);
-    log_info_with_time_v("[Client][exists?] success - true", &tm, rb_funcall(key, rb_intern("key_info"), 0));
+    log_info_with_time_v("[Client][exists?] success - true", &tm, aero_KEY_INFO);
     return Qtrue;
   }
 }
@@ -414,7 +416,7 @@ static VALUE get_header(int argc, VALUE * argv, VALUE self) {
 
   as_record_destroy(rec);
 
-  log_info_with_time_v("[Client][get_header] success", &tm, rb_funcall(key, rb_intern("key_info"), 0));
+  log_info_with_time_v("[Client][get_header] success", &tm, aero_KEY_INFO);
 
   return header;
 }
@@ -458,7 +460,7 @@ static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
     specific_bins = Qnil;
   }
   else {
-    if ( TYPE(specific_bins) != T_ARRAY ) rb_raise(OptionError, "[AerospikeC::Client][batch_get] specific_bins must be an Array");
+    if ( TYPE(specific_bins) != T_ARRAY ) rb_raise(rb_aero_OptionError, "[AerospikeC::Client][batch_get] specific_bins must be an Array");
 
     bin_names   = rb_array2bin_names(specific_bins);
     n_bin_names = rb_ary_len_long(specific_bins);
@@ -577,7 +579,7 @@ static VALUE touch(int argc, VALUE * argv, VALUE self) {
   }
   else {
     if ( TYPE(rb_hash_aref(options, ttl_sym)) != T_FIXNUM ) { // check ttl option
-      rb_raise(OptionError, "[AerospikeC::Client][put] ttl must be an integer");
+      rb_raise(rb_aero_OptionError, "[AerospikeC::Client][put] ttl must be an integer");
     }
   }
 
@@ -610,7 +612,7 @@ static VALUE touch(int argc, VALUE * argv, VALUE self) {
   as_record_destroy(rec);
   as_operations_destroy(&ops);
 
-  log_info_with_time_v("[Client][touch] success", &tm, rb_funcall(key, rb_intern("key_info"), 0));
+  log_info_with_time_v("[Client][touch] success", &tm, aero_KEY_INFO);
 
   return header;
 }
@@ -653,9 +655,9 @@ static VALUE operate(int argc, VALUE * argv, VALUE self) {
 
   as_key * k     = get_key_struct(key);
 
-  VALUE is_aerospike_c_operation = rb_funcall(operations, rb_intern("is_a?"), 1, rb_const_get(AerospikeC, rb_intern("Operation")));
+  VALUE is_aerospike_c_operation = rb_funcall(operations, rb_intern("is_a?"), 1, rb_const_get(rb_aero_AerospikeC, rb_intern("Operation")));
   if ( is_aerospike_c_operation != Qtrue ) {
-    rb_raise(OptionError, "[AerospikeC::Client][operate] use AerospikeC::Operation class to perform operations");
+    rb_raise(rb_aero_OptionError, "[AerospikeC::Client][operate] use AerospikeC::Operation class to perform operations");
   }
 
   as_operations * ops = rb_operations2as_operations(operations);
@@ -678,7 +680,7 @@ static VALUE operate(int argc, VALUE * argv, VALUE self) {
   as_record_destroy(rec);
   as_operations_destroy(ops);
 
-  log_info_with_time_v("[Client][operate] success", &tm, rb_funcall(key, rb_intern("key_info"), 0));
+  log_info_with_time_v("[Client][operate] success", &tm, aero_KEY_INFO);
 
   return record;
 }
@@ -693,7 +695,7 @@ static VALUE operate(int argc, VALUE * argv, VALUE self) {
 //
 static VALUE operation_obj(VALUE self) {
   log_info("[Client] Getting new Operation object");
-  return rb_funcall(rb_const_get(AerospikeC, rb_intern("Operation")), rb_intern("new"), 0);
+  return rb_funcall(rb_const_get(rb_aero_AerospikeC, rb_intern("Operation")), rb_intern("new"), 0);
 }
 
 // ----------------------------------------------------------------------------------
@@ -744,22 +746,22 @@ static VALUE create_index(int argc, VALUE * argv, VALUE self) {
     d_type = AS_INDEX_GEO2DSPHERE;
   }
   else {
-    rb_raise(OptionError, "[AerospikeC::Client][create_index] data_type must be :string or :numeric");
+    rb_raise(rb_aero_OptionError, "[AerospikeC::Client][create_index] data_type must be :string or :numeric");
   }
 
   as_index_task * task = (as_index_task *) ruby_xmalloc( sizeof(as_index_task) );
-  if (! task) rb_raise(MemoryError, "[AerospikeC::Client][create_index] Error while allocating memory for aerospike task");
+  if (! task) rb_raise(rb_aero_MemoryError, "[AerospikeC::Client][create_index] Error while allocating memory for aerospike task");
 
 
   if ( aerospike_index_create(as, &err, task, NULL, StringValueCStr(ns), StringValueCStr(set),
                               StringValueCStr(bin), StringValueCStr(name), d_type) != AEROSPIKE_OK )
     raise_as_error(err);
 
-  VALUE index_task_struct = Data_Wrap_Struct(IndexTask, NULL, index_task_deallocate, task);
+  VALUE index_task_struct = Data_Wrap_Struct(rb_aero_IndexTask, NULL, index_task_deallocate, task);
 
   log_info_with_time("[Client][create_index] done", &tm);
 
-  return rb_funcall(IndexTask, rb_intern("new"), 1, index_task_struct);
+  return rb_funcall(rb_aero_IndexTask, rb_intern("new"), 1, index_task_struct);
 }
 
 // ----------------------------------------------------------------------------------
@@ -878,15 +880,15 @@ static VALUE register_udf(int argc, VALUE * argv, VALUE self) {
     language = lua_sym;
   }
   else {
-    if ( language != lua_sym ) rb_raise(OptionError, "[AerospikeC::Client][register_udf] in aerospike-c-client v3.1.24, only lua language is available");
+    if ( language != lua_sym ) rb_raise(rb_aero_OptionError, "[AerospikeC::Client][register_udf] in aerospike-c-client v3.1.24, only lua language is available");
   }
 
   FILE* file = fopen(StringValueCStr(path_to_file), "r");
 
-  if (! file) rb_raise(OptionError, "[AerospikeC::Client][register_udf] Cannot read udf from given path: %s", StringValueCStr(path_to_file));
+  if (! file) rb_raise(rb_aero_OptionError, "[AerospikeC::Client][register_udf] Cannot read udf from given path: %s", StringValueCStr(path_to_file));
 
   uint8_t * content = (uint8_t *) malloc(1024 * 1024);
-  if (! content) rb_raise(MemoryError, "[AerospikeC::Client][register_udf] Error while allocating memory for udf file content");
+  if (! content) rb_raise(rb_aero_MemoryError, "[AerospikeC::Client][register_udf] Error while allocating memory for udf file content");
 
   // read the file content into a local buffer
   uint8_t * p_write = content;
@@ -914,7 +916,7 @@ static VALUE register_udf(int argc, VALUE * argv, VALUE self) {
 
   log_info_with_time("[Client][register_udf] success", &tm);
 
-  return rb_funcall(UdfTask, rb_intern("new"), 2, server_path, self);
+  return rb_funcall(rb_aero_UdfTask, rb_intern("new"), 2, server_path, self);
 }
 
 // ----------------------------------------------------------------------------------
@@ -1072,7 +1074,7 @@ static VALUE execute_udf(int argc, VALUE * argv, VALUE self) {
   as_val_destroy(&res);
   as_arraylist_destroy(args);
 
-  VALUE key_info = rb_funcall(key, rb_intern("key_info"), 0);
+  VALUE key_info = aero_KEY_INFO;
   VALUE mod_info = rb_sprintf("mod: %s, func: %s", c_module_name, c_func_name);
 
   log_info_with_time_v2("[Client][execute_udf] success", &tm, key_info, mod_info);
@@ -1356,7 +1358,7 @@ static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) 
 
   log_info_with_time_v("[Client][bg_scan_udf] success", &tm, mod_info);
 
-  return rb_funcall(ScanTask, rb_intern("new"), 2, scan_id, self);
+  return rb_funcall(rb_aero_ScanTask, rb_intern("new"), 2, scan_id, self);
 }
 
 // ----------------------------------------------------------------------------------
@@ -1441,15 +1443,15 @@ static VALUE execute_query(VALUE self, VALUE query_obj) {
 
   aerospike * as = get_client_struct(self);
 
-  VALUE is_aerospike_c_query_obj = rb_funcall(query_obj, rb_intern("is_a?"), 1, Query);
+  VALUE is_aerospike_c_query_obj = rb_funcall(query_obj, rb_intern("is_a?"), 1, rb_aero_Query);
   if ( is_aerospike_c_query_obj != Qtrue )
-    rb_raise(OptionError, "[AerospikeC::Client][query] use AerospikeC::Query class to perform queries");
+    rb_raise(rb_aero_OptionError, "[AerospikeC::Client][query] use AerospikeC::Query class to perform queries");
 
   as_query * query         = query_obj2as_query(query_obj);
   as_policy_query * policy = get_query_policy(query_obj);
 
   query_item * query_data = (query_item *) malloc ( sizeof(query_item) );
-  if (! query_data) rb_raise(MemoryError, "[AerospikeC::Client][query] Error while allocating memory for query result");
+  if (! query_data) rb_raise(rb_aero_MemoryError, "[AerospikeC::Client][query] Error while allocating memory for query result");
   init_query_item(query_data);
 
   query_list q_args;
@@ -1589,9 +1591,9 @@ static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
 
   rb_scan_args(argc, argv, "31", &query_obj, &module_name, &func_name, &udf_args);
 
-  VALUE is_aerospike_c_query_obj = rb_funcall(query_obj, rb_intern("is_a?"), 1, Query);
+  VALUE is_aerospike_c_query_obj = rb_funcall(query_obj, rb_intern("is_a?"), 1, rb_aero_Query);
   if ( is_aerospike_c_query_obj != Qtrue )
-    rb_raise(OptionError, "[AerospikeC::Client][aggregate] use AerospikeC::Query class to perform queries");
+    rb_raise(rb_aero_OptionError, "[AerospikeC::Client][aggregate] use AerospikeC::Query class to perform queries");
 
   as_arraylist * args = NULL;
 
@@ -1608,7 +1610,7 @@ static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
   as_query_apply(query, c_module_name, c_func_name, (as_list*)args);
 
   query_item * query_data = (query_item *) malloc ( sizeof(query_item) );
-  if (! query_data) rb_raise(MemoryError, "[AerospikeC::Client][query] Error while allocating memory for query result");
+  if (! query_data) rb_raise(rb_aero_MemoryError, "[AerospikeC::Client][query] Error while allocating memory for query result");
   init_query_item(query_data);
 
   query_list q_args;
@@ -1662,9 +1664,9 @@ static VALUE background_execute_udf_on_query(int argc, VALUE * argv, VALUE self)
 
   rb_scan_args(argc, argv, "31", &query_obj, &module_name, &func_name, &udf_args);
 
-  VALUE is_aerospike_c_query_obj = rb_funcall(query_obj, rb_intern("is_a?"), 1, Query);
+  VALUE is_aerospike_c_query_obj = rb_funcall(query_obj, rb_intern("is_a?"), 1, rb_aero_Query);
   if ( is_aerospike_c_query_obj != Qtrue ) {
-    rb_raise(OptionError, "[AerospikeC::Client][bg_aggregate] use AerospikeC::Query class to perform queries");
+    rb_raise(rb_aero_OptionError, "[AerospikeC::Client][bg_aggregate] use AerospikeC::Query class to perform queries");
   }
 
   as_arraylist * args = NULL;
@@ -1690,7 +1692,7 @@ static VALUE background_execute_udf_on_query(int argc, VALUE * argv, VALUE self)
   as_arraylist_destroy(args);
 
   VALUE queryid  = ULONG2NUM(query_id);
-  VALUE rb_query = Data_Wrap_Struct(Query, NULL, query_task_deallocate, query);
+  VALUE rb_query = Data_Wrap_Struct(rb_aero_Query, NULL, query_task_deallocate, query);
 
   rb_iv_set(self, "@last_query_id", queryid);
 
@@ -1698,7 +1700,7 @@ static VALUE background_execute_udf_on_query(int argc, VALUE * argv, VALUE self)
 
   log_info_with_time_v("[Client][bg_aggregate] success", &tm, mod_info);
 
-  return rb_funcall(QueryTask, rb_intern("new"), 3, queryid, rb_query, self);
+  return rb_funcall(rb_aero_QueryTask, rb_intern("new"), 3, queryid, rb_query, self);
 }
 
 
@@ -1753,7 +1755,7 @@ static VALUE llist(int argc, VALUE * argv, VALUE self) {
 
   log_info("[Client] Getting new Llist");
 
-  return rb_funcall(Llist, rb_intern("new"), 4, self, key, bin_name, options);
+  return rb_funcall(rb_aero_Llist, rb_intern("new"), 4, self, key, bin_name, options);
 }
 
 // ----------------------------------------------------------------------------------
@@ -1764,71 +1766,71 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   //
   // class AerospikeC::Client < Object
   //
-  Client = rb_define_class_under(AerospikeC, "Client", rb_cObject);
-  rb_define_alloc_func(Client, client_allocate);
+  rb_aero_Client = rb_define_class_under(AerospikeC, "Client", rb_cObject);
+  rb_define_alloc_func(rb_aero_Client, client_allocate);
 
   //
   // methods
   //
-  rb_define_method(Client, "initialize", RB_FN_ANY()client_initialize, -1);
-  rb_define_method(Client, "close", RB_FN_ANY()close_connection, 0);
+  rb_define_method(rb_aero_Client, "initialize", RB_FN_ANY()client_initialize, -1);
+  rb_define_method(rb_aero_Client, "close", RB_FN_ANY()close_connection, 0);
 
   // crud
-  rb_define_method(Client, "put", RB_FN_ANY()put, -1);
-  rb_define_method(Client, "get", RB_FN_ANY()get, -1);
-  rb_define_method(Client, "delete", RB_FN_ANY()delete_record, -1);
+  rb_define_method(rb_aero_Client, "put", RB_FN_ANY()put, -1);
+  rb_define_method(rb_aero_Client, "get", RB_FN_ANY()get, -1);
+  rb_define_method(rb_aero_Client, "delete", RB_FN_ANY()delete_record, -1);
 
   // utils
-  rb_define_method(Client, "logger=", RB_FN_ANY()set_logger, 1);
-  rb_define_method(Client, "exists?", RB_FN_ANY()key_exists, -1);
-  rb_define_method(Client, "get_header", RB_FN_ANY()get_header, -1);
-  rb_define_method(Client, "batch_get", RB_FN_ANY()batch_get, -1);
-  rb_define_method(Client, "touch", RB_FN_ANY()touch, -1);
+  rb_define_method(rb_aero_Client, "logger=", RB_FN_ANY()set_logger, 1);
+  rb_define_method(rb_aero_Client, "exists?", RB_FN_ANY()key_exists, -1);
+  rb_define_method(rb_aero_Client, "get_header", RB_FN_ANY()get_header, -1);
+  rb_define_method(rb_aero_Client, "batch_get", RB_FN_ANY()batch_get, -1);
+  rb_define_method(rb_aero_Client, "touch", RB_FN_ANY()touch, -1);
 
   // operations
-  rb_define_method(Client, "operate", RB_FN_ANY()operate, -1);
-  rb_define_method(Client, "operation", RB_FN_ANY()operation_obj, 0);
+  rb_define_method(rb_aero_Client, "operate", RB_FN_ANY()operate, -1);
+  rb_define_method(rb_aero_Client, "operation", RB_FN_ANY()operation_obj, 0);
 
   // indexes
-  rb_define_method(Client, "create_index", RB_FN_ANY()create_index, -1);
-  rb_define_method(Client, "drop_index", RB_FN_ANY()drop_index, -1);
+  rb_define_method(rb_aero_Client, "create_index", RB_FN_ANY()create_index, -1);
+  rb_define_method(rb_aero_Client, "drop_index", RB_FN_ANY()drop_index, -1);
 
   // info
-  rb_define_method(Client, "info_cmd", RB_FN_ANY()info_cmd, 1);
+  rb_define_method(rb_aero_Client, "info_cmd", RB_FN_ANY()info_cmd, 1);
 
   // udfs
-  rb_define_method(Client, "register_udf", RB_FN_ANY()register_udf, -1);
-  rb_define_method(Client, "drop_udf", RB_FN_ANY()drop_udf, -1);
-  rb_define_method(Client, "list_udf", RB_FN_ANY()list_udf, -1);
-  rb_define_method(Client, "execute_udf", RB_FN_ANY()execute_udf, -1);
+  rb_define_method(rb_aero_Client, "register_udf", RB_FN_ANY()register_udf, -1);
+  rb_define_method(rb_aero_Client, "drop_udf", RB_FN_ANY()drop_udf, -1);
+  rb_define_method(rb_aero_Client, "list_udf", RB_FN_ANY()list_udf, -1);
+  rb_define_method(rb_aero_Client, "execute_udf", RB_FN_ANY()execute_udf, -1);
 
   // scans
-  rb_define_method(Client, "scan", RB_FN_ANY()scan_records, -1);
-  rb_define_method(Client, "execute_udf_on_scan", RB_FN_ANY()execute_udf_on_scan, -1);
-  rb_define_method(Client, "background_execute_udf_on_scan", RB_FN_ANY()background_execute_udf_on_scan, -1);
+  rb_define_method(rb_aero_Client, "scan", RB_FN_ANY()scan_records, -1);
+  rb_define_method(rb_aero_Client, "execute_udf_on_scan", RB_FN_ANY()execute_udf_on_scan, -1);
+  rb_define_method(rb_aero_Client, "background_execute_udf_on_scan", RB_FN_ANY()background_execute_udf_on_scan, -1);
 
   // queries
-  rb_define_method(Client, "query", RB_FN_ANY()execute_query, 1);
-  rb_define_method(Client, "execute_udf_on_query", RB_FN_ANY()execute_udf_on_query, -1);
-  rb_define_method(Client, "background_execute_udf_on_query", RB_FN_ANY()background_execute_udf_on_query, -1);
+  rb_define_method(rb_aero_Client, "query", RB_FN_ANY()execute_query, 1);
+  rb_define_method(rb_aero_Client, "execute_udf_on_query", RB_FN_ANY()execute_udf_on_query, -1);
+  rb_define_method(rb_aero_Client, "background_execute_udf_on_query", RB_FN_ANY()background_execute_udf_on_query, -1);
 
   // llist
-  rb_define_method(Client, "llist", RB_FN_ANY()llist, -1);
+  rb_define_method(rb_aero_Client, "llist", RB_FN_ANY()llist, -1);
 
   //
   // aliases
   //
-  rb_define_alias(Client, "aggregate",    "execute_udf_on_query"           );
-  rb_define_alias(Client, "bg_aggregate", "background_execute_udf_on_query");
-  rb_define_alias(Client, "scan_udf",     "execute_udf_on_scan"            );
-  rb_define_alias(Client, "bg_scan_udf",  "background_execute_udf_on_scan" );
-  rb_define_alias(Client, "list_udfs",    "list_udf"                       );
+  rb_define_alias(rb_aero_Client, "aggregate",    "execute_udf_on_query"           );
+  rb_define_alias(rb_aero_Client, "bg_aggregate", "background_execute_udf_on_query");
+  rb_define_alias(rb_aero_Client, "scan_udf",     "execute_udf_on_scan"            );
+  rb_define_alias(rb_aero_Client, "bg_scan_udf",  "background_execute_udf_on_scan" );
+  rb_define_alias(rb_aero_Client, "list_udfs",    "list_udf"                       );
 
   //
   // attr_reader
   //
-  rb_define_attr(Client, "host", 1, 0);
-  rb_define_attr(Client, "port", 1, 0);
-  rb_define_attr(Client, "last_scan_id", 1, 0);
-  rb_define_attr(Client, "last_query_id", 1, 0);
+  rb_define_attr(rb_aero_Client, "host", 1, 0);
+  rb_define_attr(rb_aero_Client, "port", 1, 0);
+  rb_define_attr(rb_aero_Client, "last_scan_id", 1, 0);
+  rb_define_attr(rb_aero_Client, "last_query_id", 1, 0);
 }
