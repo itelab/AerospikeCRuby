@@ -4,7 +4,12 @@
 VALUE rb_aero_Client;
 VALUE rb_aero_Logger;
 
-#define aero_KEY_INFO rb_funcall(key, rb_intern("key_info"), 0)
+#define rb_aero_KEY_INFO rb_funcall(key, rb_intern("key_info"), 0)
+#define rb_aero_CLIENT get_client_struct(self)
+#define rb_aero_OPERATION rb_const_get(rb_aero_AerospikeC, rb_intern("Operation")
+#define rb_aero_MOD_INFO rb_sprintf("mod: %s, func: %s", c_module_name, c_func_name)
+#define rb_aero_KEY get_key_struct(key)
+
 
 //
 // Aerospike queries and scans callback runs in parallel
@@ -88,7 +93,7 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
   as_status status;
   as_error err;
   as_record * rec = NULL;
-  aerospike * as  = get_client_struct(self);
+  aerospike * as  = rb_aero_CLIENT;
 
   VALUE key;
   VALUE hash;
@@ -120,7 +125,7 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
     new_rec = hash;
   }
 
-  as_key * k = get_key_struct(key);
+  as_key * k = rb_aero_KEY;
   as_policy_write * policy = get_policy(options);
 
   rec = get_record_struct(new_rec);
@@ -139,7 +144,7 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
 
   as_record_destroy(rec);
 
-  log_info_with_time_v("[Client][put] success", &tm, aero_KEY_INFO);
+  log_info_with_time_v("[Client][put] success", &tm, rb_aero_KEY_INFO);
 
   return Qtrue;
 }
@@ -169,7 +174,7 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
 
   as_error err;
   as_status status;
-  aerospike * as  = get_client_struct(self);
+  aerospike * as  = rb_aero_CLIENT;
   as_record * rec = NULL;
 
   VALUE bins;
@@ -186,7 +191,7 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
     rb_hash_aset(options, with_header_sym, Qfalse);
   }
 
-  as_key * k = get_key_struct(key);
+  as_key * k = rb_aero_KEY;
   as_policy_read * policy = get_policy(options);
 
   // read specific bins
@@ -217,7 +222,7 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
 
     check_for_llist_workaround(self, key, bins);
 
-    log_info_with_time_v("[Client][get] success", &tm, aero_KEY_INFO);
+    log_info_with_time_v("[Client][get] success", &tm, rb_aero_KEY_INFO);
 
     return bins;
   }
@@ -241,7 +246,7 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
 
   check_for_llist_workaround(self, key, bins);
 
-  log_info_with_time_v("[Client][get] success", &tm, aero_KEY_INFO);
+  log_info_with_time_v("[Client][get] success", &tm, rb_aero_KEY_INFO);
 
   return bins;
 }
@@ -268,7 +273,7 @@ static VALUE delete_record(int argc, VALUE * argv, VALUE self) {
 
   as_error err;
   as_status status;
-  aerospike * as = get_client_struct(self);
+  aerospike * as = rb_aero_CLIENT;
 
   VALUE key;
   VALUE options;
@@ -277,7 +282,7 @@ static VALUE delete_record(int argc, VALUE * argv, VALUE self) {
 
   if ( NIL_P(options) ) options = rb_hash_new();
 
-  as_key * k = get_key_struct(key);
+  as_key * k = rb_aero_KEY;
   as_policy_remove * policy = get_policy(options);
 
   if ( ( status = aerospike_key_remove(as, &err, policy, k) ) != AEROSPIKE_OK ) {
@@ -289,7 +294,7 @@ static VALUE delete_record(int argc, VALUE * argv, VALUE self) {
     raise_as_error(err);
   }
 
-  log_info_with_time_v("[Client][delete] success", &tm, aero_KEY_INFO);
+  log_info_with_time_v("[Client][delete] success", &tm, rb_aero_KEY_INFO);
 
   return Qtrue;
 }
@@ -335,7 +340,7 @@ static VALUE key_exists(int argc, VALUE * argv, VALUE self) {
 
   as_error err;
   as_status status;
-  aerospike * as  = get_client_struct(self);
+  aerospike * as  = rb_aero_CLIENT;
   as_record * rec = NULL;
 
   VALUE key;
@@ -345,14 +350,14 @@ static VALUE key_exists(int argc, VALUE * argv, VALUE self) {
 
   if ( NIL_P(options) ) options = rb_hash_new();
 
-  as_key * k = get_key_struct(key);
+  as_key * k = rb_aero_KEY;
   as_policy_read * policy = get_policy(options);
 
   if ( ( status = aerospike_key_exists(as, &err, policy, k, &rec) ) != AEROSPIKE_OK ) {
     as_record_destroy(rec);
 
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_info_with_time_v("[Client][exists?] success - false", &tm, aero_KEY_INFO);
+      log_info_with_time_v("[Client][exists?] success - false", &tm, rb_aero_KEY_INFO);
       return Qfalse;
     }
 
@@ -360,7 +365,7 @@ static VALUE key_exists(int argc, VALUE * argv, VALUE self) {
   }
   else {
     as_record_destroy(rec);
-    log_info_with_time_v("[Client][exists?] success - true", &tm, aero_KEY_INFO);
+    log_info_with_time_v("[Client][exists?] success - true", &tm, rb_aero_KEY_INFO);
     return Qtrue;
   }
 }
@@ -385,7 +390,7 @@ static VALUE get_header(int argc, VALUE * argv, VALUE self) {
 
   as_error err;
   as_status status;
-  aerospike * as  = get_client_struct(self);
+  aerospike * as  = rb_aero_CLIENT;
   as_record * rec = NULL;
 
   VALUE key;
@@ -395,7 +400,7 @@ static VALUE get_header(int argc, VALUE * argv, VALUE self) {
 
   if ( NIL_P(options) ) options = rb_hash_new();
 
-  as_key * k = get_key_struct(key);
+  as_key * k = rb_aero_KEY;
   as_policy_read * policy = get_policy(options);
 
   VALUE header = rb_hash_new();
@@ -416,7 +421,7 @@ static VALUE get_header(int argc, VALUE * argv, VALUE self) {
 
   as_record_destroy(rec);
 
-  log_info_with_time_v("[Client][get_header] success", &tm, aero_KEY_INFO);
+  log_info_with_time_v("[Client][get_header] success", &tm, rb_aero_KEY_INFO);
 
   return header;
 }
@@ -445,7 +450,7 @@ static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
 
   as_error err;
   as_status status;
-  aerospike * as = get_client_struct(self);
+  aerospike * as = rb_aero_CLIENT;
   char ** bin_names;
   long n_bin_names;
 
@@ -565,7 +570,7 @@ static VALUE touch(int argc, VALUE * argv, VALUE self) {
 
   as_error err;
   as_status status;
-  aerospike * as = get_client_struct(self);
+  aerospike * as = rb_aero_CLIENT;
 
   VALUE key;
   VALUE options;
@@ -583,7 +588,7 @@ static VALUE touch(int argc, VALUE * argv, VALUE self) {
     }
   }
 
-  as_key * k = get_key_struct(key);
+  as_key * k = rb_aero_KEY;
   as_record * rec = NULL;
 
   as_operations ops;
@@ -612,7 +617,7 @@ static VALUE touch(int argc, VALUE * argv, VALUE self) {
   as_record_destroy(rec);
   as_operations_destroy(&ops);
 
-  log_info_with_time_v("[Client][touch] success", &tm, aero_KEY_INFO);
+  log_info_with_time_v("[Client][touch] success", &tm, rb_aero_KEY_INFO);
 
   return header;
 }
@@ -641,7 +646,7 @@ static VALUE operate(int argc, VALUE * argv, VALUE self) {
 
   as_error err;
   as_status status;
-  aerospike * as = get_client_struct(self);
+  aerospike * as = rb_aero_CLIENT;
 
   VALUE key;
   VALUE operations;
@@ -653,9 +658,9 @@ static VALUE operate(int argc, VALUE * argv, VALUE self) {
     options = rb_hash_new();
   }
 
-  as_key * k     = get_key_struct(key);
+  as_key * k     = rb_aero_KEY;
 
-  VALUE is_aerospike_c_operation = rb_funcall(operations, rb_intern("is_a?"), 1, rb_const_get(rb_aero_AerospikeC, rb_intern("Operation")));
+  VALUE is_aerospike_c_operation = rb_funcall(operations, rb_intern("is_a?"), 1, rb_aero_OPERATION));
   if ( is_aerospike_c_operation != Qtrue ) {
     rb_raise(rb_aero_OptionError, "[AerospikeC::Client][operate] use AerospikeC::Operation class to perform operations");
   }
@@ -680,7 +685,7 @@ static VALUE operate(int argc, VALUE * argv, VALUE self) {
   as_record_destroy(rec);
   as_operations_destroy(ops);
 
-  log_info_with_time_v("[Client][operate] success", &tm, aero_KEY_INFO);
+  log_info_with_time_v("[Client][operate] success", &tm, rb_aero_KEY_INFO);
 
   return record;
 }
@@ -695,7 +700,7 @@ static VALUE operate(int argc, VALUE * argv, VALUE self) {
 //
 static VALUE operation_obj(VALUE self) {
   log_info("[Client] Getting new Operation object");
-  return rb_funcall(rb_const_get(rb_aero_AerospikeC, rb_intern("Operation")), rb_intern("new"), 0);
+  return rb_funcall(rb_aero_OPERATION), rb_intern("new"), 0);
 }
 
 // ----------------------------------------------------------------------------------
@@ -720,7 +725,7 @@ static VALUE create_index(int argc, VALUE * argv, VALUE self) {
   start_timing(&tm);
 
   as_error err;
-  aerospike * as = get_client_struct(self);
+  aerospike * as = rb_aero_CLIENT;
 
   VALUE ns;
   VALUE set;
@@ -783,7 +788,7 @@ static VALUE drop_index(int argc, VALUE * argv, VALUE self) {
   start_timing(&tm);
 
   as_error err;
-  aerospike * as = get_client_struct(self);
+  aerospike * as = rb_aero_CLIENT;
 
   VALUE ns;
   VALUE name;
@@ -823,7 +828,7 @@ static VALUE info_cmd(VALUE self, VALUE cmd) {
   start_timing(&tm);
 
   as_error err;
-  aerospike * as = get_client_struct(self);
+  aerospike * as = rb_aero_CLIENT;
 
   char * res = NULL;
 
@@ -864,7 +869,7 @@ static VALUE register_udf(int argc, VALUE * argv, VALUE self) {
   start_timing(&tm);
 
   as_error err;
-  aerospike * as = get_client_struct(self);
+  aerospike * as = rb_aero_CLIENT;
 
   VALUE path_to_file;
   VALUE server_path;
@@ -939,7 +944,7 @@ static VALUE drop_udf(int argc, VALUE * argv, VALUE self) {
   start_timing(&tm);
 
   as_error err;
-  aerospike * as = get_client_struct(self);
+  aerospike * as = rb_aero_CLIENT;
 
   VALUE server_path;
   VALUE options;
@@ -974,7 +979,7 @@ static VALUE drop_udf(int argc, VALUE * argv, VALUE self) {
 //
 static VALUE list_udf(int argc, VALUE * argv, VALUE self) {
   as_error err;
-  aerospike * as = get_client_struct(self);
+  aerospike * as = rb_aero_CLIENT;
 
   VALUE options;
 
@@ -1035,7 +1040,7 @@ static VALUE execute_udf(int argc, VALUE * argv, VALUE self) {
 
   as_error err;
   as_status status;
-  aerospike * as = get_client_struct(self);
+  aerospike * as = rb_aero_CLIENT;
 
   VALUE key;
   VALUE module_name;
@@ -1049,7 +1054,7 @@ static VALUE execute_udf(int argc, VALUE * argv, VALUE self) {
   if ( NIL_P(options) ) options = rb_hash_new();
   if ( NIL_P(udf_args) ) udf_args = rb_ary_new();
 
-  as_key * k               = get_key_struct(key);
+  as_key * k               = rb_aero_KEY;
   as_arraylist * args      = array2as_list(udf_args);
   as_policy_apply * policy = get_policy(options);
 
@@ -1074,10 +1079,9 @@ static VALUE execute_udf(int argc, VALUE * argv, VALUE self) {
   as_val_destroy(&res);
   as_arraylist_destroy(args);
 
-  VALUE key_info = aero_KEY_INFO;
-  VALUE mod_info = rb_sprintf("mod: %s, func: %s", c_module_name, c_func_name);
+  VALUE key_info = rb_aero_KEY_INFO;
 
-  log_info_with_time_v2("[Client][execute_udf] success", &tm, key_info, mod_info);
+  log_info_with_time_v2("[Client][execute_udf] success", &tm, key_info, rb_aero_MOD_INFO);
 
   return result;
 }
@@ -1155,7 +1159,7 @@ static VALUE scan_records(int argc, VALUE * argv, VALUE self) {
   struct timeval tm;
   start_timing(&tm);
 
-  aerospike * as = get_client_struct(self);
+  aerospike * as = rb_aero_CLIENT;
 
   VALUE ns;
   VALUE set;
@@ -1238,7 +1242,7 @@ static VALUE execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
   struct timeval tm;
   start_timing(&tm);
 
-  aerospike * as = get_client_struct(self);
+  aerospike * as = rb_aero_CLIENT;
 
   VALUE ns;
   VALUE set;
@@ -1280,9 +1284,7 @@ static VALUE execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
 
   VALUE result = rb_ensure(scan_records_begin, (VALUE)(&s_args), scan_records_ensure, (VALUE)(&s_args));;
 
-  VALUE mod_info = rb_sprintf("mod: %s, func: %s", c_module_name, c_func_name);
-
-  log_info_with_time_v("[Client][scan_udf] success", &tm, mod_info);
+  log_info_with_time_v("[Client][scan_udf] success", &tm, rb_aero_MOD_INFO);
 
   return result;
 }
@@ -1312,7 +1314,7 @@ static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) 
   start_timing(&tm);
 
   as_error err;
-  aerospike * as = get_client_struct(self);
+  aerospike * as = rb_aero_CLIENT;
 
   VALUE ns;
   VALUE set;
@@ -1354,9 +1356,7 @@ static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) 
   as_scan_destroy(&scan);
   as_arraylist_destroy(args);
 
-  VALUE mod_info = rb_sprintf("mod: %s, func: %s", c_module_name, c_func_name);
-
-  log_info_with_time_v("[Client][bg_scan_udf] success", &tm, mod_info);
+  log_info_with_time_v("[Client][bg_scan_udf] success", &tm, rb_aero_MOD_INFO);
 
   return rb_funcall(rb_aero_ScanTask, rb_intern("new"), 2, scan_id, self);
 }
@@ -1441,7 +1441,7 @@ static VALUE execute_query(VALUE self, VALUE query_obj) {
   struct timeval tm;
   start_timing(&tm);
 
-  aerospike * as = get_client_struct(self);
+  aerospike * as = rb_aero_CLIENT;
 
   VALUE is_aerospike_c_query_obj = rb_funcall(query_obj, rb_intern("is_a?"), 1, rb_aero_Query);
   if ( is_aerospike_c_query_obj != Qtrue )
@@ -1582,7 +1582,7 @@ static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
   struct timeval tm;
   start_timing(&tm);
 
-  aerospike * as = get_client_struct(self);
+  aerospike * as = rb_aero_CLIENT;
 
   VALUE query_obj;
   VALUE module_name;
@@ -1625,9 +1625,7 @@ static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
 
   VALUE result = rb_ensure(execute_udf_on_query_begin, (VALUE)(&q_args), execute_udf_on_query_ensure, (VALUE)(&q_args));
 
-  VALUE mod_info = rb_sprintf("mod: %s, func: %s", c_module_name, c_func_name);
-
-  log_info_with_time_v("[Client][aggregate]", &tm, mod_info);
+  log_info_with_time_v("[Client][aggregate]", &tm, rb_aero_MOD_INFO);
 
   return result;
 }
@@ -1655,7 +1653,7 @@ static VALUE background_execute_udf_on_query(int argc, VALUE * argv, VALUE self)
   start_timing(&tm);
 
   as_error err;
-  aerospike * as = get_client_struct(self);
+  aerospike * as = rb_aero_CLIENT;
 
   VALUE query_obj;
   VALUE module_name;
@@ -1696,9 +1694,7 @@ static VALUE background_execute_udf_on_query(int argc, VALUE * argv, VALUE self)
 
   rb_iv_set(self, "@last_query_id", queryid);
 
-  VALUE mod_info = rb_sprintf("mod: %s, func: %s", c_module_name, c_func_name);
-
-  log_info_with_time_v("[Client][bg_aggregate] success", &tm, mod_info);
+  log_info_with_time_v("[Client][bg_aggregate] success", &tm, rb_aero_MOD_INFO);
 
   return rb_funcall(rb_aero_QueryTask, rb_intern("new"), 3, queryid, rb_query, self);
 }
@@ -1719,7 +1715,7 @@ static VALUE close_connection(VALUE self) {
   start_timing(&tm);
 
   as_error err;
-  aerospike * as = get_client_struct(self);
+  aerospike * as = rb_aero_CLIENT;
 
   if ( aerospike_close(as, &err) != AEROSPIKE_OK )  {
     raise_as_error(err);
