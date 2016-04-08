@@ -9,7 +9,7 @@ VALUE rb_aero_Logger;
 #define rb_aero_OPERATION rb_const_get(rb_aero_AerospikeC, rb_intern("Operation")
 #define rb_aero_MOD_INFO rb_sprintf("mod: %s, func: %s", c_module_name, c_func_name)
 #define rb_aero_KEY get_key_struct(key)
-
+#define rb_aero_TIMED(val) struct timeval val; start_timing(&val)
 
 //
 // Aerospike queries and scans callback runs in parallel
@@ -31,8 +31,7 @@ static VALUE client_allocate(VALUE self) {
 // def initialize(host, port, options = {})
 //
 static void client_initialize(int argc, VALUE * argv, VALUE self) {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   VALUE host;
   VALUE port;
@@ -87,8 +86,7 @@ static void client_initialize(int argc, VALUE * argv, VALUE self) {
 //    2. nil when AEROSPIKE_ERR_RECORD_NOT_FOUND
 //
 static VALUE put(int argc, VALUE * argv, VALUE self) {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   as_status status;
   as_error err;
@@ -169,8 +167,7 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
 //    2. nil when AEROSPIKE_ERR_RECORD_NOT_FOUND
 //
 static VALUE get(int argc, VALUE * argv, VALUE self) {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   as_error err;
   as_status status;
@@ -268,8 +265,7 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
 //    2. nil if AEROSPIKE_ERR_RECORD_NOT_FOUND
 //
 static VALUE delete_record(int argc, VALUE * argv, VALUE self) {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   as_error err;
   as_status status;
@@ -335,8 +331,7 @@ static VALUE set_logger(VALUE self, VALUE logger) {
 //    2. false otherwise
 //
 static VALUE key_exists(int argc, VALUE * argv, VALUE self) {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   as_error err;
   as_status status;
@@ -385,8 +380,7 @@ static VALUE key_exists(int argc, VALUE * argv, VALUE self) {
 //    2. nil when AEROSPIKE_ERR_RECORD_NOT_FOUND
 //
 static VALUE get_header(int argc, VALUE * argv, VALUE self) {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   as_error err;
   as_status status;
@@ -445,8 +439,7 @@ static VALUE get_header(int argc, VALUE * argv, VALUE self) {
 // @TODO options policy
 //
 static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   as_error err;
   as_status status;
@@ -565,8 +558,7 @@ static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
 // @TODO options policy
 //
 static VALUE touch(int argc, VALUE * argv, VALUE self) {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   as_error err;
   as_status status;
@@ -641,8 +633,7 @@ static VALUE touch(int argc, VALUE * argv, VALUE self) {
 //
 //
 static VALUE operate(int argc, VALUE * argv, VALUE self) {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   as_error err;
   as_status status;
@@ -721,8 +712,7 @@ static VALUE operation_obj(VALUE self) {
 // @TODO options policy
 //
 static VALUE create_index(int argc, VALUE * argv, VALUE self) {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   as_error err;
   aerospike * as = rb_aero_CLIENT;
@@ -784,8 +774,7 @@ static VALUE create_index(int argc, VALUE * argv, VALUE self) {
 // @TODO options policy
 //
 static VALUE drop_index(int argc, VALUE * argv, VALUE self) {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   as_error err;
   aerospike * as = rb_aero_CLIENT;
@@ -824,8 +813,7 @@ static VALUE drop_index(int argc, VALUE * argv, VALUE self) {
 // @TODO options policy
 //
 static VALUE info_cmd(VALUE self, VALUE cmd) {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   as_error err;
   aerospike * as = rb_aero_CLIENT;
@@ -865,8 +853,7 @@ static VALUE info_cmd(VALUE self, VALUE cmd) {
 // @TODO options policy
 //
 static VALUE register_udf(int argc, VALUE * argv, VALUE self) {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   as_error err;
   aerospike * as = rb_aero_CLIENT;
@@ -940,8 +927,7 @@ static VALUE register_udf(int argc, VALUE * argv, VALUE self) {
 // @TODO options policy
 //
 static VALUE drop_udf(int argc, VALUE * argv, VALUE self) {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   as_error err;
   aerospike * as = rb_aero_CLIENT;
@@ -1035,8 +1021,7 @@ static VALUE list_udf(int argc, VALUE * argv, VALUE self) {
 //    1. data returned from udf
 //
 static VALUE execute_udf(int argc, VALUE * argv, VALUE self) {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   as_error err;
   as_status status;
@@ -1156,8 +1141,7 @@ static VALUE scan_records_ensure(VALUE rdata) {
 }
 
 static VALUE scan_records(int argc, VALUE * argv, VALUE self) {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   aerospike * as = rb_aero_CLIENT;
 
@@ -1239,8 +1223,7 @@ static VALUE execute_udf_on_scan_ensure(VALUE rdata) {
 }
 
 static VALUE execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   aerospike * as = rb_aero_CLIENT;
 
@@ -1310,8 +1293,7 @@ static VALUE execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
 //    1. AerospikeC::ScanTask object
 //
 static VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   as_error err;
   aerospike * as = rb_aero_CLIENT;
@@ -1438,8 +1420,7 @@ static VALUE execute_query_ensure(VALUE rdata) {
 }
 
 static VALUE execute_query(VALUE self, VALUE query_obj) {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   aerospike * as = rb_aero_CLIENT;
 
@@ -1579,8 +1560,7 @@ static VALUE execute_udf_on_query_ensure(VALUE rdata) {
 }
 
 static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   aerospike * as = rb_aero_CLIENT;
 
@@ -1649,8 +1629,7 @@ static VALUE execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
 // @TODO options policy in AeropsikeC::Query
 //
 static VALUE background_execute_udf_on_query(int argc, VALUE * argv, VALUE self)  {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   as_error err;
   aerospike * as = rb_aero_CLIENT;
@@ -1711,8 +1690,7 @@ static VALUE background_execute_udf_on_query(int argc, VALUE * argv, VALUE self)
 //    1. self
 //
 static VALUE close_connection(VALUE self) {
-  struct timeval tm;
-  start_timing(&tm);
+  rb_aero_TIMED(tm);
 
   as_error err;
   aerospike * as = rb_aero_CLIENT;
