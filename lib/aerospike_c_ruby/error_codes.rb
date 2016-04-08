@@ -1,4 +1,4 @@
-class AerospikeC::ErrorCodes
+class AerospikeC::ErrorCodes < StandardError
   attr_reader :code, :msg
 
   AS_PROTO_RESULT_OK = 0
@@ -84,6 +84,15 @@ class AerospikeC::ErrorCodes
   ##
   def as_json(options = {})
     {code: @code, msg: @msg}
+  end
+
+
+  #----------------------------------------------------------------------------
+  ## @brief      to string
+  ##
+  ##
+  def to_s
+    as_json.to_s
   end
 
 

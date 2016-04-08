@@ -6,3 +6,5 @@ AerospikeC::ErrorCodes.constants.each do |c|
   puts "  "
   pp err
 end
+
+raise AerospikeC::ErrorCodes.new(AerospikeC::ErrorCodes::AS_PROTO_RESULT_FAIL_BATCH_MAX_REQUESTS)
