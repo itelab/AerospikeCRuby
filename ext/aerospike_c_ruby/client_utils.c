@@ -263,3 +263,57 @@ void query_result_destroy(query_list * args) {
 
   args->query_data = NULL;
 }
+
+// ----------------------------------------------------------------------------------
+//
+// setting query list result and destroying query data
+//
+void set_scan_result_and_destroy(scan_list * args) {
+  query_item * it = args->scan_data;
+
+  while ( it != NULL ) {
+    query_item * item = it;
+
+    if ( item->rec != NULL ) {
+      rb_ary_push(args->result, record2hash(item->rec));
+      as_record_destroy(item->rec);
+    }
+
+    if ( item->val != NULL ) {
+      rb_ary_push(args->result, as_val2rb_val(item->val));
+      as_val_free(item->val);
+    }
+
+    it = item->next;
+    args->scan_data = it;
+
+    free(item);
+  }
+
+  args->scan_data = NULL;
+}
+
+// ----------------------------------------------------------------------------------
+//
+// destroying query data in query_list
+//
+void scan_result_destroy(scan_list * args) {
+  query_item * it = args->scan_data;
+
+  while ( it != NULL ) {
+    query_item * item = it;
+
+    if ( item->rec != NULL )
+      as_record_destroy(item->rec);
+
+    if ( item->val != NULL )
+      as_val_free(item->val);
+
+    it = item->next;
+    args->scan_data = it;
+
+    free(item);
+  }
+
+  args->scan_data = NULL;
+}

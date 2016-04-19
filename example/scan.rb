@@ -21,7 +21,7 @@ puts "\n----------------------------"
 scan_udf = File.expand_path(File.join(File.dirname(__FILE__), "lua/scan.lua"))
 
 task = client.register_udf(scan_udf, "scan_udf.lua")
-task.wait_till_completed
+task.wait_till_completed(50)
 
 
 puts client.execute_udf_on_scan("test", "scan_test", "scan_udf", "add_cords", [34, 56]).inspect
@@ -43,5 +43,14 @@ puts scan_task.check_status
 puts scan_task.inspect
 puts "\n----------------------------"
 puts scan_task.completed?
+
+i = 0
+10.times do
+  key = AerospikeC::Key.new("test", "scan_test", "scan_test-#{i}")
+  puts client.get(key).inspect
+
+  i += 1
+end
+
 
 client.drop_udf("scan_udf.lua")

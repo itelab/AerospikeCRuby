@@ -8,6 +8,8 @@
 /tmp/
 /example/log/*.log
 *.gem
+.tags
+.tags_sorted_by_file
 
 /ext/aerospike_c_ruby/Makefile
 /ext/aerospike_c_ruby/*.o

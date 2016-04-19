@@ -16,6 +16,27 @@ static void switch_color_code() {
 //
 // logger methods
 //
+bool rb_aero_log_callback(
+    as_log_level level, const char * func, const char * file, uint32_t line,
+    const char * fmt, ...)
+{
+    if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;
+
+    char msg[1024] = {0};
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(msg, 1024, fmt, ap);
+    msg[1023] = '\0';
+    va_end(ap);
+
+    switch_color_code();
+
+    VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s\e[0m [%s:%d][%s] %d - %s", color_code, "<AerospikeC>", file, line, func, level, msg);
+    rb_funcall(rb_aero_Logger, rb_intern("info"), 1, rb_msg);
+
+    return true;
+}
+
 void log_debug(const char * msg) {
 #ifdef AEROSPIKE_C_RUBY_DEBUG
   if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;

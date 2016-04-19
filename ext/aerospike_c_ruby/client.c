@@ -26,22 +26,6 @@ static VALUE client_allocate(VALUE self) {
   return Data_Wrap_Struct(self, NULL, client_deallocate, as);
 }
 
-static bool my_log_callback(
-    as_log_level level, const char * func, const char * file, uint32_t line,
-    const char * fmt, ...)
-{
-    char msg[1024] = {0};
-    va_list ap;
-    va_start(ap, fmt);
-    vsnprintf(msg, 1024, fmt, ap);
-    msg[1023] = '\0';
-    va_end(ap);
-    VALUE log_msg = rb_sprintf("[%s:%d][%s] %d - %s\n", file, line, func, level, msg);
-
-    log_info(StringValueCStr(log_msg));
-
-    return true;
-}
 
 // ----------------------------------------------------------------------------------
 //
@@ -82,7 +66,7 @@ static void client_initialize(int argc, VALUE * argv, VALUE self) {
   }
 
   as_log_set_level(AS_LOG_LEVEL_DEBUG);
-  as_log_set_callback(my_log_callback);
+  as_log_set_callback(rb_aero_log_callback);
 
   log_info_with_time("[Client] initializing and connecting done", &tm);
 }
@@ -130,8 +114,6 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
     if ( NIL_P(option_tmp) )
       rb_hash_aset(options, ttl_sym, rb_zero);
 
-    // if ( TYPE(option_tmp) != T_FIXNUM ) // check ttl option
-    //   rb_raise(rb_aero_OptionError, "[AerospikeC::Client][put] ttl must be an integer, options: %s", val_inspect(options));
   }
 
   VALUE new_rec;
@@ -1096,26 +1078,44 @@ static VALUE execute_udf(int argc, VALUE * argv, VALUE self) {
 // callback for scan_records
 // push into array only if non error
 //
-static VALUE scan_records_callback_protected(VALUE rdata) {
-  as_val * val = (as_val *) rdata;
+static bool scan_records_callback(const as_val * val, query_item * scan_data) {
+  if ( val == NULL ) return false;
 
-  as_record * record = as_rec_fromval(val);
+  query_item * new_item = (query_item *) malloc ( sizeof(query_item) );
+  if (! new_item) {
+    pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
+      log_warn("execute_udf_on_scan_callback allocating memory for query item failed, continue with next record");
+    pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
+    return true;
+  }
 
-  return record2hash(record);
-}
+  init_query_item(new_item);
 
-static bool scan_records_callback(const as_val * val, VALUE scan_data) {
-  if ( val == NULL ) return true;
+  if ( as_val_type(val) == AS_REC ) { // is record
+    new_item->rec = rb_copy_as_record( as_rec_fromval(val) );
 
-  pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
+    if (! new_item->rec) {
+      pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
+        log_warn("execute_udf_on_scan_callback allocating memory for record failed, continue with next record");
+      pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
 
-  int state = 0;
-  VALUE result = rb_protect(scan_records_callback_protected, (VALUE)(val), &state);
+      return true;
+    }
+  }
+  else { // is value
+    as_val_reserve(val);
+    new_item->val = val;
 
-  if (!state)
-    rb_ary_push(scan_data, result);
+    if (! new_item->val) {
+      pthread_mutex_lock(& G_CALLBACK_MUTEX); // lock
+        log_warn("execute_udf_on_scan_callback allocating memory for value failed, continue with next record");
+      pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
 
-  pthread_mutex_unlock(& G_CALLBACK_MUTEX); // unlock
+      return true;
+    }
+  }
+
+  set_query_item_next(scan_data, new_item);
 
   return true;
 }
@@ -1140,24 +1140,25 @@ static bool scan_records_callback(const as_val * val, VALUE scan_data) {
 // @TODO options policy
 //
 static VALUE scan_records_begin(VALUE rdata) {
-  scan_method_options * args = (scan_method_options *) rdata;
+  scan_list * args = (scan_list *) rdata;
   as_error err;
 
-  disable_rb_GC();
 
   if ( aerospike_scan_foreach(args->as, &err, args->policy, args->scan, args->callback, args->scan_data) != AEROSPIKE_OK )
     raise_as_error(err);
 
-  return args->scan_data;
+  set_scan_result_and_destroy(args);
+
+  return args->result;
 }
 
 static VALUE scan_records_ensure(VALUE rdata) {
-  scan_method_options * args = (scan_method_options *) rdata;
+  scan_list * args = (scan_list *) rdata;
 
-  enable_rb_GC();
   as_scan_destroy(args->scan);
+  scan_result_destroy(args);
 
-  return args->scan_data;
+  return args->result;
 }
 
 static VALUE scan_records(int argc, VALUE * argv, VALUE self) {
@@ -1176,19 +1177,21 @@ static VALUE scan_records(int argc, VALUE * argv, VALUE self) {
     options = rb_hash_new();
   }
 
-  as_scan scan;
-  as_scan_init(&scan, StringValueCStr(ns), StringValueCStr(set));
-  set_priority_options(&scan, options);
+  as_scan * scan = as_scan_new(StringValueCStr(ns), StringValueCStr(set));
+  set_priority_options(scan, options);
 
-  VALUE scan_data = rb_ary_new();
+  query_item * scan_data = (query_item *) malloc ( sizeof(query_item) );
+  if (! scan_data) rb_raise(rb_aero_MemoryError, "[AerospikeC::Client][query] Error while allocating memory for query result");
+  init_query_item(scan_data);
 
-  scan_method_options s_args;
+  scan_list s_args;
 
   s_args.as        = as;
-  s_args.scan      = &scan;
+  s_args.scan      = scan;
   s_args.policy    = NULL;
   s_args.callback  = scan_records_callback;
   s_args.scan_data = scan_data;
+  s_args.result    = rb_ary_new();
 
   VALUE result = rb_ensure(scan_records_begin, (VALUE)(&s_args), scan_records_ensure, (VALUE)(&s_args));;
 
@@ -1196,6 +1199,7 @@ static VALUE scan_records(int argc, VALUE * argv, VALUE self) {
 
   return result;
 }
+
 
 // ----------------------------------------------------------------------------------
 //
@@ -1220,26 +1224,26 @@ static VALUE scan_records(int argc, VALUE * argv, VALUE self) {
 // @TODO options policy
 //
 static VALUE execute_udf_on_scan_begin(VALUE rdata) {
-  scan_method_options * args = (scan_method_options *) rdata;
+  scan_list * args = (scan_list *) rdata;
   as_error err;
 
-  disable_rb_GC();
 
   if ( aerospike_scan_foreach(args->as, &err, args->policy, args->scan, args->callback, args->scan_data) != AEROSPIKE_OK )
     raise_as_error(err);
 
-  return args->scan_data;
+  set_scan_result_and_destroy(args);
+
+  return args->result;
 }
 
 static VALUE execute_udf_on_scan_ensure(VALUE rdata) {
-  scan_method_options * args = (scan_method_options *) rdata;
-
-  enable_rb_GC();
+  scan_list * args = (scan_list *) rdata;
 
   as_scan_destroy(args->scan);
   as_arraylist_destroy(args->args);
+  scan_result_destroy(args);
 
-  return args->scan_data;
+  return args->result;
 }
 
 static VALUE execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
@@ -1264,26 +1268,27 @@ static VALUE execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
     args = array2as_list(udf_args);
   }
 
-
-  as_scan scan;
-  as_scan_init(&scan, StringValueCStr(ns), StringValueCStr(set));
-
   char * c_module_name = StringValueCStr(module_name);
   char * c_func_name = StringValueCStr(func_name);
 
-  as_scan_apply_each(&scan, c_module_name, c_func_name, (as_list *)args);
-  set_priority_options(&scan, options);
+  as_scan * scan = as_scan_new(StringValueCStr(ns), StringValueCStr(set));
+  as_scan_apply_each(scan, c_module_name, c_func_name, (as_list *)args);
+  set_priority_options(scan, options);
 
-  VALUE scan_data = rb_ary_new();
+  query_item * scan_data = (query_item *) malloc ( sizeof(query_item) );
+  if (! scan_data) rb_raise(rb_aero_MemoryError, "[AerospikeC::Client][query] Error while allocating memory for query result");
+  init_query_item(scan_data);
 
-  scan_method_options s_args;
+  scan_list s_args;
 
   s_args.as        = as;
-  s_args.scan      = &scan;
+  s_args.scan      = scan;
   s_args.policy    = NULL;
   s_args.callback  = scan_records_callback;
-  s_args.args      = args;
   s_args.scan_data = scan_data;
+  s_args.args      = args;
+  s_args.result    = rb_ary_new();
+
 
   VALUE result = rb_ensure(scan_records_begin, (VALUE)(&s_args), scan_records_ensure, (VALUE)(&s_args));;
 
@@ -1475,27 +1480,7 @@ static VALUE execute_query(VALUE self, VALUE query_obj) {
 //
 // callback method for execute_udf_on_query
 // push into array only if non error
-// //
-// static VALUE execute_udf_on_query_callback_protected(VALUE rdata) {
-//   as_val * val = (as_val *) rdata;
-
-//   VALUE tmp;
-//   as_record * record;
-
-//   switch ( as_val_type(val) ) {
-//     case AS_REC:
-//       record = as_rec_fromval(val);
-//       tmp = record2hash(record);
-//       break;
-
-//     default:
-//       tmp = as_val2rb_val(val);
-//       break;
-//   }
-
-//   return tmp;
-// }
-
+//
 static bool execute_udf_on_query_callback(as_val * val, VALUE query_data) {
   if ( val == NULL ) return false;
 
@@ -1724,6 +1709,7 @@ static VALUE close_connection(VALUE self) {
   return self;
 }
 
+
 // ----------------------------------------------------------------------------------
 //
 // creates new AerospikeC::Llist instance
@@ -1751,6 +1737,7 @@ static VALUE llist(int argc, VALUE * argv, VALUE self) {
 
   return rb_funcall(rb_aero_Llist, rb_intern("new"), 4, self, key, bin_name, options);
 }
+
 
 // ----------------------------------------------------------------------------------
 //

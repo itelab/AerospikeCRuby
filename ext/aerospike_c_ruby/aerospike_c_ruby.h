@@ -177,6 +177,9 @@ void init_aerospike_c_index_task(VALUE AerospikeC);
 void index_task_deallocate(as_index_task * task);
 
 // utils.c
+bool rb_aero_log_callback(
+    as_log_level level, const char * func, const char * file, uint32_t line,
+    const char * fmt, ...);
 void log_debug (const char * msg);
 void log_info  (const char * msg);
 void log_warn  (const char * msg);
