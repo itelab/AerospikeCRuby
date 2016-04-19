@@ -26,6 +26,23 @@ static VALUE client_allocate(VALUE self) {
   return Data_Wrap_Struct(self, NULL, client_deallocate, as);
 }
 
+static bool my_log_callback(
+    as_log_level level, const char * func, const char * file, uint32_t line,
+    const char * fmt, ...)
+{
+    char msg[1024] = {0};
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(msg, 1024, fmt, ap);
+    msg[1023] = '\0';
+    va_end(ap);
+    VALUE log_msg = rb_sprintf("[%s:%d][%s] %d - %s\n", file, line, func, level, msg);
+
+    log_info(StringValueCStr(log_msg));
+
+    return true;
+}
+
 // ----------------------------------------------------------------------------------
 //
 // def initialize(host, port, options = {})
@@ -63,6 +80,9 @@ static void client_initialize(int argc, VALUE * argv, VALUE self) {
     aerospike_destroy(as);
     raise_as_error(err);
   }
+
+  as_log_set_level(AS_LOG_LEVEL_DEBUG);
+  as_log_set_callback(my_log_callback);
 
   log_info_with_time("[Client] initializing and connecting done", &tm);
 }
