@@ -262,6 +262,10 @@ as_arraylist * array2as_list(VALUE ary) {
         as_arraylist_append_double(list, NUM2DBL(element));
         break;
 
+      case T_OBJECT:
+        as_arraylist_append_bytes(list, rb_obj_to_as_bytes(element));
+        break;
+
       default:
         rb_raise(rb_aero_ParseError, "[array2as_list] Unsupported array value type: %s", rb_val_type_as_str(element));
         break;
@@ -342,6 +346,10 @@ static int foreach_hash2record(VALUE key, VALUE val, VALUE record) {
         as_record_set_geojson(rec, key2bin_name(key), get_geo_json_struct(val));
       }
 
+      break;
+
+    case T_OBJECT:
+      as_record_set_bytes(rec, key2bin_name(key), rb_obj_to_as_bytes(val));
       break;
 
     default:
@@ -445,6 +453,10 @@ static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE hmap) {
 
     case T_FLOAT:
       as_stringmap_set_double(map, bin_name, NUM2DBL(val));
+      break;
+
+    case T_OBJECT:
+      as_stringmap_set_bytes(map, bin_name, rb_obj_to_as_bytes(val));
       break;
 
     default:
@@ -665,6 +677,14 @@ VALUE as_val2rb_val(as_val * value) {
     case AS_UNDEF:
       return rb_str_new2("undef");
       break;
+
+    case AS_BYTES: {
+      as_bytes * bytes = as_bytes_fromval(value);
+
+      if ( as_bytes_get_type(bytes) == AS_BYTES_RUBY ) {
+        return as_bytes_to_rb_obj(bytes);
+      }
+    }
   }
 
   return rb_str_new2(as_val_type_as_str(value));
@@ -1395,4 +1415,49 @@ as_operations * rb_operations2as_operations(VALUE operations) {
   }
 
   return ops;
+}
+
+/**
+ * @brief      convert ruby object into aerospike bytes
+ *
+ * @param[in]  obj   ruby object
+ *
+ * @return     aerospike bytes
+ */
+as_bytes * rb_obj_to_as_bytes(VALUE obj) {
+  VALUE dumped = rb_funcall(rb_mMarshal(), rb_intern("dump"), 1, obj);
+  dumped = rb_funcall(dumped, rb_intern("bytes"), 0);
+
+  int len = rb_ary_len_int(dumped);
+
+  as_bytes * bytes = as_bytes_new(len);
+
+  as_bytes_set_type(bytes, AS_BYTES_RUBY);
+
+  for (int i = 0; i < len; ++i) {
+    VALUE element = rb_ary_entry(dumped, i);
+
+    as_bytes_append_byte(bytes, FIX2INT(element));
+  }
+
+  return bytes;
+}
+
+VALUE as_bytes_to_rb_obj(as_bytes * bytes) {
+  uint32_t bytes_in = as_bytes_size(bytes);
+
+  VALUE obj = rb_ary_new();
+
+  for (int i = 0; i < bytes_in; ++i) {
+    uint8_t val = 0;
+
+    as_bytes_get_byte(bytes, i, &val);
+
+    rb_ary_push(obj, INT2FIX(val));
+  }
+
+  obj = rb_funcall(obj, rb_intern("pack"), 1, rb_str_new2("c*"));
+  obj = rb_funcall(rb_mMarshal(), rb_intern("load"), 1, obj);
+
+  return obj;
 }

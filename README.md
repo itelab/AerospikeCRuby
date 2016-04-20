@@ -1,5 +1,5 @@
 # AerospikeCRuby
-### master version - 0.2.5
+### master version - 0.3.0
 
 AerospikeCRuby is an aerospike library using aerospike-c-client wrapped into ruby. Responses does not build any objects and return pure ruby hashes for speed.
 
@@ -38,10 +38,11 @@ AerospikeCRuby is an aerospike library using aerospike-c-client wrapped into rub
   - Hashes
   - Symbols (mapped to string)
   - [GeoJson](geo_json.md)
+  - Ruby objects that can be marshalled
 - Nested values like `[[1, 2], {"h1" => {"h2" => 2}}]` possible
 
 #### Major TODOs:
-- Bytes support (and object values mapping)
+- Plain bytes support
 - Response types (hashes or expanded objects)
 - More Policies
 

@@ -144,6 +144,7 @@
 ;
 
 #define rb_mJSON() rb_const_get(rb_cObject, rb_intern("JSON"))
+#define rb_mMarshal() rb_const_get(rb_cObject, rb_intern("Marshal"))
 
 #define DEFAULT_GEO_JSON_ELSE "GEO_JSON_NULL_VALUE"
 #define RB_COORDINATES_STR rb_str_new2("coordinates")
@@ -256,6 +257,8 @@ as_val * rb_copy_as_val(as_val * value);
 as_record * rb_copy_as_record(as_record * record);
 
 as_operations * rb_operations2as_operations(VALUE operations);
+as_bytes * rb_obj_to_as_bytes(VALUE obj);
+VALUE as_bytes_to_rb_obj(as_bytes * bytes);
 
 // ---------------------------------------------------
 //
