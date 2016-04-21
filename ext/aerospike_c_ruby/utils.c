@@ -1443,6 +1443,14 @@ as_bytes * rb_obj_to_as_bytes(VALUE obj) {
   return bytes;
 }
 
+
+/**
+ * @brief      convert as_bytes to ruby object
+ *
+ * @param      bytes  aerospike bytes
+ *
+ * @return     ruby object
+ */
 VALUE as_bytes_to_rb_obj(as_bytes * bytes) {
   uint32_t bytes_in = as_bytes_size(bytes);
 
@@ -1460,4 +1468,22 @@ VALUE as_bytes_to_rb_obj(as_bytes * bytes) {
   obj = rb_funcall(rb_mMarshal(), rb_intern("load"), 1, obj);
 
   return obj;
+}
+
+
+/**
+ * @brief      Check if encoding is set globaly, force if it is
+ *
+ * @param[in]  str   ruby string
+ *
+ * @return     string encoded
+ */
+VALUE check_and_force_encoding(VALUE str) {
+  VALUE encoding = rb_iv_get(rb_aero_AerospikeC, "@encoding");
+
+  if ( encoding != Qnil ) {
+    rb_funcall(str, rb_intern("force_encoding"), 1, encoding);
+  }
+
+  return str;
 }

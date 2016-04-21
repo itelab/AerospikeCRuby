@@ -14,6 +14,7 @@ client = AerospikeC::Client.new("127.0.0.1", 3000)
 
 ### API Reference
 
+- [AerospikeC module](#aerospike_c)
 - [Client class](client.md)
 - [Key class](key.md)
 - [Record class](record.md)
@@ -29,3 +30,62 @@ client = AerospikeC::Client.new("127.0.0.1", 3000)
 - [GeoJson class](geo_json.md)
 - [PasswordEngine class](password_engine.md)
 - [Password class](password.md)
+
+
+<a name="aerospike_c"></a>
+
+# AerospikeC module
+
+[Methods](#methods):
+  - [#encoding](#encoding)
+  - [#encoding=](#encoding=)
+
+
+
+<!--===============================================================================-->
+<hr/>
+<!-- encoding -->
+<a name="encoding"></a>
+
+### encoding
+
+Get current global encoding
+
+Example:
+
+```ruby
+AerospikeC.encoding # => nil
+AerospikeC.encoding = 'UTF-8'
+AerospikeC.encoding # => 'UTF-8'
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- encoding= -->
+<a name="encoding="></a>
+
+### encoding=(value)
+
+Set global encoding, this will be used to encode all string returned from aerospike
+
+Return value
+
+Example from examples/utf8.rb:
+
+```ruby
+bins = {
+  "title" => "Tytuł",
+  "content" => "Jaskółka",
+}
+client.put(key, bins)
+
+puts AerospikeC.encoding.inspect # => nil
+puts client.get(key) # => {"title"=>"Tytu\xC5\x82", "content"=>"Jask\xC3\xB3\xC5\x82ka"}
+
+puts "------------------"
+AerospikeC.encoding = 'UTF-8'
+
+puts AerospikeC.encoding.inspect # => "UTF-8"
+
+puts client.get(key) # {"title"=>"Tytuł", "content"=>"Jaskółka"}
+```

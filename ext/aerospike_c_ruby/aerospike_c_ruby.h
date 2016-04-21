@@ -130,7 +130,7 @@
 ;
 
 #define as_val_int_2_val(val) LONG2FIX( as_integer_get( as_integer_fromval(val) ) )         //(int)    as_val * -> VALUE
-#define as_val_str_2_val(val) rb_str_new2( as_string_tostring( as_string_fromval(val) ) )   //(string) as_val * -> VALUE
+#define as_val_str_2_val(val) check_and_force_encoding( rb_str_new2( as_string_tostring( as_string_fromval(val))))   //(string) as_val * -> VALUE
 #define as_val_dbl_2_val(val) rb_float_new( as_double_get( as_double_fromval(val) ) )       //(double) as_val * -> VALUE
 #define rb_ary_len_int(ary) FIX2INT( rb_funcall(ary, rb_intern("length"), 0) )              //(int)    VALUE -> int
 #define rb_ary_len_long(ary) FIX2LONG( rb_funcall(ary, rb_intern("length"), 0) )            //(long)   VALUE -> long
@@ -259,6 +259,8 @@ as_record * rb_copy_as_record(as_record * record);
 as_operations * rb_operations2as_operations(VALUE operations);
 as_bytes * rb_obj_to_as_bytes(VALUE obj);
 VALUE as_bytes_to_rb_obj(as_bytes * bytes);
+
+VALUE check_and_force_encoding(VALUE str);
 
 // ---------------------------------------------------
 //

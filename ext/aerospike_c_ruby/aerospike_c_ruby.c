@@ -15,6 +15,14 @@
 
 VALUE rb_aero_AerospikeC;
 
+VALUE get_encoding(VALUE self) {
+  return rb_iv_get(rb_aero_AerospikeC, "@encoding");
+}
+
+VALUE set_encoding(VALUE self, VALUE encoding) {
+  return rb_iv_set(rb_aero_AerospikeC, "@encoding", encoding);
+}
+
 // ----------------------------------------------------------------------------------
 // Init
 //
@@ -23,6 +31,11 @@ void Init_aerospike_c_ruby() {
 
   rb_define_const(rb_aero_AerospikeC, "VERSION", rb_str_new2("0.2.0"));
   rb_define_const(rb_aero_AerospikeC, "C_CLIENT_VERSION", rb_str_new2("3.1.24"));
+
+  rb_iv_set(rb_aero_AerospikeC, "@encoding", Qnil);
+
+  rb_define_singleton_method(rb_aero_AerospikeC, "encoding", get_encoding, 0);
+  rb_define_singleton_method(rb_aero_AerospikeC, "encoding=", set_encoding, 1);
 
   init_aerospike_c_client(rb_aero_AerospikeC);
   init_aerospike_c_key(rb_aero_AerospikeC);
