@@ -31,12 +31,13 @@ static char * arg_to_cstr(VALUE key) {
 //
 static void key_deallocate(as_key * key) {
   as_key_destroy(key);
-  xfree(key);
 }
 
 static VALUE key_allocate(VALUE self) {
-  as_key * k = (as_key *) ruby_xmalloc ( sizeof(as_key) );
+  as_key * k = (as_key *) malloc ( sizeof(as_key) );
   if (! k) rb_raise(rb_aero_MemoryError, "[AerospikeC::Key][initialize] Error while allocating memory for aerospike key");
+
+  k->_free = true;
 
   return Data_Wrap_Struct(self, NULL, key_deallocate, k);
 }

@@ -21,7 +21,7 @@ pthread_mutex_t G_CALLBACK_MUTEX = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 // client allocate
 //
 static VALUE client_allocate(VALUE self) {
-  aerospike * as = (aerospike *) ruby_xmalloc ( sizeof(aerospike) );
+  aerospike * as = (aerospike *) malloc ( sizeof(aerospike) );
 
   return Data_Wrap_Struct(self, NULL, client_deallocate, as);
 }

@@ -14,11 +14,11 @@ static VALUE bin_val(VALUE self) {
 //
 static void rec_deallocate(as_record * rec) {
   as_record_destroy(rec);
-  xfree(rec);
+  free(rec);
 }
 
 static VALUE rec_allocate(VALUE self) {
-  as_record * rec = (as_record *) ruby_xmalloc( sizeof(as_record) );
+  as_record * rec = (as_record *) malloc( sizeof(as_record) );
   if (! rec) rb_raise(rb_aero_MemoryError, "[AerospikeC::Record][initialize] Error while allocating memory for aerospike record");
 
   return Data_Wrap_Struct(self, NULL, rec_deallocate, rec);

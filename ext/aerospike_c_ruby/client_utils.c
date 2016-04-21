@@ -6,7 +6,6 @@
 //
 void client_deallocate(aerospike * as) {
   aerospike_destroy(as);
-  xfree(as);
 }
 
 // ----------------------------------------------------------------------------------

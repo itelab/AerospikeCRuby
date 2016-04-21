@@ -14,11 +14,11 @@ VALUE rb_aero_GeoJson;
 //
 static void geo_json_deallocate(as_geojson * key) {
   as_geojson_destroy(key);
-  xfree(key);
+  free(key);
 }
 
 static VALUE geo_json_allocate(VALUE self) {
-  as_geojson * geo = (as_geojson *) ruby_xmalloc ( sizeof(as_geojson) );
+  as_geojson * geo = (as_geojson *) malloc ( sizeof(as_geojson) );
   if (! geo) rb_raise(rb_aero_MemoryError, "[AerospikeC::GeoJson][initialize] Error while allocating memory for aerospike geo_json");
 
   return Data_Wrap_Struct(self, NULL, geo_json_deallocate, geo);
