@@ -29,4 +29,14 @@ AerospikeC::GeoJson.class_eval do
       raise NotImplementedError
     end
   end
+
+
+  #----------------------------------------------------------------------------
+  ## @brief      to array
+  ##
+  ## @return     [lng, lat]
+  ##
+  def to_a
+    [lng, lat]
+  end
 end
