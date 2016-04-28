@@ -220,7 +220,22 @@ void set_query_result_and_destroy(query_list * args) {
     query_item * item = it;
 
     if ( item->rec != NULL ) {
-      rb_ary_push(args->result, record2hash(item->rec));
+      VALUE hash = record2hash(item->rec);
+
+      if ( args->with_header == true ) {
+        VALUE header_hash = rb_hash_new();
+        rb_hash_aset(header_hash, rb_str_new2("gen"), INT2FIX(item->rec->gen));
+        rb_hash_aset(header_hash, rb_str_new2("expire_in"), INT2FIX(item->rec->ttl));
+
+        if ( rb_hash_aref(hash, rb_str_new2("header")) != Qnil ) {
+          rb_hash_aset(hash, rb_str_new2("record_header"), header_hash);
+        }
+        else {
+          rb_hash_aset(hash, rb_str_new2("header"), header_hash);
+        }
+      }
+
+      rb_ary_push(args->result, hash);
       as_record_destroy(item->rec);
     }
 

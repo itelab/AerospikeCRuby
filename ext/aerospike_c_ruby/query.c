@@ -236,6 +236,32 @@ static VALUE query_info(VALUE self) {
   }
 }
 
+
+/**
+ * @brief      Set @with_header
+ *
+ * @param[in]  self  The object.
+ * @param[in]  val   value to set
+ *
+ * @return     self
+ */
+static VALUE set_with_header(VALUE self, VALUE val) {
+  rb_iv_set(self, "@with_header", val);
+
+  return self;
+}
+
+/**
+ * @brief      Get the with header.
+ *
+ * @param[in]  self  The object.
+ *
+ * @return     @with_header
+ */
+static VALUE get_with_header(VALUE self) {
+  return rb_iv_get(self, "@with_header");
+}
+
 // ----------------------------------------------------------------------------------
 // Init
 //
@@ -259,6 +285,8 @@ void init_aerospike_c_query(VALUE AerospikeC) {
   rb_define_method(rb_aero_Query, "bins<<", RB_FN_ANY()add_bin, 1);
   rb_define_method(rb_aero_Query, "policy=", RB_FN_ANY()set_policy, 1);
   rb_define_method(rb_aero_Query, "query_info", RB_FN_ANY()query_info, 0);
+  rb_define_method(rb_aero_Query, "with_header!", RB_FN_ANY()set_with_header, 1);
+  rb_define_method(rb_aero_Query, "with_header", RB_FN_ANY()get_with_header, 0);
 
   //
   // attr_accessor

@@ -19,6 +19,7 @@ typedef struct query_list_s {
   as_arraylist *                    args;
   query_item *                      query_data;
   VALUE                             result;
+  bool                              with_header;
 } query_list;
 
 typedef struct scan_method_options_s {

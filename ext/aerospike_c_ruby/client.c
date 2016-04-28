@@ -1462,12 +1462,17 @@ static VALUE execute_query(VALUE self, VALUE query_obj) {
 
   query_list q_args;
 
-  q_args.as         = as;
-  q_args.policy     = policy;
-  q_args.query      = query;
-  q_args.query_data = query_data;
-  q_args.callback   = execute_query_callback;
-  q_args.result     = rb_ary_new();
+  q_args.as          = as;
+  q_args.policy      = policy;
+  q_args.query       = query;
+  q_args.query_data  = query_data;
+  q_args.callback    = execute_query_callback;
+  q_args.result      = rb_ary_new();
+  q_args.with_header = false;
+
+  if ( rb_funcall(query_obj, rb_intern("with_header"), 0) == Qtrue ) {
+    q_args.with_header = true;
+  }
 
   VALUE result = rb_ensure(execute_query_begin, (VALUE)(&q_args), execute_query_ensure, (VALUE)(&q_args));
 

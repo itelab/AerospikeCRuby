@@ -51,7 +51,7 @@ def build_data(client)
       other_bin2: [1, 2, "three"]
     }
 
-    client.put(key, bins)
+    client.put(key, bins, ttl: 20)
     i += 1
   end
 end
@@ -64,6 +64,12 @@ build_data(client)
 # query
 #
 puts "\nquery range int_bin 1,5:"
+recs = client.query(q_range)
+puts recs.inspect
+
+puts "\n-----------------------------\n"
+puts "\nquery range int_bin 1,5 with header:"
+q_range.with_header!(true)
 recs = client.query(q_range)
 puts recs.inspect
 

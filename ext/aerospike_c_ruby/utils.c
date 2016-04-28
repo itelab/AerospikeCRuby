@@ -1194,6 +1194,9 @@ as_record * rb_copy_as_record(as_record * record) {
   as_record_iterator it;
   as_record_iterator_init(&it, record);
 
+  new_record->gen = record->gen;
+  new_record->ttl = record->ttl;
+
   while ( as_record_iterator_has_next(&it) ) {
     as_bin * bin = as_record_iterator_next(&it);
     char *   name = as_bin_get_name(bin);
