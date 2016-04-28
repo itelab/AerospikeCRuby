@@ -311,7 +311,6 @@ static VALUE delete_record(int argc, VALUE * argv, VALUE self) {
 //    1. true if no errors
 //
 static VALUE set_logger(VALUE self, VALUE logger) {
-  log_info("[Client] Setting logger object");
   rb_aero_Logger = logger;
   return Qtrue;
 }
@@ -360,11 +359,10 @@ static VALUE key_exists(int argc, VALUE * argv, VALUE self) {
 
     raise_as_error(err);
   }
-  else {
-    as_record_destroy(rec);
-    log_info_with_time_v("[Client][exists?] success - true", &tm, rb_aero_KEY_INFO);
-    return Qtrue;
-  }
+
+  as_record_destroy(rec);
+  log_info_with_time_v("[Client][exists?] success - true", &tm, rb_aero_KEY_INFO);
+  return Qtrue;
 }
 
 // ----------------------------------------------------------------------------------
@@ -594,12 +592,13 @@ static VALUE touch(int argc, VALUE * argv, VALUE self) {
   as_policy_operate * policy = get_policy(options);
 
   if ( ( status = aerospike_key_operate(as, &err, policy, k, &ops, &rec) ) != AEROSPIKE_OK ) {
+    as_operations_destroy(&ops);
+
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
       log_warn("[Client][touch] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
 
-    as_operations_destroy(&ops);
     raise_as_error(err);
   }
 
@@ -664,12 +663,12 @@ static VALUE operate(int argc, VALUE * argv, VALUE self) {
   as_policy_operate * policy = get_policy(options);
 
   if ( ( status = aerospike_key_operate(as, &err, policy, k, ops, &rec) ) != AEROSPIKE_OK ) {
+    as_operations_destroy(ops);
+
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
       log_warn("[Client][operate] AEROSPIKE_ERR_RECORD_NOT_FOUND");
       return Qnil;
     }
-
-    as_operations_destroy(&ops);
     raise_as_error(err);
   }
 
