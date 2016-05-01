@@ -187,9 +187,9 @@ void log_warn  (const char * msg);
 void log_error (const char * msg);
 void log_fatal (const char * msg);
 
-void log_info_with_time(const char * msg, struct timeval * tm);
-void log_info_with_time_v(const char * msg, struct timeval * tm, VALUE val);
-void log_info_with_time_v2(const char * msg, struct timeval * tm, VALUE val, VALUE val2);
+void log_debug_with_time(const char * msg, struct timeval * tm);
+void log_debug_with_time_v(const char * msg, struct timeval * tm, VALUE val);
+void log_debug_with_time_v2(const char * msg, struct timeval * tm, VALUE val, VALUE val2);
 
 void start_timing(struct timeval * tm);
 

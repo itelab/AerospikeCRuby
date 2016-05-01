@@ -84,7 +84,7 @@ void log_fatal(const char * msg) {
   rb_funcall(rb_aero_Logger, rb_intern("fatal"), 1, rb_msg);
 }
 
-void log_info_with_time(const char * msg, struct timeval * tm) {
+void log_debug_with_time(const char * msg, struct timeval * tm) {
   if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;
 
   struct timeval tm2;
@@ -96,10 +96,10 @@ void log_info_with_time(const char * msg, struct timeval * tm) {
   switch_color_code();
 
   VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s (%.4f ms)\e[0m \e[1m%s\e[0m", color_code, "<AerospikeC>", elapsedTime, msg);
-  rb_funcall(rb_aero_Logger, rb_intern("info"), 1, rb_msg);
+  rb_funcall(rb_aero_Logger, rb_intern("debug"), 1, rb_msg);
 }
 
-void log_info_with_time_v(const char * msg, struct timeval * tm, VALUE val) {
+void log_debug_with_time_v(const char * msg, struct timeval * tm, VALUE val) {
   if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;
 
   struct timeval tm2;
@@ -111,10 +111,10 @@ void log_info_with_time_v(const char * msg, struct timeval * tm, VALUE val) {
   switch_color_code();
 
   VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s (%.4f ms)\e[0m \e[1m%s, %"PRIsVALUE"\e[0m", color_code, "<AerospikeC>", elapsedTime, msg, val);
-  rb_funcall(rb_aero_Logger, rb_intern("info"), 1, rb_msg);
+  rb_funcall(rb_aero_Logger, rb_intern("debug"), 1, rb_msg);
 }
 
-void log_info_with_time_v2(const char * msg, struct timeval * tm, VALUE val, VALUE val2) {
+void log_debug_with_time_v2(const char * msg, struct timeval * tm, VALUE val, VALUE val2) {
   if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;
 
   struct timeval tm2;
@@ -126,7 +126,7 @@ void log_info_with_time_v2(const char * msg, struct timeval * tm, VALUE val, VAL
   switch_color_code();
 
   VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s (%.4f ms)\e[0m \e[1m%s, %"PRIsVALUE", %"PRIsVALUE"\e[0m", color_code, "<AerospikeC>", elapsedTime, msg, val, val2);
-  rb_funcall(rb_aero_Logger, rb_intern("info"), 1, rb_msg);
+  rb_funcall(rb_aero_Logger, rb_intern("debug"), 1, rb_msg);
 }
 
 void start_timing(struct timeval * tm) {
