@@ -209,8 +209,8 @@ VALUE record2hash(as_record * rec) {
 //
 // convert ruby hash and save its value to record
 //
-void hash2record(VALUE hash, VALUE rec) {
-  rb_hash_foreach(hash, foreach_hash2record, rec);
+void hash2record(VALUE hash, as_record * rec) {
+  rb_hash_foreach(hash, foreach_hash2record, (VALUE)rec);
   // log_debug("Converted ruby hash into as_record");
 }
 
@@ -306,8 +306,7 @@ static int foreach_hash2record(VALUE key, VALUE val, VALUE record) {
   as_arraylist * tmp_list;
   as_hashmap * tmp_map;
 
-  as_record * rec;
-  Data_Get_Struct(record, as_record, rec);
+  as_record * rec = (as_record *)record;
 
   switch ( TYPE(val) ) { // set bin_name = val dependent on type
     case T_NIL:

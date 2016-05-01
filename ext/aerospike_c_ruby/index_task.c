@@ -55,7 +55,7 @@ static VALUE wait_till_completed(int argc, VALUE * argv, VALUE self) {
 
   rb_iv_set(self, "@done", bool2rb_bool(itask->done));
 
-  log_info("[IndexTask][wait_till_completed] success");
+  log_debug("[IndexTask][wait_till_completed] success");
 
   return Qtrue;
 }

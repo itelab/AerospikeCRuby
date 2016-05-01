@@ -54,7 +54,7 @@ static VALUE wait_till_completed(int argc, VALUE * argv, VALUE self) {
   }
 
   rb_iv_set(self, "@done", Qtrue);
-  log_info_with_time("[QueryTask][wait_till_completed] success", &tm);
+  log_debug_with_time("[QueryTask][wait_till_completed] success", &tm);
 
   return rb_iv_get(self, "@done");
 }

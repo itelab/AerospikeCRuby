@@ -94,7 +94,6 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
 
   as_status status;
   as_error err;
-  as_record * rec = NULL;
   aerospike * as  = rb_aero_CLIENT;
 
   VALUE key;
@@ -116,23 +115,20 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
 
   }
 
-  VALUE new_rec;
+  long len = rb_ary_len_long(hash);
 
-  if ( TYPE(hash) == T_HASH ) {
-    new_rec = rb_funcall(rb_aero_Record, rb_intern("new"), 1, hash);
-  }
-  else {
-    new_rec = hash;
-  }
+  as_record rec;
+  as_record_init(&rec, len);
+
+  hash2record(hash, &rec);
 
   as_key * k = rb_aero_KEY;
   as_policy_write * policy = get_policy(options);
 
-  rec = get_record_struct(new_rec);
-  rec->ttl = FIX2INT( rb_hash_aref(options, ttl_sym) );
+  rec.ttl = FIX2INT( rb_hash_aref(options, ttl_sym) );
 
-  if ( ( status = aerospike_key_put(as, &err, policy, k, rec) ) != AEROSPIKE_OK) {
-    as_record_destroy(rec);
+  if ( ( status = aerospike_key_put(as, &err, policy, k, &rec) ) != AEROSPIKE_OK) {
+    as_record_destroy(&rec);
 
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
       log_warn("[Client][put] AEROSPIKE_ERR_RECORD_NOT_FOUND");
@@ -142,7 +138,7 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
     raise_as_error(err);
   }
 
-  as_record_destroy(rec);
+  as_record_destroy(&rec);
 
   log_debug_with_time_v("[Client][put] success", &tm, rb_aero_KEY_INFO);
 

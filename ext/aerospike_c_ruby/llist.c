@@ -154,7 +154,7 @@ static VALUE llist_add(int argc, VALUE * argv, VALUE self) {
 
   add_llist_status_bins_workaround(rb_iv_get(self, "@client"), rb_iv_get(self, "@key"), rb_iv_get(self, "@bin_name"));
 
-  log_info_with_time_v("[Llist][add] success", &tm, value);
+  log_debug_with_time_v("[Llist][add] success", &tm, value);
 
   return Qtrue;
 }
@@ -199,7 +199,7 @@ static VALUE llist_add_all(int argc, VALUE * argv, VALUE self) {
 
   add_llist_status_bins_workaround(rb_iv_get(self, "@client"), rb_iv_get(self, "@key"), rb_iv_get(self, "@bin_name"));
 
-  log_info_with_time("[LList][add_all] success", &tm);
+  log_debug_with_time("[LList][add_all] success", &tm);
 
   return Qtrue;
 }
@@ -241,7 +241,7 @@ static VALUE llist_update(int argc, VALUE * argv, VALUE self) {
 
   as_val_free(val);
 
-  log_info_with_time_v("[LList][update] success", &tm, value);
+  log_debug_with_time_v("[LList][update] success", &tm, value);
 
   return Qtrue;
 }
@@ -284,7 +284,7 @@ static VALUE llist_update_all(int argc, VALUE * argv, VALUE self) {
 
   as_arraylist_destroy(vals);
 
-  log_info_with_time("[LList][update_all] success", &tm);
+  log_debug_with_time("[LList][update_all] success", &tm);
 
   return Qtrue;
 }
@@ -326,7 +326,7 @@ static VALUE llist_scan(int argc, VALUE * argv, VALUE self) {
 
   as_arraylist_destroy(result_list);
 
-  log_info_with_time("[LList][scan] success", &tm);
+  log_debug_with_time("[LList][scan] success", &tm);
 
   return result;
 }
@@ -373,7 +373,7 @@ static VALUE llist_delete(int argc, VALUE * argv, VALUE self) {
 
   as_val_free(val);
 
-  log_info_with_time_v("[LList][delete] success", &tm, value);
+  log_debug_with_time_v("[LList][delete] success", &tm, value);
 
   return Qtrue;
 }
@@ -425,7 +425,7 @@ static VALUE llist_find(int argc, VALUE * argv, VALUE self) {
   as_val_free(val);
   as_arraylist_destroy(result_list);
 
-  log_info_with_time_v("[LList][find] success", &tm, value);
+  log_debug_with_time_v("[LList][find] success", &tm, value);
 
   return rb_ary_entry(result, 0);
 }
@@ -476,7 +476,7 @@ static VALUE llist_find_first(int argc, VALUE * argv, VALUE self) {
 
   as_arraylist_destroy(result_list);
 
-  log_info_with_time_v("[LList][find_first] success", &tm, count);
+  log_debug_with_time_v("[LList][find_first] success", &tm, count);
 
   return result;
 }
@@ -541,7 +541,7 @@ static VALUE llist_find_last(int argc, VALUE * argv, VALUE self) {
 
   as_arraylist_destroy(result_list);
 
-  log_info_with_time_v("[LList][find_last] success", &tm, count);
+  log_debug_with_time_v("[LList][find_last] success", &tm, count);
 
   return result;
 }
@@ -611,7 +611,7 @@ static VALUE llist_find_from(int argc, VALUE * argv, VALUE self) {
   as_val_free(val);
   as_arraylist_destroy(result_list);
 
-  log_info_with_time_v2("[LList][find_from] success", &tm, value, count);
+  log_debug_with_time_v2("[LList][find_from] success", &tm, value, count);
 
   return result;
 }
@@ -649,7 +649,7 @@ static VALUE llist_size(int argc, VALUE * argv, VALUE self) {
     raise_as_error(err);
   }
 
-  log_info_with_time("[LList][size] success", &tm);
+  log_debug_with_time("[LList][size] success", &tm);
 
   return LONG2FIX(llist_size);
 }

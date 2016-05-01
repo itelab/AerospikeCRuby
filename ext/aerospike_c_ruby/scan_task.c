@@ -75,7 +75,7 @@ static VALUE check_status(VALUE self) {
   rb_hash_aset(status, rb_str_new2("status_id"), stat_id);
   rb_hash_aset(status, rb_str_new2("progress"), prog);
 
-  log_info_with_time("[ScanTask][check_status] success", &tm);
+  log_debug_with_time("[ScanTask][check_status] success", &tm);
 
   return status;
 }

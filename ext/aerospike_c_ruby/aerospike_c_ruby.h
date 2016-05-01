@@ -201,7 +201,7 @@ as_geojson * get_geo_json_struct(VALUE rb_geo);
 void raise_as_err(as_error err);
 
 VALUE record2hash(as_record * rec);
-void  hash2record(VALUE hash, VALUE rec);
+void  hash2record(VALUE hash, as_record * rec);
 
 as_arraylist * array2as_list(VALUE ary);
 VALUE          as_list2array(as_arraylist * list);
