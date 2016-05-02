@@ -88,6 +88,20 @@ client = AerospikeC::Client.new("127.0.0.1", 3000)
 key = AerospikeC::Key.new("test", "test", "test")
 
 #
+# some test class
+#
+class Person
+  def initialize
+    @name = "Rocky"
+    @surname = "Balboa"
+  end
+
+  def hello
+    "Hello my name is #{@name} #{@surname}"
+  end
+end
+
+#
 # chose bins to save
 #
 bins = {
@@ -102,7 +116,9 @@ bins = {
       "hash_nested_int" => 5,
       "hash_nested_sting" => "hash_nested_string"
     }
-  }
+  },
+
+  obj: Person.new,
 }
 
 #
@@ -114,6 +130,9 @@ client.put(key, bins)
 # get bins from the cluster
 #
 rec_bins = client.get(key)
+
+puts rec_bins["bin_string"] # => "string"
+puts rec_bins["obj"].hello  # => "Hello my name is Rocky Balboa"
 
 #
 # update
