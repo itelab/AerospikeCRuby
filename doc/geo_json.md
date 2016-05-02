@@ -18,6 +18,8 @@ With a new [AerospikeC::GeoJson](geo_json.md), you can use any of the methods sp
   - [#point?](#point?)
   - [#polygon?](#polygon?)
   - [#circle?](#circle?)
+  - [#lat](#lat)
+  - [#lng](#lng)
 
 - [Class Methods](#class_methods)
   - [#point](#point)
@@ -74,6 +76,8 @@ geo.json # => {"type":"Point", "coordinates":[0.0, 0.0]}
 <a name="coordinates"></a>
 
 ### coordinates
+
+`alias: to_a`
 
 Retruns instance `coordinates`
 
@@ -165,6 +169,42 @@ circle.circle? # => true
 
 geo = AerospikeC::GeoJson.new({type:"Point", coordinates: [0.0, 0.0]})
 geo.circle? # => false
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- lat -->
+<a name="lat"></a>
+
+### lat
+
+Latitude value for point
+
+Example:
+
+```ruby
+point = AerospikeC::GeoJson.point([11.23234, 55.53453])
+# => #<AerospikeC::GeoJson {"type"=>"Point", "coordinates"=>[11.23234, 55.53453]}>
+
+point.lat # => 55.53453
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- lng -->
+<a name="lng"></a>
+
+### lng
+
+Longitude value for point
+
+Example:
+
+```ruby
+point = AerospikeC::GeoJson.point([11.23234, 55.53453])
+# => #<AerospikeC::GeoJson {"type"=>"Point", "coordinates"=>[11.23234, 55.53453]}>
+
+point.lng # => 11.23234
 ```
 
 

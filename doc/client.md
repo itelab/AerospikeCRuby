@@ -154,7 +154,7 @@ Adding record to the cluster. Creates [AerospikeC::Record](record.md) object, in
 Parameters:
 
 - `key`  - [AerospikeC::Key](key.md) object
-- `bins` - either hash or [AerospikeC::Record](record.md) object
+- `bins` - ruby Hash
 - `options:`
 
   - `:ttl` - time to live record (default: 0, which means server will use namespace default)

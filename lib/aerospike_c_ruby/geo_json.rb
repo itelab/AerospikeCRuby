@@ -37,6 +37,6 @@ AerospikeC::GeoJson.class_eval do
   ## @return     [lng, lat]
   ##
   def to_a
-    [lng, lat]
+    coordinates
   end
 end

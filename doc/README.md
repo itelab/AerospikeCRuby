@@ -17,7 +17,7 @@ client = AerospikeC::Client.new("127.0.0.1", 3000)
 - [AerospikeC module](#aerospike_c)
 - [Client class](client.md)
 - [Key class](key.md)
-- [Record class](record.md)
+- [Record class (deprecated)](record.md)
 - [Operation class](operation.md)
 - [Query class](query.md)
 - [IndexTask class](index_task.md)
@@ -39,7 +39,8 @@ client = AerospikeC::Client.new("127.0.0.1", 3000)
 [Methods](#methods):
   - [#encoding](#encoding)
   - [#encoding=](#encoding=)
-
+  - [#logger](#logger)
+  - [#logger=](#logger=)
 
 
 <!--===============================================================================-->
@@ -89,3 +90,22 @@ puts AerospikeC.encoding.inspect # => "UTF-8"
 
 puts client.get(key) # {"title"=>"Tytuł", "content"=>"Jaskółka"}
 ```
+
+<!--===============================================================================-->
+<hr/>
+<!-- logger= -->
+<a name="logger="></a>
+
+### logger=(log)
+
+Setting global logger. AerospikeCRuby supports only global logger. This may change in the future into per client ones
+
+
+<!--===============================================================================-->
+<hr/>
+<!-- logger -->
+<a name="logger"></a>
+
+### logger
+
+Getting global logger. AerospikeCRuby supports only global logger. This may change in the future into per client ones
