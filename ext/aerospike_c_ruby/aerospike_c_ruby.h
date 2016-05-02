@@ -181,15 +181,9 @@ void index_task_deallocate(as_index_task * task);
 bool rb_aero_log_callback(
     as_log_level level, const char * func, const char * file, uint32_t line,
     const char * fmt, ...);
-void log_debug (const char * msg);
-void log_info  (const char * msg);
-void log_warn  (const char * msg);
-void log_error (const char * msg);
-void log_fatal (const char * msg);
 
-void log_debug_with_time(const char * msg, struct timeval * tm);
-void log_debug_with_time_v(const char * msg, struct timeval * tm, VALUE val);
-void log_debug_with_time_v2(const char * msg, struct timeval * tm, VALUE val, VALUE val2);
+bool rb_aero_logger(as_log_level level, struct timeval * tm, int args, ...);
+
 
 void start_timing(struct timeval * tm);
 

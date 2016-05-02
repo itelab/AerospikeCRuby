@@ -143,7 +143,7 @@ static VALUE llist_add(int argc, VALUE * argv, VALUE self) {
     as_val_free(val);
 
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[LList][add] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      rb_aero_logger(AS_LOG_LEVEL_WARN, &tm, 1, rb_str_new2("[LList][add] AEROSPIKE_ERR_RECORD_NOT_FOUND"));
       return Qnil;
     }
 
@@ -154,7 +154,7 @@ static VALUE llist_add(int argc, VALUE * argv, VALUE self) {
 
   add_llist_status_bins_workaround(rb_iv_get(self, "@client"), rb_iv_get(self, "@key"), rb_iv_get(self, "@bin_name"));
 
-  log_debug_with_time_v("[Llist][add] success", &tm, value);
+  rb_aero_logger(AS_LOG_LEVEL_DEBUG, &tm, 2, rb_str_new2("[LList][add] success"), value);
 
   return Qtrue;
 }
@@ -188,7 +188,7 @@ static VALUE llist_add_all(int argc, VALUE * argv, VALUE self) {
     as_arraylist_destroy(vals);
 
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[LList][add_all] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      rb_aero_logger(AS_LOG_LEVEL_WARN, &tm, 1, rb_str_new2("[LList][add_all] AEROSPIKE_ERR_RECORD_NOT_FOUND"));
       return Qnil;
     }
 
@@ -199,7 +199,7 @@ static VALUE llist_add_all(int argc, VALUE * argv, VALUE self) {
 
   add_llist_status_bins_workaround(rb_iv_get(self, "@client"), rb_iv_get(self, "@key"), rb_iv_get(self, "@bin_name"));
 
-  log_debug_with_time("[LList][add_all] success", &tm);
+  rb_aero_logger(AS_LOG_LEVEL_DEBUG, &tm, 1, rb_str_new2("[LList][add_all] success"));
 
   return Qtrue;
 }
@@ -232,7 +232,7 @@ static VALUE llist_update(int argc, VALUE * argv, VALUE self) {
     as_val_free(val);
 
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[LList][update] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      rb_aero_logger(AS_LOG_LEVEL_WARN, &tm, 1, rb_str_new2("[LList][update] AEROSPIKE_ERR_RECORD_NOT_FOUND"));
       return Qnil;
     }
 
@@ -241,7 +241,7 @@ static VALUE llist_update(int argc, VALUE * argv, VALUE self) {
 
   as_val_free(val);
 
-  log_debug_with_time_v("[LList][update] success", &tm, value);
+  rb_aero_logger(AS_LOG_LEVEL_DEBUG, &tm, 2, rb_str_new2("[LList][update] success"), value);
 
   return Qtrue;
 }
@@ -275,7 +275,7 @@ static VALUE llist_update_all(int argc, VALUE * argv, VALUE self) {
     as_arraylist_destroy(vals);
 
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[LList][update_all] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      rb_aero_logger(AS_LOG_LEVEL_WARN, &tm, 1, rb_str_new2("[LList][update_all] AEROSPIKE_ERR_RECORD_NOT_FOUND"));
       return Qnil;
     }
 
@@ -284,7 +284,7 @@ static VALUE llist_update_all(int argc, VALUE * argv, VALUE self) {
 
   as_arraylist_destroy(vals);
 
-  log_debug_with_time("[LList][update_all] success", &tm);
+  rb_aero_logger(AS_LOG_LEVEL_DEBUG, &tm, 1, rb_str_new2("[LList][update_all] success"));
 
   return Qtrue;
 }
@@ -315,7 +315,7 @@ static VALUE llist_scan(int argc, VALUE * argv, VALUE self) {
 
   if ( ( status = aerospike_llist_scan(as, &err, policy, key, llist, &result_list) ) != AEROSPIKE_OK ) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[LList][scan] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      rb_aero_logger(AS_LOG_LEVEL_WARN, &tm, 1, rb_str_new2("[LList][scan] AEROSPIKE_ERR_RECORD_NOT_FOUND"));
       return Qnil;
     }
 
@@ -326,7 +326,7 @@ static VALUE llist_scan(int argc, VALUE * argv, VALUE self) {
 
   as_arraylist_destroy(result_list);
 
-  log_debug_with_time("[LList][scan] success", &tm);
+  rb_aero_logger(AS_LOG_LEVEL_DEBUG, &tm, 1, rb_str_new2("[LList][scan] success"));
 
   return result;
 }
@@ -359,12 +359,12 @@ static VALUE llist_delete(int argc, VALUE * argv, VALUE self) {
     as_val_free(val);
 
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[LList][delete] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      rb_aero_logger(AS_LOG_LEVEL_WARN, &tm, 1, rb_str_new2("[LList][delete] AEROSPIKE_ERR_RECORD_NOT_FOUND"));
       return Qnil;
     }
 
     if ( status == AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND ) {
-      log_warn("[LList][delete] AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND");
+      rb_aero_logger(AS_LOG_LEVEL_WARN, &tm, 1, rb_str_new2("[LList][delete] AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND"));
       return Qnil;
     }
 
@@ -373,7 +373,7 @@ static VALUE llist_delete(int argc, VALUE * argv, VALUE self) {
 
   as_val_free(val);
 
-  log_debug_with_time_v("[LList][delete] success", &tm, value);
+  rb_aero_logger(AS_LOG_LEVEL_DEBUG, &tm, 2, rb_str_new2("[LList][delete] success"), value);
 
   return Qtrue;
 }
@@ -408,12 +408,12 @@ static VALUE llist_find(int argc, VALUE * argv, VALUE self) {
     as_val_free(val);
 
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[LList][find] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      rb_aero_logger(AS_LOG_LEVEL_WARN, &tm, 1, rb_str_new2("[LList][find] AEROSPIKE_ERR_RECORD_NOT_FOUND"));
       return Qnil;
     }
 
     if ( status == AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND ) {
-      log_warn("[LList][find] AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND");
+      rb_aero_logger(AS_LOG_LEVEL_WARN, &tm, 1, rb_str_new2("[LList][find] AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND"));
       return Qnil;
     }
 
@@ -425,7 +425,7 @@ static VALUE llist_find(int argc, VALUE * argv, VALUE self) {
   as_val_free(val);
   as_arraylist_destroy(result_list);
 
-  log_debug_with_time_v("[LList][find] success", &tm, value);
+  rb_aero_logger(AS_LOG_LEVEL_DEBUG, &tm, 2, rb_str_new2("[LList][find] success"), value);
 
   return rb_ary_entry(result, 0);
 }
@@ -460,12 +460,12 @@ static VALUE llist_find_first(int argc, VALUE * argv, VALUE self) {
 
   if ( ( status = aerospike_llist_find_first(as, &err, policy, key, llist, FIX2LONG(count), &result_list) ) != AEROSPIKE_OK ) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[LList][find_first] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      rb_aero_logger(AS_LOG_LEVEL_WARN, &tm, 1, rb_str_new2("[LList][find_first] AEROSPIKE_ERR_RECORD_NOT_FOUND"));
       return Qnil;
     }
 
     if ( status == AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND ) {
-      log_warn("[LList][find_first] AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND");
+      rb_aero_logger(AS_LOG_LEVEL_WARN, &tm, 1, rb_str_new2("[LList][find_first] AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND"));
       return Qnil;
     }
 
@@ -476,7 +476,7 @@ static VALUE llist_find_first(int argc, VALUE * argv, VALUE self) {
 
   as_arraylist_destroy(result_list);
 
-  log_debug_with_time_v("[LList][find_first] success", &tm, count);
+  rb_aero_logger(AS_LOG_LEVEL_DEBUG, &tm, 2, rb_str_new2("[LList][find_first] success"), count);
 
   return result;
 }
@@ -525,12 +525,12 @@ static VALUE llist_find_last(int argc, VALUE * argv, VALUE self) {
 
   if ( ( status = aerospike_llist_find_last(as, &err, policy, key, llist, FIX2LONG(count), &result_list) ) != AEROSPIKE_OK ) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[LList][find_last] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      rb_aero_logger(AS_LOG_LEVEL_WARN, &tm, 1, rb_str_new2("[LList][find_last] AEROSPIKE_ERR_RECORD_NOT_FOUND"));
       return Qnil;
     }
 
     if ( status == AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND ) {
-      log_warn("[LList][find_last] AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND");
+      rb_aero_logger(AS_LOG_LEVEL_WARN, &tm, 1, rb_str_new2("[LList][find_last] AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND"));
       return Qnil;
     }
 
@@ -541,7 +541,7 @@ static VALUE llist_find_last(int argc, VALUE * argv, VALUE self) {
 
   as_arraylist_destroy(result_list);
 
-  log_debug_with_time_v("[LList][find_last] success", &tm, count);
+  rb_aero_logger(AS_LOG_LEVEL_DEBUG, &tm, 2, rb_str_new2("[LList][find_last] success"), count);
 
   return result;
 }
@@ -594,12 +594,12 @@ static VALUE llist_find_from(int argc, VALUE * argv, VALUE self) {
     as_val_free(val);
 
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[LList][find_from] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      rb_aero_logger(AS_LOG_LEVEL_WARN, &tm, 1, rb_str_new2("[LList][find_from] AEROSPIKE_ERR_RECORD_NOT_FOUND"));
       return Qnil;
     }
 
     if ( status == AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND ) {
-      log_warn("[LList][find_from] AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND");
+      rb_aero_logger(AS_LOG_LEVEL_WARN, &tm, 1, rb_str_new2("[LList][find_from] AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND"));
       return Qnil;
     }
 
@@ -611,7 +611,7 @@ static VALUE llist_find_from(int argc, VALUE * argv, VALUE self) {
   as_val_free(val);
   as_arraylist_destroy(result_list);
 
-  log_debug_with_time_v2("[LList][find_from] success", &tm, value, count);
+  rb_aero_logger(AS_LOG_LEVEL_DEBUG, &tm, 3, rb_str_new2("[LList][find_from] success"), value, count);
 
   return result;
 }
@@ -642,14 +642,14 @@ static VALUE llist_size(int argc, VALUE * argv, VALUE self) {
 
   if ( ( status = aerospike_llist_size(as, &err, policy, key, llist, &llist_size) ) != AEROSPIKE_OK ) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-      log_warn("[LList][size] AEROSPIKE_ERR_RECORD_NOT_FOUND");
+      rb_aero_logger(AS_LOG_LEVEL_WARN, &tm, 1, rb_str_new2("[LList][size] AEROSPIKE_ERR_RECORD_NOT_FOUND"));
       return Qnil;
     }
 
     raise_as_error(err);
   }
 
-  log_debug_with_time("[LList][size] success", &tm);
+  rb_aero_logger(AS_LOG_LEVEL_DEBUG, &tm, 1, rb_str_new2("[LList][size] success"));
 
   return LONG2FIX(llist_size);
 }

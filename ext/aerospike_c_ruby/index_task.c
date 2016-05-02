@@ -36,6 +36,9 @@ static VALUE is_done(VALUE self) {
 //   interval_ms - the polling interval in milliseconds. If zero, 1000 ms is used
 //
 static VALUE wait_till_completed(int argc, VALUE * argv, VALUE self) {
+  struct timeval tm;
+  start_timing(&tm);
+
   if ( rb_iv_get(self, "@done") == Qtrue ) return Qtrue;
 
   as_error err;
@@ -55,7 +58,7 @@ static VALUE wait_till_completed(int argc, VALUE * argv, VALUE self) {
 
   rb_iv_set(self, "@done", bool2rb_bool(itask->done));
 
-  log_debug("[IndexTask][wait_till_completed] success");
+  rb_aero_logger(AS_LOG_LEVEL_DEBUG, &tm, 1, rb_str_new2("[IndexTask][wait_till_completed] success"));
 
   return Qtrue;
 }

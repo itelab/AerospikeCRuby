@@ -20,7 +20,9 @@ bool rb_aero_log_callback(
     as_log_level level, const char * func, const char * file, uint32_t line,
     const char * fmt, ...)
 {
-    if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;
+      VALUE logger = rb_funcall(rb_aero_AerospikeC, rb_intern("logger"), 0);
+
+  if ( TYPE(logger) != T_OBJECT ) return;
 
     char msg[1024] = {0};
     va_list ap;
@@ -32,106 +34,78 @@ bool rb_aero_log_callback(
     switch_color_code();
 
     VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s\e[0m [%s:%d][%s] %d - %s", color_code, "<AerospikeC>", file, line, func, level, msg);
-    rb_funcall(rb_aero_Logger, rb_intern("info"), 1, rb_msg);
+    rb_funcall(logger, rb_intern("debug"), 1, rb_msg);
 
     return true;
 }
 
-void log_debug(const char * msg) {
-#ifdef AEROSPIKE_C_RUBY_DEBUG
-  if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;
-
-  switch_color_code();
-
-  VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s\e[0m %s", color_code, "<AerospikeC>", msg);
-  rb_funcall(rb_aero_Logger, rb_intern("debug"), 1, rb_msg);
-#endif
-}
-
-void log_info(const char * msg) {
-  if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;
-
-  switch_color_code();
-
-  VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s\e[0m %s", color_code, "<AerospikeC>", msg);
-  rb_funcall(rb_aero_Logger, rb_intern("info"), 1, rb_msg);
-}
-
-void log_warn(const char * msg) {
-  if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;
-
-  switch_color_code();
-
-  VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s\e[0m %s", color_code, "<AerospikeC>", msg);
-  rb_funcall(rb_aero_Logger, rb_intern("warn"), 1, rb_msg);
-}
-
-void log_error(const char * msg) {
-  if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;
-
-  switch_color_code();
-
-  VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s\e[0m \e[1m\e[31%s\e[0m", color_code, "<AerospikeC>", msg);
-  rb_funcall(rb_aero_Logger, rb_intern("error"), 1, rb_msg);
-}
-
-void log_fatal(const char * msg) {
-  if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;
-
-  switch_color_code();
-
-  VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s\e[0m \e[1m\e[31%s\e[0m", color_code, "<AerospikeC>", msg);
-  rb_funcall(rb_aero_Logger, rb_intern("fatal"), 1, rb_msg);
-}
-
-void log_debug_with_time(const char * msg, struct timeval * tm) {
-  if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;
-
-  struct timeval tm2;
-  gettimeofday(&tm2, NULL);
-
-  double elapsedTime = (tm2.tv_sec - tm->tv_sec) * 1000.0;
-  elapsedTime += (tm2.tv_usec - tm->tv_usec) / 1000.0;
-
-  switch_color_code();
-
-  VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s (%.4f ms)\e[0m \e[1m%s\e[0m", color_code, "<AerospikeC>", elapsedTime, msg);
-  rb_funcall(rb_aero_Logger, rb_intern("debug"), 1, rb_msg);
-}
-
-void log_debug_with_time_v(const char * msg, struct timeval * tm, VALUE val) {
-  if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;
-
-  struct timeval tm2;
-  gettimeofday(&tm2, NULL);
-
-  double elapsedTime = (tm2.tv_sec - tm->tv_sec) * 1000.0;
-  elapsedTime += (tm2.tv_usec - tm->tv_usec) / 1000.0;
-
-  switch_color_code();
-
-  VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s (%.4f ms)\e[0m \e[1m%s, %"PRIsVALUE"\e[0m", color_code, "<AerospikeC>", elapsedTime, msg, val);
-  rb_funcall(rb_aero_Logger, rb_intern("debug"), 1, rb_msg);
-}
-
-void log_debug_with_time_v2(const char * msg, struct timeval * tm, VALUE val, VALUE val2) {
-  if ( TYPE(rb_aero_Logger) != T_OBJECT ) return;
-
-  struct timeval tm2;
-  gettimeofday(&tm2, NULL);
-
-  double elapsedTime = (tm2.tv_sec - tm->tv_sec) * 1000.0;
-  elapsedTime += (tm2.tv_usec - tm->tv_usec) / 1000.0;
-
-  switch_color_code();
-
-  VALUE rb_msg = rb_sprintf("\e[1m\e[%dm%s (%.4f ms)\e[0m \e[1m%s, %"PRIsVALUE", %"PRIsVALUE"\e[0m", color_code, "<AerospikeC>", elapsedTime, msg, val, val2);
-  rb_funcall(rb_aero_Logger, rb_intern("debug"), 1, rb_msg);
-}
 
 void start_timing(struct timeval * tm) {
   gettimeofday(tm, NULL);
 }
+
+
+
+bool rb_aero_logger(as_log_level level, struct timeval * tm, int args, ...) {
+  VALUE logger = rb_funcall(rb_aero_AerospikeC, rb_intern("logger"), 0);
+
+  if ( TYPE(logger) != T_OBJECT ) return;
+
+  switch_color_code();
+
+  VALUE msg = rb_sprintf("\e[1m\e[%dm<AerospikeC>", color_code);
+
+  if ( tm != NULL ) {
+    struct timeval tm2;
+    gettimeofday(&tm2, NULL);
+
+    double elapsedTime = (tm2.tv_sec - tm->tv_sec) * 1000.0;
+    elapsedTime += (tm2.tv_usec - tm->tv_usec) / 1000.0;
+
+    VALUE rb_time = rb_sprintf(" (%.4f ms)", elapsedTime);
+
+    rb_funcall(msg, rb_intern("<<"), 1, rb_time);
+  }
+
+  rb_funcall(msg, rb_intern("<<"), 1, rb_str_new2("\e[0m"));
+
+  va_list ap;
+  va_start(ap, args);
+
+  VALUE val;
+
+  for (int i = 0; i < args; ++i) {
+    val = va_arg(ap, VALUE);
+
+    rb_funcall(msg, rb_intern("<<"), 1, rb_str_new2(" "));
+    rb_funcall(msg, rb_intern("<<"), 1, val);
+  }
+
+  va_end(ap);
+
+  ID method;
+
+  switch( level ) {
+    case AS_LOG_LEVEL_ERROR:
+      method = rb_intern("error");
+      break;
+
+    case AS_LOG_LEVEL_WARN:
+      method = rb_intern("warn");
+      break;
+
+    case AS_LOG_LEVEL_INFO:
+      method = rb_intern("info");
+      break;
+
+    case AS_LOG_LEVEL_DEBUG:
+      method = rb_intern("debug");
+      break;
+  }
+
+  rb_funcall(logger, method, 1, msg);
+}
+
 
 
 // ----------------------------------------------------------------------------------
