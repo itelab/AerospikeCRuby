@@ -6,7 +6,7 @@ VALUE rb_aero_Logger;
 
 #define rb_aero_KEY_INFO rb_funcall(key, rb_intern("key_info"), 0)
 #define rb_aero_CLIENT get_client_struct(self)
-#define rb_aero_OPERATION rb_const_get(rb_aero_AerospikeC, rb_intern("Operation")
+#define rb_aero_OPERATION rb_const_get(rb_aero_AerospikeC, rb_intern("Operation"))
 #define rb_aero_MOD_INFO rb_sprintf("mod: %s, func: %s", c_module_name, c_func_name)
 #define rb_aero_KEY get_key_struct(key)
 #define rb_aero_TIMED(val) struct timeval val; start_timing(&val)
@@ -647,7 +647,7 @@ static VALUE operate(int argc, VALUE * argv, VALUE self) {
 
   as_key * k     = rb_aero_KEY;
 
-  VALUE is_aerospike_c_operation = rb_funcall(operations, rb_intern("is_a?"), 1, rb_aero_OPERATION));
+  VALUE is_aerospike_c_operation = rb_funcall(operations, rb_intern("is_a?"), 1, rb_aero_OPERATION);
   if ( is_aerospike_c_operation != Qtrue ) {
     rb_raise(rb_aero_OptionError, "[AerospikeC::Client][operate] use AerospikeC::Operation class to perform operations");
   }
@@ -686,7 +686,7 @@ static VALUE operate(int argc, VALUE * argv, VALUE self) {
 //    1. new AerospikeC::Operation object
 //
 static VALUE operation_obj(VALUE self) {
-  return rb_funcall(rb_aero_OPERATION), rb_intern("new"), 0);
+  return rb_funcall(rb_aero_OPERATION, rb_intern("new"), 0);
 }
 
 // ----------------------------------------------------------------------------------

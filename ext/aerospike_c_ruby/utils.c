@@ -153,7 +153,7 @@ as_geojson * get_geo_json_struct(VALUE rb_geo) {
 // raise RuntimeError with as_error info
 //
 void raise_as_error(as_error err) {
-  log_fatal(err.message);
+  rb_aero_logger(AS_LOG_LEVEL_ERROR, NULL, 1, rb_str_new2(err.message));
   rb_raise(rb_aero_AsError, "%s -- Error code: %d, at: [%s:%d]", err.message, err.code, err.file, err.line);
 }
 
@@ -1386,6 +1386,7 @@ as_operations * rb_operations2as_operations(VALUE operations) {
 
     // uknown operation
     else {
+      as_operations_destroy(ops);
       rb_raise(rb_aero_ParseError, "[AerospikeC::Client][operate] uknown operation type: %s", val_inspect(operation_type));
     }
   }
