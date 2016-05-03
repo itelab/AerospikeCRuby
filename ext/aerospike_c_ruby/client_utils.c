@@ -114,7 +114,9 @@ void options2config(as_config * config, VALUE options, VALUE self) {
   }
 
   option_tmp = rb_hash_aref(options, logger_sym);
-  if ( option_tmp != Qnil ) rb_aero_Logger = option_tmp; // logger
+  if ( option_tmp != Qnil ) {
+    rb_funcall(rb_aero_AerospikeC, rb_intern("logger="), 1, option_tmp);
+  }
 
   option_tmp = rb_hash_aref(options, ldt_proxy_sym);
   if ( option_tmp != Qnil ) { // ldt_proxy

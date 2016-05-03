@@ -2,7 +2,6 @@
 #include <client_utils.h>
 
 VALUE rb_aero_Client;
-VALUE rb_aero_Logger;
 
 #define rb_aero_KEY_INFO rb_funcall(key, rb_intern("key_info"), 0)
 #define rb_aero_CLIENT get_client_struct(self)
