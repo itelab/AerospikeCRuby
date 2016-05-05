@@ -29,6 +29,7 @@
 #define desc_sym                ID2SYM(rb_intern("desc"))               // :desc
 #define order_sym               ID2SYM(rb_intern("order"))              // :order
 #define at_sym                  ID2SYM(rb_intern("at"))                 // :at
+#define c_log_sym               ID2SYM(rb_intern("c_log"))              // :c_log
 ;
 #define lua_path_sym            ID2SYM(rb_intern("lua_path"))           // :lua_path
 #define password_sym            ID2SYM(rb_intern("password"))           // :password

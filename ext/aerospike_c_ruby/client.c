@@ -65,9 +65,12 @@ static void client_initialize(int argc, VALUE * argv, VALUE self) {
   }
 
   as_log_set_level(AS_LOG_LEVEL_DEBUG);
-  as_log_set_callback(rb_aero_log_callback);
 
-  rb_aero_logger(AS_LOG_LEVEL_DEBUG, &tm, 1, rb_str_new2("[Client] initializing and connecting done"));
+  VALUE option_tmp = rb_hash_aref(options, c_log_sym);
+
+  if ( TYPE(option_tmp) == T_TRUE ) {
+    as_log_set_callback(rb_aero_log_callback);
+  }
 }
 
 // ----------------------------------------------------------------------------------
