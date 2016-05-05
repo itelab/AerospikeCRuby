@@ -101,18 +101,10 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
 
   rb_scan_args(argc, argv, "21", &key, &hash, &options);
 
-  // default values for optional arguments
-  if ( NIL_P(options) ) {
-    options = rb_hash_new();
-    rb_hash_aset(options, ttl_sym, rb_zero);
-  }
-  else {
-    VALUE option_tmp = rb_hash_aref(options, ttl_sym);
+  if ( NIL_P(options) ) options = rb_hash_new();
 
-    if ( NIL_P(option_tmp) )
-      rb_hash_aset(options, ttl_sym, rb_zero);
+  VALUE option_tmp;
 
-  }
 
   long len = rb_ary_len_long(hash);
 
@@ -124,7 +116,14 @@ static VALUE put(int argc, VALUE * argv, VALUE self) {
   as_key * k = rb_aero_KEY;
   as_policy_write * policy = get_policy(options);
 
-  rec.ttl = FIX2INT( rb_hash_aref(options, ttl_sym) );
+  if ( !NIL_P(options) ) {
+    VALUE rb_ttl = rb_hash_aref(options, ttl_sym);
+
+    if ( TYPE(rb_ttl) == T_FIXNUM ) {
+      rec.ttl = FIX2INT( rb_ttl );
+    }
+  }
+
 
   if ( ( status = aerospike_key_put(as, &err, policy, k, &rec) ) != AEROSPIKE_OK) {
     as_record_destroy(&rec);

@@ -275,9 +275,7 @@ as_hashmap * hash2as_hashmap(VALUE hash) {
 
   as_hashmap * map = as_hashmap_new(len);
 
-  VALUE hmap = Data_Wrap_Struct(rb_aero_Record, NULL, map_deallocate, map);
-
-  rb_hash_foreach(hash, foreach_hash2as_hashmap, hmap);
+  rb_hash_foreach(hash, foreach_hash2as_hashmap, (VALUE)map);
 
   // log_debug("Converted ruby hash into as_hashmap");
 
@@ -295,8 +293,7 @@ static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE hmap) {
 
   char * bin_name = key2bin_name(key);
 
-  as_hashmap * map;
-  Data_Get_Struct(hmap, as_hashmap, map);
+  as_hashmap * map = (as_hashmap *)hmap;
 
   switch ( TYPE(val) ) { // set bin_name = val dependent on type
     case T_NIL:
