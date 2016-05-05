@@ -97,6 +97,8 @@ Parameters:
 
   - `:ldt_proxy` - usage of [AerospikeC::LdtProxy](llist.md#workaround_note), `default: true`
 
+  - `:c_log` - enable additional aerospike C library logger, beware as it's set to `debug` level and it's not thread safe, `default: false`
+
 Example:
 
 ```ruby
