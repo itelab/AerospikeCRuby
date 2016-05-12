@@ -20,6 +20,8 @@ typedef struct query_list_s {
   query_item *                      query_data;
   VALUE                             result;
   bool                              with_header;
+  as_error                          err;
+  bool                              is_err;
 } query_list;
 
 typedef struct scan_method_options_s {

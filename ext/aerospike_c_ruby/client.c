@@ -1383,6 +1383,15 @@ static bool execute_query_callback(as_val * val, query_item * query_data) {
   return true;
 }
 
+#include <ruby/thread.h>
+
+static void * rb_run_query(query_list * args) {
+  if ( aerospike_query_foreach(args->as, &args->err, args->policy, args->query, args->callback, args->query_data) != AEROSPIKE_OK )
+    args->is_err = true;
+
+  return NULL;
+}
+
 // ----------------------------------------------------------------------------------
 //
 // execute query
@@ -1399,10 +1408,12 @@ static bool execute_query_callback(as_val * val, query_item * query_data) {
 //
 static VALUE execute_query_begin(VALUE rdata) {
   query_list * args = (query_list *) rdata;
-  as_error err;
+  args->is_err = false;
 
-  if ( aerospike_query_foreach(args->as, &err, args->policy, args->query, args->callback, args->query_data) != AEROSPIKE_OK )
-    raise_as_error(err);
+  rb_thread_call_without_gvl(rb_run_query, args, NULL, NULL);
+
+  if ( args->is_err )
+    raise_as_error(args->err);
 
   set_query_result_and_destroy(args);
 
