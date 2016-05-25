@@ -5,6 +5,8 @@ VALUE rb_aero_MemoryError;
 VALUE rb_aero_ParseError;
 VALUE rb_aero_OptionError;
 
+
+
 // ----------------------------------------------------------------------------------
 //
 // Init
