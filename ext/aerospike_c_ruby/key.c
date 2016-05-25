@@ -50,6 +50,18 @@ static void key_initialize(VALUE self, VALUE as_namespace, VALUE set, VALUE key)
   as_key * k;
   Data_Get_Struct(self, as_key, k);
 
+  if ( NIL_P(as_namespace) ) {
+    rb_raise(rb_aero_OptionError, "[AerospikeC::Key][initialize] namespace cannot be nil");
+  }
+
+  if ( NIL_P(set) ) {
+    rb_raise(rb_aero_OptionError, "[AerospikeC::Key][initialize] set cannot be nil");
+  }
+
+  if ( NIL_P(key) ) {
+    rb_raise(rb_aero_OptionError, "[AerospikeC::Key][initialize] key cannot be nil");
+  }
+
   char * c_namespace = arg_to_cstr(as_namespace);
   char * c_set = arg_to_cstr(set);
 
@@ -114,11 +126,76 @@ static VALUE key_inspect(VALUE self) {
   rb_str_cat2(str, ":");
   rb_str_cat2(str, k->set);
   rb_str_cat2(str, ":");
-  rb_funcall(str, rb_intern("<<"), 1, rb_iv_get(self, "@key"));
+  rb_funcall(str, rb_intern("<<"), 1, value_to_s(rb_iv_get(self, "@key")));
   rb_str_cat2(str, ">");
 
   return str;
 }
+
+
+/**
+ * @brief      Get key digest
+ *
+ * @param[in]  self  The object
+ *
+ * @return     string digest
+ */
+static VALUE key_digest(VALUE self) {
+  VALUE cache = rb_iv_get(self, "@digest");
+
+  if ( TYPE(cache) == T_ARRAY ) {
+    return cache;
+  }
+
+  as_key * k;
+  Data_Get_Struct(self, as_key, k);
+
+  as_digest * digest = as_key_digest(k);
+
+  VALUE result = rb_ary_new();
+
+  for (int i = 0; i < AS_DIGEST_VALUE_SIZE; ++i) {
+    rb_ary_push(result, INT2FIX(digest->value[i]));
+  }
+
+  rb_iv_set(self, "@digest", result);
+
+  return result;
+}
+
+
+/**
+ * @brief      compare keys
+ *
+ * @param[in]  self       The object
+ * @param[in]  other_key  The other key
+ *
+ * @return     true/false
+ */
+static VALUE key_eql(VALUE self, VALUE other_key) {
+  if ( rb_funcall(other_key, rb_intern("is_a?"), 1, rb_aero_Key) == Qfalse ) {
+    return Qfalse;
+  }
+
+  if ( rb_funcall(key_digest(self), rb_intern("=="), 1, key_digest(other_key)) == Qfalse ) {
+    return Qfalse;
+  }
+
+  return Qtrue;
+}
+
+
+/**
+ * @brief      key hash method
+ *
+ * @param[in]  self  The object
+ *
+ * @return     string digest
+ */
+static VALUE key_hash(VALUE self) {
+  return rb_funcall(key_digest(self), rb_intern("hash"), 0);
+}
+
 
 // ----------------------------------------------------------------------------------
 // Init
@@ -138,6 +215,12 @@ void init_aerospike_c_key(VALUE AerospikeC) {
   rb_define_method(rb_aero_Key, "namespace", RB_FN_ANY()key_namespace, 0);
   rb_define_method(rb_aero_Key, "set", RB_FN_ANY()key_set, 0);
   rb_define_method(rb_aero_Key, "inspect", RB_FN_ANY()key_inspect, 0);
+  rb_define_method(rb_aero_Key, "==", RB_FN_ANY()key_eql, 1);
+  rb_define_method(rb_aero_Key, "digest", RB_FN_ANY()key_digest, 0);
+  rb_define_method(rb_aero_Key, "hash", RB_FN_ANY()key_hash, 0);
+
+
+  rb_define_alias(rb_aero_Key, "eql?", "==");
 
   //
   // attr_reader

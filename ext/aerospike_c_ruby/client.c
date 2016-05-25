@@ -536,6 +536,111 @@ static VALUE batch_get(int argc, VALUE * argv, VALUE self) {
   return records_bins;
 }
 
+
+/**
+ * @brief      Callback for batch_exists
+ *
+ * @param[in]  results  The results
+ * @param[in]  n        number for resulsts
+ * @param      udata    The user data
+ *
+ * @return     true on success. Otherwise, an error occurred
+ */
+static bool batch_exists_callback(const as_batch_read * results, uint32_t n, VALUE return_data) {
+  for (uint32_t i = 0; i < n; ++i) {
+    if ( results[i].result != AEROSPIKE_OK ) continue;
+
+    as_val * rec_val = (as_val *) results[i].key->valuep;
+
+    VALUE ns  = rb_str_new2(results[i].key->ns);
+    VALUE set = rb_str_new2(results[i].key->set);
+    VALUE val;
+
+    switch ( as_val_type(rec_val) ) {
+      case AS_INTEGER: {
+        val = as_val_int_2_val(rec_val);
+        break;
+      }
+
+      case AS_STRING: {
+        val = as_val_str_2_val(rec_val);
+        break;
+      }
+    }
+
+    VALUE key;
+
+    key = rb_funcall(rb_aero_Key, rb_intern("new"), 3, ns, set, val);
+
+    rb_hash_aset(return_data, key, Qtrue);
+  }
+
+  return true;
+}
+
+
+/**
+ * @brief      Test whether multiple records exist in the cluster.
+ *
+ * @param[in]  argc  The argc
+ * @param      argv  The argv
+ * @param[in]  self  The object
+ *
+ * @return     { description_of_the_return_value }
+ */
+static VALUE batch_exists(int argc, VALUE * argv, VALUE self) {
+  rb_aero_TIMED(tm);
+
+  as_error err;
+  as_status status;
+  aerospike * as = rb_aero_CLIENT;
+
+  VALUE keys;
+  VALUE options;
+
+  rb_scan_args(argc, argv, "11", &keys, &options);
+
+  long keys_len = rb_ary_len_long(keys);
+
+  as_batch batch;
+  as_batch_inita(&batch, keys_len);
+
+  VALUE return_data = rb_hash_new();
+
+  for (long i = 0; i < keys_len; ++i) {
+    VALUE element = rb_ary_entry(keys, i);
+
+    // set into hash for return values
+    rb_hash_aset(return_data, element, Qfalse);
+
+    VALUE tmp = rb_funcall(element, rb_intern("namespace"), 0);
+    char * c_namespace = StringValueCStr( tmp );
+
+    tmp = rb_funcall(element, rb_intern("set"), 0);
+    char * c_set = StringValueCStr( tmp );
+
+    tmp = rb_funcall(element, rb_intern("key"), 0);
+
+    if ( TYPE(tmp) != T_FIXNUM ) {
+      char * c_key = StringValueCStr( tmp );
+      as_key_init(as_batch_keyat(&batch,i), c_namespace, c_set, c_key);
+    }
+    else {
+      as_key_init_int64(as_batch_keyat(&batch,i), c_namespace, c_set, FIX2LONG(tmp));
+    }
+  }
+
+  if ( aerospike_batch_exists(as, &err, NULL, &batch, batch_exists_callback, return_data) != AEROSPIKE_OK ) {
+    as_batch_destroy(&batch);
+    raise_as_error(err);
+  }
+
+  as_batch_destroy(&batch);
+
+  return return_data;
+}
+
+
 // ----------------------------------------------------------------------------------
 //
 // def touch(key, options = {})
@@ -1740,8 +1845,11 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   rb_define_method(rb_aero_Client, "logger=", RB_FN_ANY()set_logger, 1);
   rb_define_method(rb_aero_Client, "exists?", RB_FN_ANY()key_exists, -1);
   rb_define_method(rb_aero_Client, "get_header", RB_FN_ANY()get_header, -1);
-  rb_define_method(rb_aero_Client, "batch_get", RB_FN_ANY()batch_get, -1);
   rb_define_method(rb_aero_Client, "touch", RB_FN_ANY()touch, -1);
+
+  // batch
+  rb_define_method(rb_aero_Client, "batch_get", RB_FN_ANY()batch_get, -1);
+  rb_define_method(rb_aero_Client, "batch_exists", RB_FN_ANY()batch_exists, -1);
 
   // operations
   rb_define_method(rb_aero_Client, "operate", RB_FN_ANY()operate, -1);

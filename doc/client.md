@@ -21,8 +21,11 @@ With a new client, you can use any of the methods specified below:
     - [#logger=](#logger=)
     - [#exists?](#exists?)
     - [#get_header](#get_header)
-    - [#batch_get](#batch_get)
     - [#touch](#touch)
+
+  - Batch:
+    - [#batch_get](#batch_get)
+    - [#batch_exists](#batch_exists)
 
   - Operations:
     - [#operate](#operate)
@@ -395,6 +398,76 @@ client.batch_get(keys)
 client.batch_get(keys, ["index"], with_header: true)
 # [{"index"=>0, "header"=>{"gen"=>1, "expire_in"=>60}}, {"index"=>1, "header"=>{"gen"=>1, "expire_in"=>60}}, {"index"=>2, "header"=>{"gen"=>1, "expire_in"=>60}}, {"index"=>3, "header"=>{"gen"=>1, "expire_in"=>60}}, {"index"=>4, "header"=>{"gen"=>1, "expire_in"=>60}}]
 ```
+
+<!--===============================================================================-->
+<hr/>
+<!-- batch_exists -->
+<a name="batch_exists"></a>
+
+### batch_exists(keys, options = {})
+
+Check if batch of keys exists in single server call
+
+Parameters:
+
+- `keys` - array of [AerospikeC::Key](key.md) objects
+- `options`:
+   - @TODO options policy
+
+Return:
+
+- `array of hashes` {[AerospikeC::Key](key.md) => true/false}
+
+Example:
+
+```ruby
+keys = []
+
+i = 0
+10.times do
+  keys << AerospikeC::Key.new("test", "batch_exists", "key#{i}")
+  key = AerospikeC::Key.new("test", "batch_exists", i)
+  keys << key
+
+  if i % 2 == 0
+    bins = {
+      bin1: 1,
+      bin2: "bin2"
+    }
+
+    client.put(key, bins)
+  end
+
+  i += 1
+end
+
+
+client.batch_exists(keys)
+#{
+#   #<AerospikeC::Key test:batch_exists:key0> => false,
+#   #<AerospikeC::Key test:batch_exists:0> => true,
+#   #<AerospikeC::Key test:batch_exists:key1> => false,
+#   #<AerospikeC::Key test:batch_exists:1> => false,
+#   #<AerospikeC::Key test:batch_exists:key2> => false,
+#   #<AerospikeC::Key test:batch_exists:2> => true,
+#   #<AerospikeC::Key test:batch_exists:key3> => false,
+#   #<AerospikeC::Key test:batch_exists:3> => false,
+#   #<AerospikeC::Key test:batch_exists:key4> => false,
+#   #<AerospikeC::Key test:batch_exists:4> => true,
+#   #<AerospikeC::Key test:batch_exists:key5> => false,
+#   #<AerospikeC::Key test:batch_exists:5> => false,
+#   #<AerospikeC::Key test:batch_exists:key6> => false,
+#   #<AerospikeC::Key test:batch_exists:6> => true,
+#   #<AerospikeC::Key test:batch_exists:key7> => false,
+#   #<AerospikeC::Key test:batch_exists:7> => false,
+#   #<AerospikeC::Key test:batch_exists:key8> => false,
+#   #<AerospikeC::Key test:batch_exists:8> => true,
+#   #<AerospikeC::Key test:batch_exists:key9> => false,
+#   #<AerospikeC::Key test:batch_exists:9> => false
+# }
+
+```
+
 
 <!--===============================================================================-->
 <hr/>
