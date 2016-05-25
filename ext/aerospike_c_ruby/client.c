@@ -637,6 +637,8 @@ static VALUE batch_exists(int argc, VALUE * argv, VALUE self) {
 
   as_batch_destroy(&batch);
 
+  rb_aero_logger(AS_LOG_LEVEL_DEBUG, &tm, 1, rb_str_new2("[Client][batch_exists] success"));
+
   return return_data;
 }
 
