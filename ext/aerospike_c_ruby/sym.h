@@ -32,6 +32,7 @@
 #define c_log_sym               ID2SYM(rb_intern("c_log"))              // :c_log
 ;
 #define lua_path_sym            ID2SYM(rb_intern("lua_path"))           // :lua_path
+#define lua_system_path_sym     ID2SYM(rb_intern("lua_system_path"))    // :lua_system_path
 #define password_sym            ID2SYM(rb_intern("password"))           // :password
 #define logger_sym              ID2SYM(rb_intern("logger"))             // :logger
 #define hosts_sym               ID2SYM(rb_intern("hosts"))              // :hosts

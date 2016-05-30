@@ -57,6 +57,15 @@ void options2config(as_config * config, VALUE options, VALUE self) {
     strcpy(config->lua.user_path, StringValueCStr(option_tmp));
   }
 
+  option_tmp = rb_hash_aref(options, lua_system_path_sym);
+  if ( option_tmp != Qnil ) { // lua_system_path
+    if ( TYPE(option_tmp) != T_STRING )
+      rb_raise(rb_aero_OptionError, "[AerospikeC::Client][initialize] options :lua_system_path must be string");
+
+    strcpy(config->lua.system_path, StringValueCStr(option_tmp));
+  }
+
+
   option_tmp = rb_hash_aref(options, password_sym);
   if ( option_tmp != Qnil ) { // password
     if ( TYPE(option_tmp) != T_STRING )
