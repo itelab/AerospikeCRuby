@@ -138,6 +138,9 @@ as_arraylist * array2as_list(VALUE ary) {
         as_arraylist_append_double(list, NUM2DBL(element));
         break;
 
+      case T_FALSE:
+      case T_TRUE:
+
       case T_OBJECT:
         as_arraylist_append_bytes(list, rb_obj_to_as_bytes(element));
         break;
@@ -222,6 +225,9 @@ static int foreach_hash2record(VALUE key, VALUE val, VALUE record) {
       }
 
       break;
+
+    case T_FALSE:
+    case T_TRUE:
 
     case T_OBJECT:
       as_record_set_bytes(rec, key2bin_name(key), rb_obj_to_as_bytes(val));
@@ -326,6 +332,9 @@ static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE hmap) {
     case T_FLOAT:
       as_stringmap_set_double(map, bin_name, NUM2DBL(val));
       break;
+
+    case T_FALSE:
+    case T_TRUE:
 
     case T_OBJECT:
       as_stringmap_set_bytes(map, bin_name, rb_obj_to_as_bytes(val));

@@ -1,5 +1,5 @@
 # AerospikeCRuby
-### master version - 0.4.3
+### master version - 0.4.4
 
 AerospikeCRuby is an aerospike library using aerospike-c-client wrapped into ruby. Responses does not build any objects and return pure ruby hashes for speed.
 
@@ -119,6 +119,7 @@ bins = {
   },
 
   obj: Person.new,
+  bool: true,
 }
 
 #

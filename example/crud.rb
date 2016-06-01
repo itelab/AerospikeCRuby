@@ -23,7 +23,9 @@ bins = {
     "x" => 1,
     "y" => "two",
     "hash_tab" => [1, "two"]
-  }
+  },
+
+  bool: true
 }
 
 puts "\n--- bins:"
