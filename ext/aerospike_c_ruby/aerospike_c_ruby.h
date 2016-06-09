@@ -75,6 +75,13 @@
 #define RB_CIRCLE_STR rb_str_new2("AeroCircle")
 ;
 
+#define rb_aero_KEY_INFO rb_funcall(key, rb_intern("key_info"), 0)
+#define rb_aero_CLIENT get_client_struct(self)
+#define rb_aero_OPERATION rb_const_get(rb_aero_AerospikeC, rb_intern("Operation"))
+#define rb_aero_MOD_INFO rb_sprintf("mod: %s, func: %s", c_module_name, c_func_name)
+#define rb_aero_KEY get_key_struct(key)
+#define rb_aero_TIMED(val) struct timeval val; start_timing(&val)
+
 // ---------------------------------------------------
 // definitions
 //

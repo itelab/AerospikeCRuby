@@ -52,5 +52,9 @@ i = 0
   i += 1
 end
 
+puts "------ scan each: "
+client.scan_each("test", "scan_test") do |r|
+  puts r
+end
 
 client.drop_udf("scan_udf.lua")
