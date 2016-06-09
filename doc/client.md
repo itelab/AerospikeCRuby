@@ -49,11 +49,13 @@ With a new client, you can use any of the methods specified below:
 
   - Scan:
     - [#scan](#scan)
+    - [#scan_each](#scan_each)
     - [#execute_udf_on_scan](#execute_udf_on_scan)
     - [#background_execute_udf_on_scan](#background_execute_udf_on_scan)
 
   - Query & Aggregation:
     - [#query](#query)
+    - [#query_each](#query_each)
     - [#execute_udf_on_query](#execute_udf_on_query)
     - [#background_execute_udf_on_query](#background_execute_udf_on_query)
 
@@ -866,6 +868,50 @@ client.scan("test", "scan_test")
 
 <!--===============================================================================-->
 <hr/>
+<!-- scan_each -->
+<a name="scan_each"></a>
+
+### scan_each(ns, set, options = {})
+
+Scan records in specified namespace and set with block.
+
+Aerospike reference: http://www.aerospike.com/docs/guide/scan.html
+
+Parameters:
+
+- `ns`  - namespace to scan
+- `set` - set to scan
+- `options`:
+
+  - `:priority` - [AerospikeC::ScanTask priority](scan_task.md#priority)
+
+  - @TODO options policy
+
+Return:
+
+- `true` on success
+
+Example:
+
+```ruby
+i = 0
+5.times do
+  key = AerospikeC::Key.new("test", "scan_test", "scan_test_#{i}")
+  bins = {"x" => i, "lat" => 34, "lng" => 56#{i}"}
+
+  client.put(key, bins)
+
+  i += 1
+end
+
+client.scan_each("test", "scan_test") do |rec|
+  puts rec
+end
+```
+
+
+<!--===============================================================================-->
+<hr/>
 <!-- execute_udf_on_scan -->
 <a name="execute_udf_on_scan"></a>
 
@@ -999,6 +1045,60 @@ q_range.range!("int_bin", 8, 10)
 
 client.query(q_range) # => [{"int_bin" => 8}, {"int_bin" => 9}, {"int_bin" => 10}]
 ```
+
+
+<!--===============================================================================-->
+<hr/>
+<!-- query_each -->
+<a name="query_each"></a>
+
+### query_each(query_obj)
+
+Simple query execution with block.
+
+
+Parameters:
+
+- `query_obj` - [AerospikeC::Query](query.md) object
+
+Return:
+
+- `true` on succes
+
+Example:
+
+```ruby
+#
+# query need indexes
+#
+task = client.create_index("test", "query_test", "int_bin", "test_query_test_int_bin_idx", :numeric)
+task.wait_till_completed
+
+#
+# build data to operate on
+#
+i = 0
+100.times do
+  key = AerospikeC::Key.new("test", "query_test", "query#{i}")
+  bins = {
+    int_bin: i,
+  }
+
+  client.put(key, bins)
+  i += 1
+end
+
+q_range = AerospikeC::Query.new("test", "query_test")
+q_range.range!("int_bin", 8, 10)
+
+client.query_each(q_range) do |rec|
+  puts rec
+end
+# => {"int_bin" => 8}
+# => {"int_bin" => 9}
+# => {"int_bin" => 10}
+```
+
 
 <!--===============================================================================-->
 <hr/>

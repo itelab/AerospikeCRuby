@@ -294,19 +294,24 @@ VALUE background_execute_udf_on_scan(int argc, VALUE * argv, VALUE self) {
 static bool scan_each_callback(const as_val * val, VALUE blk) {
   pthread_mutex_lock(&G_CALLBACK_MUTEX);
 
-  if ( val == NULL ) return false;
+  if ( val == NULL ) {
+    pthread_mutex_unlock(&G_CALLBACK_MUTEX);
+    return false;
+  }
 
   as_record * rec = as_rec_fromval(val);
 
   rb_funcall(blk, rb_intern("call"), 1, record2hash(rec));
 
-  return true;
-
   pthread_mutex_unlock(&G_CALLBACK_MUTEX);
+
+  return true;
 }
 
 
 VALUE scan_each(int argc, VALUE * argv, VALUE self) {
+  rb_need_block();
+
   rb_aero_TIMED(tm);
 
   aerospike * as = rb_aero_CLIENT;
@@ -327,10 +332,12 @@ VALUE scan_each(int argc, VALUE * argv, VALUE self) {
   as_scan * scan = as_scan_new(StringValueCStr(ns), StringValueCStr(set));
   set_priority_options(scan, options);
 
-
-  if ( aerospike_scan_foreach(as, &err, NULL, scan, scan_each_callback, blk) != AEROSPIKE_OK )
+  if ( aerospike_scan_foreach(as, &err, NULL, scan, scan_each_callback, blk) != AEROSPIKE_OK ){
+    as_scan_destroy(scan);
     raise_as_error(err);
+  }
 
+  as_scan_destroy(scan);
 
   rb_aero_logger(AS_LOG_LEVEL_DEBUG, &tm, 1, rb_str_new2("[Client][scan_each] success"));
 

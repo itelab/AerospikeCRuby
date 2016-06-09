@@ -4,6 +4,7 @@
 #define AEROSPIKE_C_RUBY_DEBUG
 
 #include <ruby.h>
+#include <ruby/thread.h>
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -111,6 +111,15 @@ puts query_task.inspect
 query_task.wait_till_completed(50)
 puts query_task.done?
 
+puts "---- query each"
+client.query_each(q_eql) do |rec|
+  puts rec
+end
+
+
+
+
+
 #
 # cleanup
 #
