@@ -1,4 +1,5 @@
 AerospikeC::Key.class_eval do
+  attr_accessor :user_data
 
   #----------------------------------------------------------------------------
   ##
