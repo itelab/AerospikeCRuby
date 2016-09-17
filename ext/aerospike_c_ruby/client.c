@@ -389,11 +389,9 @@ static VALUE get_header(int argc, VALUE * argv, VALUE self) {
   as_key * k = rb_aero_KEY;
   as_policy_read * policy = get_policy(options);
 
-  VALUE header = rb_hash_new();
+  if ( ( status = aerospike_key_exists(as, &err, policy, k, &rec) ) != AEROSPIKE_OK ) {
+    as_record_destroy(rec);
 
-  const char * inputArray[] = { NULL };
-
-  if ( ( status = aerospike_key_select(as, &err, policy, k, inputArray, &rec) ) != AEROSPIKE_OK) {
     if ( status == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
       rb_aero_logger(AS_LOG_LEVEL_WARN, &tm, 2, rb_str_new2("[Client][get_header] AEROSPIKE_ERR_RECORD_NOT_FOUND"), rb_aero_KEY_INFO);
       return Qnil;
@@ -402,8 +400,10 @@ static VALUE get_header(int argc, VALUE * argv, VALUE self) {
     raise_as_error(err);
   }
 
+  VALUE header = rb_hash_new();
+
   rb_hash_aset(header, rb_str_new2("gen"), INT2FIX(rec->gen));
-  rb_hash_aset(header, rb_str_new2("expire_in"), INT2FIX(rec->ttl));
+  rb_hash_aset(header, rb_funcall(rb_aero_AerospikeC, rb_intern("ttl_name"), 0), INT2FIX(rec->ttl));
 
   as_record_destroy(rec);
 

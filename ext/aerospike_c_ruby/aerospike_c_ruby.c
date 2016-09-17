@@ -4,7 +4,7 @@
   Aerospike ruby client, using aerospike-c-client
 
   Written and tested with:
-    * aerospike          - 3.7.1
+    * aerospike          - 3.9.1.1
     * aerospike-c-client - 4.0.0
     * ruby version       - 2.2.3
     * Ubuntu             - 15.04
@@ -31,6 +31,14 @@ static VALUE set_logger(VALUE self, VALUE logger) {
   return rb_iv_set(rb_aero_AerospikeC, "@logger", logger);
 }
 
+static VALUE get_ttl_name(VALUE self) {
+  return rb_iv_get(rb_aero_AerospikeC, "@ttl_name");
+}
+
+static VALUE set_ttl_name(VALUE self, VALUE ttl_name) {
+  return rb_iv_set(rb_aero_AerospikeC, "@ttl_name", ttl_name);
+}
+
 // ----------------------------------------------------------------------------------
 // Init
 //
@@ -41,11 +49,15 @@ void Init_aerospike_c_ruby() {
   rb_define_const(rb_aero_AerospikeC, "C_CLIENT_VERSION", rb_str_new2("3.1.24"));
 
   rb_iv_set(rb_aero_AerospikeC, "@encoding", Qnil);
+  rb_iv_set(rb_aero_AerospikeC, "@ttl_name", rb_str_new2("expire_in"));
 
   rb_define_singleton_method(rb_aero_AerospikeC, "encoding", get_encoding, 0);
   rb_define_singleton_method(rb_aero_AerospikeC, "encoding=", set_encoding, 1);
   rb_define_singleton_method(rb_aero_AerospikeC, "logger", get_logger, 0);
   rb_define_singleton_method(rb_aero_AerospikeC, "logger=", set_logger, 1);
+  rb_define_singleton_method(rb_aero_AerospikeC, "ttl_name", get_ttl_name, 0);
+  rb_define_singleton_method(rb_aero_AerospikeC, "ttl_name=", set_ttl_name, 1);
+
 
   init_aerospike_c_client(rb_aero_AerospikeC);
   init_aerospike_c_key(rb_aero_AerospikeC);
