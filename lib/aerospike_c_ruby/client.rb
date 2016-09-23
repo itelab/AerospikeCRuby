@@ -62,4 +62,8 @@ AerospikeC::Client.class_eval do
   def namespaces
     info_cmd("namespaces").gsub(/namespaces\s/, '').split(";")
   end
+
+  def query(q)
+    _query(q)
+  end
 end

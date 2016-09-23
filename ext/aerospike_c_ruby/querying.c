@@ -61,7 +61,7 @@ static VALUE execute_query_begin(VALUE rdata) {
   query_list * args = (query_list *) rdata;
   args->is_err = false;
 
-  rb_thread_call_without_gvl(rb_run_query, args, NULL, NULL);
+  rb_run_query(args);
 
   if ( args->is_err )
     raise_as_error(args->err);

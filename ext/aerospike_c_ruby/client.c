@@ -1391,7 +1391,7 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   rb_define_method(rb_aero_Client, "background_execute_udf_on_scan", RB_FN_ANY()background_execute_udf_on_scan, -1);
 
   // queries
-  rb_define_method(rb_aero_Client, "query", RB_FN_ANY()execute_query, 1);
+  rb_define_method(rb_aero_Client, "_query", RB_FN_ANY()execute_query, 1);
   rb_define_method(rb_aero_Client, "query_each", RB_FN_ANY()execute_query_each, 1);
   rb_define_method(rb_aero_Client, "execute_udf_on_query", RB_FN_ANY()execute_udf_on_query, -1);
   rb_define_method(rb_aero_Client, "background_execute_udf_on_query", RB_FN_ANY()background_execute_udf_on_query, -1);
