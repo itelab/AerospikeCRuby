@@ -156,9 +156,9 @@ client.delete(key)
 
 ### Build information:
 
-* aerospike          - 3.12.0
-* aerospike-c-client - 4.1.4
-* ruby version       - 2.3.0
+* aerospike          - 3.9.1.1
+* aerospike-c-client - 4.0.4
+* ruby version       - 2.2.3
 
 
 
