@@ -12,6 +12,8 @@ AerospikeC::GeoJson.class_eval do
   def lng
     if point?
       coordinates[0]
+    elsif circle?
+      coordinates[0][0]
     else
       raise NotImplementedError
     end
@@ -24,6 +26,21 @@ AerospikeC::GeoJson.class_eval do
   ##
   def lat
     if point?
+      coordinates[1]
+    elsif circle?
+      coordinates[0][1]
+    else
+      raise NotImplementedError
+    end
+  end
+
+  #----------------------------------------------------------------------------
+  ## @brief      radius of circle
+  ##
+  ## @return     radius radius of cirle in meters
+  ##
+  def radius
+    if circle?
       coordinates[1]
     else
       raise NotImplementedError

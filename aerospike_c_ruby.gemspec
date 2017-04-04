@@ -1,10 +1,10 @@
 Gem::Specification.new do |s|
   s.name        = 'aerospike_c_ruby'
-  s.version     = '0.4.7'
-  s.date        = '2015-11-20'
+  s.version     = '0.4.8'
+  s.date        = '2017-04-04'
   s.summary     = "aerospike_c_ruby"
   s.description = "aerospike_c_ruby"
-  s.authors     = ["Adam Stomski"]
+  s.authors     = ["Adam Stomski", "Arkadiusz Jasinski"]
   s.email       = 'office@itelab.eu'
 
   s.files       = Dir["{lib}/**/*", "Rakefile", "README.md", 'ext/**/*.c', 'ext/**/*.h']

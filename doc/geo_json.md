@@ -20,6 +20,7 @@ With a new [AerospikeC::GeoJson](geo_json.md), you can use any of the methods sp
   - [#circle?](#circle?)
   - [#lat](#lat)
   - [#lng](#lng)
+  - [#radius](#radius)
 
 - [Class Methods](#class_methods)
   - [#point](#point)
@@ -178,7 +179,7 @@ geo.circle? # => false
 
 ### lat
 
-Latitude value for point
+Latitude value for point or circle
 
 Example:
 
@@ -187,6 +188,11 @@ point = AerospikeC::GeoJson.point([11.23234, 55.53453])
 # => #<AerospikeC::GeoJson {"type"=>"Point", "coordinates"=>[11.23234, 55.53453]}>
 
 point.lat # => 55.53453
+
+circle = AerospikeC::GeoJson.circle([11.23234, 55.53453], 1000)
+# => #<AerospikeC::GeoJson {"type"=>"AeroCircle", "coordinates"=>[[11.23234, 55.53453], 1000]}>
+
+circle.lat # => 55.53453
 ```
 
 <!--===============================================================================-->
@@ -196,7 +202,7 @@ point.lat # => 55.53453
 
 ### lng
 
-Longitude value for point
+Longitude value for point or circle
 
 Example:
 
@@ -205,6 +211,29 @@ point = AerospikeC::GeoJson.point([11.23234, 55.53453])
 # => #<AerospikeC::GeoJson {"type"=>"Point", "coordinates"=>[11.23234, 55.53453]}>
 
 point.lng # => 11.23234
+
+circle = AerospikeC::GeoJson.circle([11.23234, 55.53453], 1000)
+# => #<AerospikeC::GeoJson {"type"=>"AeroCircle", "coordinates"=>[[11.23234, 55.53453], 1000]}>
+
+circle.lng # => 11.23234
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- lng -->
+<a name="lng"></a>
+
+### radius
+
+Radius of circle in meters
+
+Example:
+
+```ruby
+circle = AerospikeC::GeoJson.circle([11.23234, 55.53453], 1000)
+# => #<AerospikeC::GeoJson {"type"=>"AeroCircle", "coordinates"=>[[11.23234, 55.53453], 1000]}>
+
+circle.radius # => 1000
 ```
 
 
