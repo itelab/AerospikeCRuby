@@ -8,21 +8,21 @@ describe AerospikeC::Record do
   before(:each) do
     @bins = {
       "bin_int" => @bin_int,
-      "bin_string" => @bin_string,
-      "bin_tab" => [rand(1..100), rand(1..100), rand_string(100), [rand(1..200), rand_string(25)], rand(1.2...276.9)],
-      "bin_float" => rand(-123.2...123.2),
-
-      "bin_hash" => {
-        "hash_int" => rand(1..100),
-        "hash_string" => rand_string(1),
-        "hash_float" => rand(1.2..ttl_default),
-        "hash_nested" => {
-          "hash_nested_int" => rand(1..500),
-          "hash_nested_sting" => rand_string(rand(1..1000)),
-          "hash_nested_tab" => [rand(1..100), rand_string(rand(8..256))],
-          "hash_nested_float" => rand(1.2...276.9)
-        }
-      }
+      # "bin_string" => @bin_string,
+      # "bin_tab" => [rand(1..100), rand(1..100), rand_string(100), [rand(1..200), rand_string(25)], rand(1.2...276.9)],
+      # "bin_float" => rand(-123.2...123.2),
+      #
+      # "bin_hash" => {
+      #   "hash_int" => rand(1..100),
+      #   "hash_string" => rand_string(1),
+      #   "hash_float" => rand(1.2..ttl_default),
+      #   "hash_nested" => {
+      #     "hash_nested_int" => rand(1..500),
+      #     "hash_nested_sting" => rand_string(rand(1..1000)),
+      #     "hash_nested_tab" => [rand(1..100), rand_string(rand(8..256))],
+      #     "hash_nested_float" => rand(1.2...276.9)
+      #   }
+      # }
     }
 
     @rec = AerospikeC::Record.new(@bins)

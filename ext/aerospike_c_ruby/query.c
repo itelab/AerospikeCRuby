@@ -262,6 +262,27 @@ static VALUE get_with_header(VALUE self) {
   return rb_iv_get(self, "@with_header");
 }
 
+
+// ----------------------------------------------------------------------------------
+//
+// predexp = (predexp)
+//
+// params:
+//   predexp - AerospikeC::PredExp
+//
+//  ------
+//  RETURN:
+//    1. self
+//
+static VALUE set_predexp(VALUE self, VALUE predexp) {
+  if ( rb_funcall(predexp, rb_intern("is_a?"), 1, rb_aero_PredExp) == Qfalse )
+    rb_raise(rb_aero_OptionError, "[AerospikeC::Query][predexp<<] use AerospikeC::PredExp as predicate: %s", val_inspect(predexp));
+
+  rb_iv_set(self, "@predexp", predexp);
+
+  return self;
+}
+
 // ----------------------------------------------------------------------------------
 // Init
 //
@@ -287,6 +308,7 @@ void init_aerospike_c_query(VALUE AerospikeC) {
   rb_define_method(rb_aero_Query, "query_info", RB_FN_ANY()query_info, 0);
   rb_define_method(rb_aero_Query, "with_header!", RB_FN_ANY()set_with_header, 1);
   rb_define_method(rb_aero_Query, "with_header", RB_FN_ANY()get_with_header, 0);
+  rb_define_method(rb_aero_Query, "predexp=", RB_FN_ANY()set_predexp, 1);
 
   //
   // attr_accessor
@@ -300,4 +322,5 @@ void init_aerospike_c_query(VALUE AerospikeC) {
   //
   rb_define_attr(rb_aero_Query, "filter", 1, 0);
   rb_define_attr(rb_aero_Query, "order", 1, 0);
+  rb_define_attr(rb_aero_Query, "predexp", 1, 0);
 }

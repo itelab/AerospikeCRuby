@@ -4,7 +4,105 @@ static int foreach_hash2record(VALUE key, VALUE val, VALUE record);
 static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE map);
 static char * key2bin_name(VALUE key);
 
+typedef struct {
+  as_predexp_base *array;
+  size_t used;
+  size_t size;
+} Array_as_predexp;
 
+void initArray(Array_as_predexp *a, size_t initialSize) {
+  a->array = (as_predexp_base *)malloc(initialSize * sizeof(int));
+  a->used = 0;
+  a->size = initialSize;
+}
+
+void insertArray(Array_as_predexp *a, as_predexp_base element) {
+  // a->used is the number of used entries, because a->array[a->used++] updates a->used only *after* the array has been accessed.
+  // Therefore a->used can go up to a->size
+  if (a->used == a->size) {
+    a->size *= 2;
+    a->array = (as_predexp_base *)realloc(a->array, a->size * sizeof(int));
+  }
+  a->array[a->used++] = element;
+}
+
+void freeArray(Array_as_predexp *a) {
+  free(a->array);
+  a->array = NULL;
+  a->used = a->size = 0;
+}
+
+/**
+ * @brief      Convert AerospikeC::PredExp object to an array of as_predexp_base objects
+ *
+ * @param[in]  str   ruby AerospikeC::PredExp object
+ *
+ * @return     Array of as_predexp_base objects
+ */
+VALUE predexp_obj2_as_predexp_ary(VALUE predexp_obj){
+  as_predexp_base as_predexp_objs[10];
+
+  // initArray(&as_predexp_objs, 10);
+
+
+  VALUE predexp = rb_iv_get(predexp_obj, "@predexp");
+
+  if(TYPE(predexp) != T_ARRAY) {
+    return as_predexp_objs;
+  }
+
+  VALUE len = rb_ary_len_int(predexp);
+
+  if(len > 0) {
+    for (int i = 0; i < len; ++i) {
+      VALUE predexp_o = rb_ary_entry(predexp, i);
+
+      VALUE type = rb_hash_aref(predexp_o, type_sym);
+      VALUE pred = rb_hash_aref(predexp_o, predexp_sym);
+      VALUE bin = rb_hash_aref(predexp_o, bin_sym);
+      VALUE val = rb_hash_aref(predexp_o, value_sym);
+      rb_p(type);
+      rb_p(pred);
+      rb_p(bin);
+      rb_p(val);
+      create_as_predexp(as_predexp_objs, type, pred, bin, val);
+    }
+  }
+  return as_predexp_objs;
+}
+
+void create_as_predexp(Array_as_predexp a, VALUE type, VALUE pred, VALUE bin, VALUE val) {
+  rb_p(type);
+  rb_p(pred);
+  rb_p(bin);
+  rb_p(val);
+  VALUE predex_type_sym = TYPE(type);
+
+  // if (predex_type_sym == numeric_sym){
+  //   val = NUM2INT(val);
+  //   insertArray(&a, *as_predexp_integer_bin(bin));
+  //   insertArray(&a, *as_predexp_integer_value(val));
+  //   VALUE predex_pred_sym = TYPE(pred);
+  //
+  //   if (predex_pred_sym == predexp_equal_sym) {
+  //     insertArray(&a, *as_predexp_integer_equal());
+  //   } else if(predex_type_sym == predexp_unequal_sym) {
+  //     insertArray(&a, *as_predexp_integer_unequal());
+  //   } else if(predex_type_sym == predexp_greater_sym) {
+  //     insertArray(&a, *as_predexp_integer_greater());
+  //   } else if(predex_type_sym == predexp_greatereq_sym) {
+  //     insertArray(&a, *as_predexp_integer_greatereq());
+  //   } else if(predex_type_sym == predexp_less_sym) {
+  //     insertArray(&a, *as_predexp_integer_less());
+  //   } else if(predex_type_sym == predexp_lesseq_sym) {
+  //     insertArray(&a, *as_predexp_integer_lesseq());
+  //   }
+  // } else if(predex_type_sym == string_sym){
+  //
+  // } else if(predex_type_sym == geo_json_sym){
+  //
+  // }
+}
 
 void start_timing(struct timeval * tm) {
   gettimeofday(tm, NULL);
@@ -817,6 +915,24 @@ as_query * query_obj2as_query(VALUE query_obj) {
 
       as_query_orderby(query, StringValueCStr(order_bin), FIX2INT(order_type));
     }
+  }
+
+  VALUE predexp = rb_iv_get(query_obj, "@predexp");
+
+  if( predexp != Qnil ) {
+    predexp = predexp_obj2_as_predexp_ary(predexp);
+    len     = sizeof(predexp);
+
+    // if(len > 0) {
+    //   as_query_predexp_init(query, len);
+    //   // ----------------
+    //   // order
+    //   for (int i = 0; i < len; ++i) {
+    //     VALUE predexp_obj = rb_ary_entry(predexp, i);
+    //
+    //     as_query_predexp_add(query, predexp_obj);
+    //   }
+    // }
   }
 
   // log_debug("Converted ruby AerospikeC::Query to as_query");

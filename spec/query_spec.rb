@@ -74,4 +74,12 @@ describe AerospikeC::Query do
     @query.order_by!("other_bin", :desc)
     expect(@query.order).to eq([{:order=>0, :bin=>"string_bin"}, {:order=>1, :bin=>"other_bin"}])
   end
+
+  context "predexp" do
+    it "can set predexp" do
+      predexp = AerospikeC::PredExp.new
+      @query.predexp = predexp
+      expect(@query.predexp).to eq(predexp)
+    end
+  end
 end

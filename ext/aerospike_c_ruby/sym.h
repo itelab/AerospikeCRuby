@@ -85,4 +85,15 @@
 #define list_get_range_from_sym ID2SYM(rb_intern("list_get_range_from"))// :list_get_range_from
 ;
 
+#define predexp_sym                   ID2SYM(rb_intern("predexp"))   // :predexp
+#define predexp_equal_sym             ID2SYM(rb_intern("equal"))     // :equal
+#define predexp_unequal_sym           ID2SYM(rb_intern("unequal"))   // :unequal
+#define predexp_greater_sym           ID2SYM(rb_intern("greater"))   // :greater
+#define predexp_greatereq_sym         ID2SYM(rb_intern("greatereq")) // :greatereq
+#define predexp_less_sym              ID2SYM(rb_intern("less"))      // :less
+#define predexp_lesseq_sym            ID2SYM(rb_intern("lesseq"))    // :lesseq
+#define predexp_within_sym            ID2SYM(rb_intern("within"))    // :within
+#define predexp_contains_sym          ID2SYM(rb_intern("contains"))  // :contains
+;
+
 #endif // AEROSPIKE_C_RUBY_SYM_H

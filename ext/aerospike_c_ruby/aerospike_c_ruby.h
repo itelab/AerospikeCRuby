@@ -39,6 +39,7 @@
 #include <aerospike/aerospike_query.h>
 #include <aerospike/as_ldt.h>
 #include <aerospike/as_password.h>
+#include <aerospike/as_predexp.h>
 
 #include <sym.h>
 #include <logger.h>
@@ -98,6 +99,7 @@ void init_aerospike_c_ldt_proxy(VALUE AerospikeC);  // ldt_proxy.c
 void init_aerospike_c_exceptions(VALUE AerospikeC); // exceptions.c
 void init_aerospike_c_geo_json(VALUE AerospikeC);   // geo_json.c
 void init_aerospike_c_password(VALUE AerospikeC);   // password.c
+void init_aerospike_c_predexp(VALUE AerospikeC);    // predexp.c
 
 // query_task.c
 void init_aerospike_c_query_task(VALUE AerospikeC);
@@ -124,6 +126,7 @@ extern VALUE rb_aero_ScanTask;
 extern VALUE rb_aero_QueryTask;
 
 extern VALUE rb_aero_Query;
+extern VALUE rb_aero_PredExp;
 
 extern VALUE rb_aero_Policy;
 extern VALUE rb_aero_WritePolicy;
