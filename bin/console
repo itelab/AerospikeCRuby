@@ -18,11 +18,11 @@ require "irb"
 @key_2 = AerospikeC::Key.new("test", "test", "test2")
 @key_3 = AerospikeC::Key.new("test", "test", "test3")
 @client.put(@key, {"foo": 0})
-@client.put(@key_2, {"foo": 1, "bar": 2})
-@client.put(@key_3, {"foo": 1, "bar": 3})
+@client.put(@key_2, {"foo": 1, "bar": "baz"})
+@client.put(@key_3, {"foo": 1, "bar": "baz2"})
 @query = AerospikeC::Query.new("test", "test")
 @query.eql!("foo", 1)
 @predexp = AerospikeC::PredExp.new
-@predexp.eql("bar", 2)
+@predexp.eql("bar", "baz")
 @query.predexp = @predexp
 IRB.start

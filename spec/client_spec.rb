@@ -579,5 +579,93 @@ describe AerospikeC::Client do
       expect(@client.last_query_id).to eq(task.query_id)
       task.wait_till_completed(100)
     end
+
+    context "predexp" do
+      let(:query) { AerospikeC::Query.new("test", "query_test") }
+
+      before(:each) do
+        query.predexp = AerospikeC::PredExp.new
+      end
+
+      context "integer" do
+        before(:each) do
+          query.range!("int_bin", 8, 10)
+        end
+
+        it "#eql" do
+          query.predexp.eql("int_bin", 9)
+          response = @client.query(query)
+
+          expect(response.count).to eq(1)
+          expect(response.last["int_bin"]).to eq(9)
+        end
+
+        it "#uneql" do
+          query.predexp.uneql("int_bin", 9)
+          response = @client.query(query)
+
+          expect(response.count).to eq(2)
+          expect(response.first["int_bin"]).to eq(8)
+          expect(response.last["int_bin"]).to eq(10)
+        end
+
+        it "#greater" do
+          query.predexp.greater("int_bin", 9)
+          response = @client.query(query)
+
+          expect(response.count).to eq(1)
+          expect(response.last["int_bin"]).to eq(10)
+        end
+
+        it "#greatereq" do
+          query.predexp.greatereq("int_bin", 9)
+          response = @client.query(query)
+
+          expect(response.count).to eq(2)
+          expect(response.first["int_bin"]).to eq(9)
+          expect(response.last["int_bin"]).to eq(10)
+        end
+
+        it "#less" do
+          query.predexp.less("int_bin", 9)
+          response = @client.query(query)
+
+          expect(response.count).to eq(1)
+          expect(response.last["int_bin"]).to eq(8)
+        end
+
+        it "#lesseq" do
+          query.predexp.lesseq("int_bin", 9)
+          response = @client.query(query)
+
+          expect(response.count).to eq(2)
+          expect(response.first["int_bin"]).to eq(8)
+          expect(response.last["int_bin"]).to eq(9)
+        end
+      end
+
+      context "string" do
+        before(:each) do
+          query.range!("int_bin", 8, 10)
+        end
+
+        it "eql" do
+          query.predexp.eql("string_bin", "str9")
+          response = @client.query(query)
+
+          expect(response.count).to eq(1)
+          expect(response.first["string_bin"]).to eq("str9")
+        end
+
+        it "uneql" do
+          query.predexp.uneql("string_bin", "str9")
+          response = @client.query(query)
+
+          expect(response.count).to eq(2)
+          expect(response.first["string_bin"]).to eq("str8")
+          expect(response.last["string_bin"]).to eq("str10")
+        end
+      end
+    end
   end
 end

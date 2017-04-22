@@ -4,34 +4,6 @@ static int foreach_hash2record(VALUE key, VALUE val, VALUE record);
 static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE map);
 static char * key2bin_name(VALUE key);
 
-typedef struct {
-  as_predexp_base *array;
-  size_t used;
-  size_t size;
-} Array_as_predexp;
-
-void initArray(Array_as_predexp *a, size_t initialSize) {
-  a->array = (as_predexp_base *)malloc(initialSize * sizeof(int));
-  a->used = 0;
-  a->size = initialSize;
-}
-
-void insertArray(Array_as_predexp *a, as_predexp_base element) {
-  // a->used is the number of used entries, because a->array[a->used++] updates a->used only *after* the array has been accessed.
-  // Therefore a->used can go up to a->size
-  if (a->used == a->size) {
-    a->size *= 2;
-    a->array = (as_predexp_base *)realloc(a->array, a->size * sizeof(int));
-  }
-  a->array[a->used++] = element;
-}
-
-void freeArray(Array_as_predexp *a) {
-  free(a->array);
-  a->array = NULL;
-  a->used = a->size = 0;
-}
-
 /**
  * @brief      Convert AerospikeC::PredExp object to an array of as_predexp_base objects
  *
@@ -39,16 +11,16 @@ void freeArray(Array_as_predexp *a) {
  *
  * @return     Array of as_predexp_base objects
  */
-VALUE predexp_obj2_as_predexp_ary(VALUE predexp_obj){
-  as_predexp_base as_predexp_objs[10];
-
-  // initArray(&as_predexp_objs, 10);
-
+void predexp_obj2_as_predexp_ary(as_predexp_base *a[], int * size, VALUE predexp_obj){
+  // a[0] = as_predexp_integer_bin("bar");
+  // a[1] = as_predexp_integer_value(3);
+  // a[2] = as_predexp_integer_equal();
+  // *size = 3;
 
   VALUE predexp = rb_iv_get(predexp_obj, "@predexp");
 
   if(TYPE(predexp) != T_ARRAY) {
-    return as_predexp_objs;
+    return;
   }
 
   VALUE len = rb_ary_len_int(predexp);
@@ -61,47 +33,59 @@ VALUE predexp_obj2_as_predexp_ary(VALUE predexp_obj){
       VALUE pred = rb_hash_aref(predexp_o, predexp_sym);
       VALUE bin = rb_hash_aref(predexp_o, bin_sym);
       VALUE val = rb_hash_aref(predexp_o, value_sym);
-      rb_p(type);
-      rb_p(pred);
-      rb_p(bin);
-      rb_p(val);
-      create_as_predexp(as_predexp_objs, type, pred, bin, val);
+      // rb_p(type);
+      // rb_p(pred);
+      // rb_p(bin);
+      // rb_p(val);
+      if (type == numeric_sym){
+        val = NUM2UINT(val);
+        bin = StringValueCStr(bin);
+        add_predexp_to_array(a, size, as_predexp_integer_bin(bin));
+        add_predexp_to_array(a, size, as_predexp_integer_value(val));
+        if (pred == predexp_equal_sym) {
+          add_predexp_to_array(a, size, as_predexp_integer_equal());
+        } else if(pred == predexp_unequal_sym) {
+          add_predexp_to_array(a, size, as_predexp_integer_unequal());
+        } else if(pred == predexp_greater_sym) {
+          add_predexp_to_array(a, size, as_predexp_integer_greater());
+        } else if(pred == predexp_greatereq_sym) {
+          add_predexp_to_array(a, size, as_predexp_integer_greatereq());
+        } else if(pred == predexp_less_sym) {
+          add_predexp_to_array(a, size, as_predexp_integer_less());
+        } else if(pred == predexp_lesseq_sym) {
+          add_predexp_to_array(a, size, as_predexp_integer_lesseq());
+        }
+      } else if(type == string_sym){
+        val = StringValueCStr(val);
+        bin = StringValueCStr(bin);
+        add_predexp_to_array(a, size, as_predexp_string_bin(bin));
+        add_predexp_to_array(a, size, as_predexp_string_value(val));
+        if (pred == predexp_equal_sym) {
+          add_predexp_to_array(a, size, as_predexp_string_equal());
+        } else if(pred == predexp_unequal_sym) {
+          add_predexp_to_array(a, size, as_predexp_string_unequal());
+        }
+      } else if(type == geo_json_sym){
+        as_geojson * geo = get_geo_json_struct(val);
+        char * buffer = (char *) malloc ( strlen(geo->value) + 1 );
+        strcpy(buffer, geo->value);
+        bin = StringValueCStr(bin);
+
+        add_predexp_to_array(a, size, as_predexp_geojson_bin(bin));
+        add_predexp_to_array(a, size, as_predexp_geojson_value(buffer));
+        if (pred == predexp_within_sym) {
+          add_predexp_to_array(a, size, as_predexp_geojson_within());
+        } else if(pred == predexp_contains_sym) {
+          add_predexp_to_array(a, size, as_predexp_geojson_contains());
+        }
+      }
     }
   }
-  return as_predexp_objs;
 }
 
-void create_as_predexp(Array_as_predexp a, VALUE type, VALUE pred, VALUE bin, VALUE val) {
-  rb_p(type);
-  rb_p(pred);
-  rb_p(bin);
-  rb_p(val);
-  VALUE predex_type_sym = TYPE(type);
-
-  // if (predex_type_sym == numeric_sym){
-  //   val = NUM2INT(val);
-  //   insertArray(&a, *as_predexp_integer_bin(bin));
-  //   insertArray(&a, *as_predexp_integer_value(val));
-  //   VALUE predex_pred_sym = TYPE(pred);
-  //
-  //   if (predex_pred_sym == predexp_equal_sym) {
-  //     insertArray(&a, *as_predexp_integer_equal());
-  //   } else if(predex_type_sym == predexp_unequal_sym) {
-  //     insertArray(&a, *as_predexp_integer_unequal());
-  //   } else if(predex_type_sym == predexp_greater_sym) {
-  //     insertArray(&a, *as_predexp_integer_greater());
-  //   } else if(predex_type_sym == predexp_greatereq_sym) {
-  //     insertArray(&a, *as_predexp_integer_greatereq());
-  //   } else if(predex_type_sym == predexp_less_sym) {
-  //     insertArray(&a, *as_predexp_integer_less());
-  //   } else if(predex_type_sym == predexp_lesseq_sym) {
-  //     insertArray(&a, *as_predexp_integer_lesseq());
-  //   }
-  // } else if(predex_type_sym == string_sym){
-  //
-  // } else if(predex_type_sym == geo_json_sym){
-  //
-  // }
+void add_predexp_to_array(as_predexp_base *a[], int * index, as_predexp_base * predexp) {
+  a[*index] = predexp;
+  *index+=1;
 }
 
 void start_timing(struct timeval * tm) {
@@ -920,19 +904,18 @@ as_query * query_obj2as_query(VALUE query_obj) {
   VALUE predexp = rb_iv_get(query_obj, "@predexp");
 
   if( predexp != Qnil ) {
-    predexp = predexp_obj2_as_predexp_ary(predexp);
-    len     = sizeof(predexp);
+    rb_p(rb_str_new2("new predicates"));
+    as_predexp_base * a [100]; // TODO dynamic array
+    int size = 0;
+    predexp_obj2_as_predexp_ary(a, &size, predexp);
 
-    // if(len > 0) {
-    //   as_query_predexp_init(query, len);
-    //   // ----------------
-    //   // order
-    //   for (int i = 0; i < len; ++i) {
-    //     VALUE predexp_obj = rb_ary_entry(predexp, i);
-    //
-    //     as_query_predexp_add(query, predexp_obj);
-    //   }
-    // }
+    if(size > 0) {
+      as_query_predexp_init(query, size);
+      for (int i = 0; i < 3; i++) {
+        as_query_predexp_add(query, a[i]);
+      }
+    }
+    rb_p(rb_str_new2("done"));
   }
 
   // log_debug("Converted ruby AerospikeC::Query to as_query");
