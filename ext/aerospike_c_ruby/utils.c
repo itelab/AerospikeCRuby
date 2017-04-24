@@ -1,22 +1,11 @@
 #include <aerospike_c_ruby.h>
+#include <as_predexp_array.h>
 
 static int foreach_hash2record(VALUE key, VALUE val, VALUE record);
 static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE map);
 static char * key2bin_name(VALUE key);
 
-/**
- * @brief      Convert AerospikeC::PredExp object to an array of as_predexp_base objects
- *
- * @param[in]  str   ruby AerospikeC::PredExp object
- *
- * @return     Array of as_predexp_base objects
- */
-void predexp_obj2_as_predexp_ary(as_predexp_base *a[], int * size, VALUE predexp_obj){
-  // a[0] = as_predexp_integer_bin("bar");
-  // a[1] = as_predexp_integer_value(3);
-  // a[2] = as_predexp_integer_equal();
-  // *size = 3;
-
+void predexp_obj2_as_predexp_ary(as_predexp_array *a, VALUE predexp_obj){
   VALUE predexp = rb_iv_get(predexp_obj, "@predexp");
 
   if(TYPE(predexp) != T_ARRAY) {
@@ -40,30 +29,30 @@ void predexp_obj2_as_predexp_ary(as_predexp_base *a[], int * size, VALUE predexp
       if (type == numeric_sym){
         val = NUM2UINT(val);
         bin = StringValueCStr(bin);
-        add_predexp_to_array(a, size, as_predexp_integer_bin(bin));
-        add_predexp_to_array(a, size, as_predexp_integer_value(val));
+        insert_as_predexp_array(a, as_predexp_integer_bin(bin));
+        insert_as_predexp_array(a, as_predexp_integer_value(val));
         if (pred == predexp_equal_sym) {
-          add_predexp_to_array(a, size, as_predexp_integer_equal());
+          insert_as_predexp_array(a, as_predexp_integer_equal());
         } else if(pred == predexp_unequal_sym) {
-          add_predexp_to_array(a, size, as_predexp_integer_unequal());
+          insert_as_predexp_array(a, as_predexp_integer_unequal());
         } else if(pred == predexp_greater_sym) {
-          add_predexp_to_array(a, size, as_predexp_integer_greater());
+          insert_as_predexp_array(a, as_predexp_integer_greater());
         } else if(pred == predexp_greatereq_sym) {
-          add_predexp_to_array(a, size, as_predexp_integer_greatereq());
+          insert_as_predexp_array(a, as_predexp_integer_greatereq());
         } else if(pred == predexp_less_sym) {
-          add_predexp_to_array(a, size, as_predexp_integer_less());
+          insert_as_predexp_array(a, as_predexp_integer_less());
         } else if(pred == predexp_lesseq_sym) {
-          add_predexp_to_array(a, size, as_predexp_integer_lesseq());
+          insert_as_predexp_array(a, as_predexp_integer_lesseq());
         }
       } else if(type == string_sym){
         val = StringValueCStr(val);
         bin = StringValueCStr(bin);
-        add_predexp_to_array(a, size, as_predexp_string_bin(bin));
-        add_predexp_to_array(a, size, as_predexp_string_value(val));
+        insert_as_predexp_array(a, as_predexp_string_bin(bin));
+        insert_as_predexp_array(a, as_predexp_string_value(val));
         if (pred == predexp_equal_sym) {
-          add_predexp_to_array(a, size, as_predexp_string_equal());
+          insert_as_predexp_array(a, as_predexp_string_equal());
         } else if(pred == predexp_unequal_sym) {
-          add_predexp_to_array(a, size, as_predexp_string_unequal());
+          insert_as_predexp_array(a, as_predexp_string_unequal());
         }
       } else if(type == geo_json_sym){
         as_geojson * geo = get_geo_json_struct(val);
@@ -71,21 +60,16 @@ void predexp_obj2_as_predexp_ary(as_predexp_base *a[], int * size, VALUE predexp
         strcpy(buffer, geo->value);
         bin = StringValueCStr(bin);
 
-        add_predexp_to_array(a, size, as_predexp_geojson_bin(bin));
-        add_predexp_to_array(a, size, as_predexp_geojson_value(buffer));
+        insert_as_predexp_array(a, as_predexp_geojson_bin(bin));
+        insert_as_predexp_array(a, as_predexp_geojson_value(buffer));
         if (pred == predexp_within_sym) {
-          add_predexp_to_array(a, size, as_predexp_geojson_within());
+          insert_as_predexp_array(a, as_predexp_geojson_within());
         } else if(pred == predexp_contains_sym) {
-          add_predexp_to_array(a, size, as_predexp_geojson_contains());
+          insert_as_predexp_array(a, as_predexp_geojson_contains());
         }
       }
     }
   }
-}
-
-void add_predexp_to_array(as_predexp_base *a[], int * index, as_predexp_base * predexp) {
-  a[*index] = predexp;
-  *index+=1;
 }
 
 void start_timing(struct timeval * tm) {
@@ -904,18 +888,18 @@ as_query * query_obj2as_query(VALUE query_obj) {
   VALUE predexp = rb_iv_get(query_obj, "@predexp");
 
   if( predexp != Qnil ) {
-    rb_p(rb_str_new2("new predicates"));
-    as_predexp_base * a [100]; // TODO dynamic array
-    int size = 0;
-    predexp_obj2_as_predexp_ary(a, &size, predexp);
+    as_predexp_array a; // dynamic array
+    init_as_predexp_array(&a, 100);
+    predexp_obj2_as_predexp_ary(&a, predexp);
 
-    if(size > 0) {
-      as_query_predexp_init(query, size);
-      for (int i = 0; i < 3; i++) {
-        as_query_predexp_add(query, a[i]);
+    if (a.capacity > 0) {
+      as_query_predexp_init(query, a.capacity);
+      for(int i = 0; i < a.capacity; i++){
+        as_query_predexp_add(query, a.array[i]);
       }
     }
-    rb_p(rb_str_new2("done"));
+
+    free_as_predexp_array(&a);
   }
 
   // log_debug("Converted ruby AerospikeC::Query to as_query");

@@ -666,6 +666,115 @@ describe AerospikeC::Client do
           expect(response.last["string_bin"]).to eq("str10")
         end
       end
+
+      context "geo json" do
+        let(:polygon_in) do
+          AerospikeC::GeoJson.polygon(
+            [
+              [
+                19.9636173248291,
+                53.71083119601402
+              ],
+              [
+                19.968852996826172,
+                53.69690974231214
+              ],
+              [
+                19.988508224487305,
+                53.69985700363742
+              ],
+              [
+                19.985761642456055,
+                53.71210117237752
+              ],
+              [
+                19.9636173248291,
+                53.71083119601402
+              ]
+            ]
+          )
+        end
+
+        let(:polygon_out) do
+          AerospikeC::GeoJson.polygon(
+            [
+              [
+                19.951000213623047,
+                53.7154537257792
+              ],
+              [
+                19.961214065551758,
+                53.701787856057244
+              ],
+              [
+                19.971942901611328,
+                53.7154537257792
+              ],
+              [
+                19.951000213623047,
+                53.7154537257792
+              ]
+            ]
+          )
+        end
+
+        let(:within_point) { AerospikeC::GeoJson.point(19.972801208496094, 53.70615735286408) }
+
+        before(:each) do
+          query.range!("int_bin", 101, 110)
+        end
+
+        it "contains" do
+          i = 101
+          2.times do
+            key = AerospikeC::Key.new("test", "query_test", "query#{i}")
+            bins = {
+              "int_bin" => i,
+              "geojson_bin" => AerospikeC::GeoJson.point(i.to_f, i.to_f / 2)
+            }
+            @client.put(key, bins)
+
+            @query_keys << key
+            i += 1
+          end
+
+          circle = AerospikeC::GeoJson.circle([101.0, 50.5], 10_000)
+          query.predexp.contains("geojson_bin", circle)
+          response = @client.query(query)
+
+          puts response.inspect
+
+          expect(response.count).to eq(1)
+          expect(response.last["int_bin"]).to eq(101)
+        end
+
+        it "within" do
+          key = AerospikeC::Key.new("test", "query_test", "query101")
+          bins = {
+            "int_bin" => 101,
+            "geojson_bin" => polygon_in
+          }
+          @client.put(key, bins)
+
+          @query_keys << key
+
+          key = AerospikeC::Key.new("test", "query_test", "query102")
+          bins["int_bin"] = 102
+          bins["geojson_bin"] = polygon_out
+
+          @client.put(key, bins)
+
+          @query_keys << key
+
+          query.predexp.within("geojson_bin", within_point)
+          response = @client.query(query)
+
+          puts response.inspect
+
+          expect(response.count).to eq(1)
+          expect(response.last["int_bin"]).to eq(101)
+        end
+      end
     end
   end
 end
