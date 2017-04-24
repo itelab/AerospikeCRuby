@@ -12,17 +12,4 @@ require "aerospike_c_ruby"
 
 require "irb"
 
-@client = AerospikeC::Client.new("127.0.0.1", 3000)
-@client.create_index("test", "test", "foo", "test_test_foo_idx", :numeric)
-@key = AerospikeC::Key.new("test", "test", "test1")
-@key_2 = AerospikeC::Key.new("test", "test", "test2")
-@key_3 = AerospikeC::Key.new("test", "test", "test3")
-@client.put(@key, {"foo": 0})
-@client.put(@key_2, {"foo": 1, "bar": "baz"})
-@client.put(@key_3, {"foo": 1, "bar": "baz2"})
-@query = AerospikeC::Query.new("test", "test")
-@query.eql!("foo", 1)
-@predexp = AerospikeC::PredExp.new
-@predexp.eql("bar", "baz")
-@query.predexp = @predexp
 IRB.start

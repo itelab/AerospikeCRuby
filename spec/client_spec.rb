@@ -110,6 +110,8 @@ describe AerospikeC::Client do
     end
 
     it "can put nil" do
+      @client.put(@test_put_key, {"nilbin" => 1})
+      # nil is for deleting bins from the record
       expect( @client.put(@test_put_key, {"nilbin" => nil}) ).to eq(true)
       expect( @client.get(@test_put_key) ).to eq(nil)
     end
@@ -359,33 +361,37 @@ describe AerospikeC::Client do
       @task = @client.create_index("test", "test", "test_bin", "test_test_test_bin_idx", :numeric)
     end
 
-    after(:each) do
-      @task.wait_till_completed(100)
-      @client.drop_index("test", "test_test_test_bin_idx")
-    end
+    context "created index" do
+      after(:each) do
+        @task.wait_till_completed(100)
+        @client.drop_index("test", "test_test_test_bin_idx")
+      end
 
-    it "returns IndexTask", slow: true do
-      expect(@task).to be_kind_of(AerospikeC::IndexTask)
-    end
+      it "returns IndexTask", slow: true do
+        expect(@task).to be_kind_of(AerospikeC::IndexTask)
+      end
 
-    it "is not done without wait", slow: true do
-      expect(@task.done?).to eq(false)
-    end
+      it "is not done without wait", slow: true do
+        expect(@task.done?).to eq(false)
+      end
 
-    it "can wait for done", slow: true do
-      expect(@task.wait_till_completed(100)).to eq(true)
-      expect(@task.done?).to eq(true)
-    end
+      it "can wait for done", slow: true do
+        expect(@task.wait_till_completed(100)).to eq(true)
+        expect(@task.done?).to eq(true)
+      end
 
-    it "creates index", slow: true do
-      expect(@task.wait_till_completed(100)).to eq(true)
-      expect(@client.list_indexes.first).to include("indexname"=>"test_test_test_bin_idx")
+      it "creates index", slow: true do
+        expect(@task.wait_till_completed(100)).to eq(true)
+        expect(@client.list_indexes.map{|ind| ind["indexname"]}).to include("test_test_test_bin_idx")
+      end
     end
 
     it "drops_index", slow: true do
+      @task.wait_till_completed(100)
       expect(@client.drop_index("test", "test_test_test_bin_idx")).to eq(true)
-      sleep 5
-      expect(@client.list_indexes.last).to eq(nil)
+      sleep 0.1
+      @indexes = @client.list_indexes
+      expect(@indexes.map{|ind| ind["indexname"]}).not_to include("test_test_test_bin_idx")
     end
   end
 
@@ -408,10 +414,14 @@ describe AerospikeC::Client do
     end
 
     it "statistic" do
-      expect(@client.statistics).to include("aggr_scans_failed")
-      expect(@client.statistics).to include("rw_err_dup_cluster_key")
-      expect(@client.statistics).to include("total-bytes-disk")
-      expect(@client.statistics).to include("udf_read_success")
+      # @deprecated in version 3.9
+      # expect(@client.statistics).to include("aggr_scans_failed")
+      # expect(@client.statistics).to include("rw_err_dup_cluster_key")
+      # expect(@client.statistics).to include("total-bytes-disk")
+      # expect(@client.statistics).to include("udf_read_success")
+
+      expect(@client.statistics).to include("batch_error")
+      expect(@client.statistics).to include("cluster_integrity")
     end
   end
 
@@ -550,7 +560,7 @@ describe AerospikeC::Client do
 
       expect(@client.execute_udf_on_query(q_range, "aggregate_udf", "mycount")).to eq([11])
       # alias:
-      expect(@client.aggregate(q_range, "aggregate_udf", "mycount")).to eq([11])
+      # expect(@client.aggregate(q_range, "aggregate_udf", "mycount")).to eq([11])
     end
 
     it "background query returns AerospikeC::QueryTask", slow: true do

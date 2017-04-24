@@ -13,13 +13,11 @@ static VALUE bin_val(VALUE self) {
 // free memory method
 //
 static void rec_deallocate(as_record * rec) {
-  rb_p("deallocating...");
   as_record_destroy(rec);
   free(rec);
 }
 
 static VALUE rec_allocate(VALUE self) {
-  rb_p("allocating...");
   as_record * rec = (as_record *) cf_malloc( sizeof(as_record) );
   if (! rec) rb_raise(rb_aero_MemoryError, "[AerospikeC::Record][initialize] Error while allocating memory for aerospike record");
 
@@ -58,7 +56,9 @@ static void rec_initialize(int argc, VALUE * argv, VALUE self) {
   as_record_init(rec, len);
   rec->ttl = FIX2INT( rb_hash_aref(options, ttl_sym) );
 
-  hash2record(value, self);
+  hash2record(value, rec);
+
+  return self;
 }
 
 //
