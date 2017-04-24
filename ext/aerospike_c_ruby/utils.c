@@ -53,6 +53,8 @@ void predexp_obj2_as_predexp_ary(as_predexp_array *a, VALUE predexp_obj){
           insert_as_predexp_array(a, as_predexp_string_equal());
         } else if(pred == predexp_unequal_sym) {
           insert_as_predexp_array(a, as_predexp_string_unequal());
+        } else if(pred == predexp_regexp_sym) {
+          insert_as_predexp_array(a, as_predexp_string_regex(1));
         }
       } else if(type == geo_json_sym){
         as_geojson * geo = get_geo_json_struct(val);

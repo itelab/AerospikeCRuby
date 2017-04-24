@@ -675,6 +675,14 @@ describe AerospikeC::Client do
           expect(response.first["string_bin"]).to eq("str8")
           expect(response.last["string_bin"]).to eq("str10")
         end
+
+        it "predexp" do
+          query.predexp.regexp("string_bin", "str9")
+          response = @client.query(query)
+
+          expect(response.count).to eq(1)
+          expect(response.first["string_bin"]).to eq("str9")
+        end
       end
 
       context "geo json" do

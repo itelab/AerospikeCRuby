@@ -94,6 +94,7 @@
 #define predexp_lesseq_sym            ID2SYM(rb_intern("lesseq"))    // :lesseq
 #define predexp_within_sym            ID2SYM(rb_intern("within"))    // :within
 #define predexp_contains_sym          ID2SYM(rb_intern("contains"))  // :contains
+#define predexp_regexp_sym            ID2SYM(rb_intern("regexp"))    // :regexp
 ;
 
 #endif // AEROSPIKE_C_RUBY_SYM_H

@@ -124,4 +124,19 @@ describe AerospikeC::PredExp do
       }.to raise_error(AerospikeC::OptionError)
     end
   end
+
+
+  context "#regexp" do
+    it "as String" do
+      point = AerospikeC::GeoJson.point(1,1)
+      @predexp.regexp("string_bin", "hay")
+      expect(@predexp.predexp).to eq([{:predexp=>:regexp, :bin=>"string_bin", :value=>"hay", :type=>:string}])
+    end
+
+    it "raises error" do
+      expect{
+        @predexp.regexp("string_bin", /hay/)
+      }.to raise_error(AerospikeC::OptionError)
+    end
+  end
 end

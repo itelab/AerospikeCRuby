@@ -49,6 +49,11 @@ static VALUE contains(VALUE self, VALUE bin, VALUE val) {
   return self;
 }
 
+static VALUE regexp(VALUE self, VALUE bin, VALUE val) {
+  add_string_predicate(self, bin, val, predexp_regexp_sym);
+  return self;
+}
+
 
 // -------------------------------------------------------------------------------------------------
 // helper methods
@@ -67,7 +72,7 @@ void add_numeric_predicate(VALUE self, VALUE bin, VALUE val, VALUE sym) {
       break;
 
     default:
-      rb_raise(rb_aero_OptionError, "[AerospikeC::PredExp] Unsuporrted value type: %s", rb_val_type_as_str(val));
+      rb_raise(rb_aero_OptionError, "[AerospikeC::PredExp] Unsupported value type: %s", rb_val_type_as_str(val));
       break;
   }
 
@@ -91,7 +96,27 @@ void add_numeric_or_string_predicate(VALUE self, VALUE bin, VALUE val, VALUE sym
       break;
 
     default:
-      rb_raise(rb_aero_OptionError, "[AerospikeC::PredExp] Unsuporrted value type: %s", rb_val_type_as_str(val));
+      rb_raise(rb_aero_OptionError, "[AerospikeC::PredExp] Unsupported value type: %s", rb_val_type_as_str(val));
+      break;
+  }
+
+  save_predicate(self, predicate);
+}
+
+void add_string_predicate(VALUE self, VALUE bin, VALUE val, VALUE sym) {
+  VALUE predicate = rb_hash_new();
+
+  rb_hash_aset(predicate, predexp_sym, sym);
+  rb_hash_aset(predicate, bin_sym, value_to_s(bin));
+  rb_hash_aset(predicate, value_sym, val);
+
+  switch ( TYPE(val) ) {
+    case T_STRING:
+      rb_hash_aset(predicate, type_sym, string_sym);
+      break;
+
+    default:
+      rb_raise(rb_aero_OptionError, "[AerospikeC::PredExp] Unsupported value type: %s", rb_val_type_as_str(val));
       break;
   }
 
@@ -114,7 +139,7 @@ void add_geojson_predicate(VALUE self, VALUE bin, VALUE val, VALUE sym) {
       break;
 
     default:
-      rb_raise(rb_aero_OptionError, "[AerospikeC::PredExp] Unsuporrted value type: %s", rb_val_type_as_str(val));
+      rb_raise(rb_aero_OptionError, "[AerospikeC::PredExp] Unsupported value type: %s", rb_val_type_as_str(val));
       break;
   }
 
@@ -148,6 +173,7 @@ void init_aerospike_c_predexp(VALUE AerospikeC) {
   rb_define_method(rb_aero_PredExp, "lesseq", RB_FN_ANY()lesseq, 2);
   rb_define_method(rb_aero_PredExp, "within", RB_FN_ANY()within, 2);
   rb_define_method(rb_aero_PredExp, "contains", RB_FN_ANY()contains, 2);
+  rb_define_method(rb_aero_PredExp, "regexp", RB_FN_ANY()regexp, 2);
 
   //
   // attr_accessor
