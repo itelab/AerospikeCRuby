@@ -57,8 +57,6 @@ static void rec_initialize(int argc, VALUE * argv, VALUE self) {
   rec->ttl = FIX2INT( rb_hash_aref(options, ttl_sym) );
 
   hash2record(value, rec);
-
-  return self;
 }
 
 //
