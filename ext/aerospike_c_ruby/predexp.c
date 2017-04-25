@@ -7,6 +7,7 @@ VALUE rb_aero_PredExp;
 //
 static VALUE predexp_initialize(VALUE self) {
   rb_iv_set(self, "@predexp", rb_ary_new());
+  rb_iv_set(self, "@next_pred_false", Qfalse);
 }
 
 // ----------------------------------------------------------------------------------
@@ -94,6 +95,14 @@ static VALUE record_expiration_time(VALUE self, VALUE pred, VALUE val) {
 //
 static VALUE record_last_update(VALUE self, VALUE pred, VALUE val) {
   add_record_predicate(self, pred, val, predexp_record_last_update_sym);
+  return self;
+}
+
+// ----------------------------------------------------------------------------------
+// def not
+//
+static VALUE record_not(VALUE self, VALUE pred, VALUE val) {
+  rb_iv_set(self, "@next_pred_false", Qtrue);
   return self;
 }
 
@@ -226,6 +235,11 @@ void add_record_predicate(VALUE self, VALUE pred, VALUE val, VALUE sym){
 
 void save_predicate(VALUE self, VALUE predicate) {
   VALUE old_pred = rb_iv_get(self, "@predexp");
+  VALUE false_pred = rb_iv_get(self, "@next_pred_false");
+  if (false_pred == Qtrue) {
+    rb_hash_aset(predicate, predexp_negate_sym, Qtrue);
+    rb_iv_set(self, "@next_pred_false", Qfalse);
+  }
   rb_ary_push(old_pred, predicate);
   rb_iv_set(self, "@predexp", old_pred);
 }
@@ -254,6 +268,7 @@ void init_aerospike_c_predexp(VALUE AerospikeC) {
   rb_define_method(rb_aero_PredExp, "regexp", RB_FN_ANY()regexp, 2);
   rb_define_method(rb_aero_PredExp, "expiration_time", RB_FN_ANY()record_expiration_time, 2);
   rb_define_method(rb_aero_PredExp, "last_update", RB_FN_ANY()record_last_update, 2);
+  rb_define_method(rb_aero_PredExp, "not", RB_FN_ANY()record_not, 0);
 
   //
   // attr_accessor

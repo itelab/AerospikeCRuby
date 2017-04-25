@@ -889,7 +889,6 @@ describe AerospikeC::Client do
         end
 
         context "last_update" do
-
           # time of last update is in nanoseconds, at this moment we are unable to get exact time of update
 
           it "less" do
@@ -913,6 +912,328 @@ describe AerospikeC::Client do
             response = @client.query(query)
             expect(response.count).to eq(1)
             expect(response.map{ |r| r["int_bin"] }).to eq([102])
+          end
+        end
+      end
+
+      context "not" do
+        context "integer" do
+          before(:each) do
+            query.range!("int_bin", 8, 10)
+          end
+
+          it "#eql" do
+            query.predexp.not.eql("int_bin", 9)
+            response = @client.query(query)
+
+            expect(response.count).to eq(2)
+            expect(response.first["int_bin"]).to eq(8)
+            expect(response.last["int_bin"]).to eq(10)
+          end
+
+          it "#uneql" do
+            query.predexp.not.uneql("int_bin", 9)
+            response = @client.query(query)
+
+            expect(response.count).to eq(1)
+            expect(response.last["int_bin"]).to eq(9)
+          end
+
+          it "#greater" do
+            query.predexp.not.greater("int_bin", 9)
+            response = @client.query(query)
+
+            expect(response.count).to eq(2)
+            expect(response.first["int_bin"]).to eq(8)
+            expect(response.last["int_bin"]).to eq(9)
+          end
+
+          it "#greatereq" do
+            query.predexp.not.greatereq("int_bin", 9)
+            response = @client.query(query)
+
+            expect(response.count).to eq(1)
+            expect(response.last["int_bin"]).to eq(8)
+          end
+
+          it "#less" do
+            query.predexp.not.less("int_bin", 9)
+            response = @client.query(query)
+
+            expect(response.count).to eq(2)
+            expect(response.first["int_bin"]).to eq(9)
+            expect(response.last["int_bin"]).to eq(10)
+          end
+
+          it "#lesseq" do
+            query.predexp.not.lesseq("int_bin", 9)
+            response = @client.query(query)
+
+            expect(response.count).to eq(1)
+            expect(response.last["int_bin"]).to eq(10)
+          end
+        end
+
+        context "string" do
+          before(:each) do
+            query.range!("int_bin", 8, 10)
+          end
+
+          it "eql" do
+            query.predexp.not.eql("string_bin", "str9")
+            response = @client.query(query)
+
+            expect(response.count).to eq(2)
+            expect(response.first["string_bin"]).to eq("str8")
+            expect(response.last["string_bin"]).to eq("str10")
+          end
+
+          it "uneql" do
+            query.predexp.not.uneql("string_bin", "str9")
+            response = @client.query(query)
+
+            expect(response.count).to eq(1)
+            expect(response.first["string_bin"]).to eq("str9")
+          end
+
+          it "predexp" do
+            query.predexp.not.regexp("string_bin", "str9")
+            response = @client.query(query)
+
+            expect(response.count).to eq(2)
+            expect(response.first["string_bin"]).to eq("str8")
+            expect(response.last["string_bin"]).to eq("str10")
+          end
+        end
+
+        context "geo json" do
+          let(:polygon_in) do
+            AerospikeC::GeoJson.polygon(
+              [
+                [
+                  19.9636173248291,
+                  53.71083119601402
+                ],
+                [
+                  19.968852996826172,
+                  53.69690974231214
+                ],
+                [
+                  19.988508224487305,
+                  53.69985700363742
+                ],
+                [
+                  19.985761642456055,
+                  53.71210117237752
+                ],
+                [
+                  19.9636173248291,
+                  53.71083119601402
+                ]
+              ]
+            )
+          end
+
+          let(:polygon_out) do
+            AerospikeC::GeoJson.polygon(
+              [
+                [
+                  19.951000213623047,
+                  53.7154537257792
+                ],
+                [
+                  19.961214065551758,
+                  53.701787856057244
+                ],
+                [
+                  19.971942901611328,
+                  53.7154537257792
+                ],
+                [
+                  19.951000213623047,
+                  53.7154537257792
+                ]
+              ]
+            )
+          end
+
+          let(:within_point) { AerospikeC::GeoJson.point(19.972801208496094, 53.70615735286408) }
+
+          before(:each) do
+            query.range!("int_bin", 101, 110)
+          end
+
+          it "contains" do
+            i = 101
+            2.times do
+              key = AerospikeC::Key.new("test", "query_test", "query#{i}")
+              bins = {
+                "int_bin" => i,
+                "geojson_bin" => AerospikeC::GeoJson.point(i.to_f, i.to_f / 2)
+              }
+              @client.put(key, bins)
+
+              @query_keys << key
+              i += 1
+            end
+
+            circle = AerospikeC::GeoJson.circle([101.0, 50.5], 10_000)
+            query.predexp.not.contains("geojson_bin", circle)
+            response = @client.query(query)
+
+            puts response.inspect
+
+            expect(response.count).to eq(1)
+            expect(response.last["int_bin"]).to eq(102)
+          end
+
+          it "within" do
+            key = AerospikeC::Key.new("test", "query_test", "query101")
+            bins = {
+              "int_bin" => 101,
+              "geojson_bin" => polygon_in
+            }
+            @client.put(key, bins)
+
+            @query_keys << key
+
+            key = AerospikeC::Key.new("test", "query_test", "query102")
+            bins["int_bin"] = 102
+            bins["geojson_bin"] = polygon_out
+
+            @client.put(key, bins)
+
+            @query_keys << key
+
+            query.predexp.not.within("geojson_bin", within_point)
+            response = @client.query(query)
+
+            puts response.inspect
+
+            expect(response.count).to eq(1)
+            expect(response.last["int_bin"]).to eq(102)
+          end
+        end
+
+        context "record" do
+          before(:each) do
+            query.range!("int_bin", 101, 110)
+            @key_1 = AerospikeC::Key.new("test", "query_test", "query101")
+            bins = {
+              "int_bin" => 101
+            }
+            @client.put(@key_1, bins)
+
+            @query_keys << @key_1
+
+            @key_2 = AerospikeC::Key.new("test", "query_test", "query102")
+            bins["int_bin"] = 102
+
+            @client.put(@key_2, bins)
+
+            @query_keys << @key_2
+
+            @key_3 = AerospikeC::Key.new("test", "query_test", "query103")
+            bins["int_bin"] = 103
+
+            @client.put(@key_3, bins)
+
+            @query_keys << @key_3
+
+            @client.touch(@key_1, ttl: 10)
+            @client.touch(@key_2, ttl: 20)
+            @client.touch(@key_3, ttl: 30)
+          end
+
+          context "expiration_time" do
+            it "equal" do
+              r = @client.get(@key_1, [], with_header: true)
+              time = (Time.now.to_i + r["header"]["expire_in"]) * 1_000_000_000
+              query.predexp.not.expiration_time(:equal, time)
+              response = @client.query(query)
+              expect(response.count).to eq(2)
+              expect(response.first["int_bin"]).to eq(102)
+              expect(response.last["int_bin"]).to eq(103)
+            end
+
+            it "unequal" do
+              r = @client.get(@key_2, [], with_header: true)
+              time = (Time.now.to_i + r["header"]["expire_in"]) * 1_000_000_000
+              query.predexp.not.expiration_time(:unequal, time)
+
+              response = @client.query(query)
+              expect(response.count).to eq(1)
+              expect(response.last["int_bin"]).to eq(102)
+            end
+
+            it "greater" do
+              r = @client.get(@key_1, [], with_header: true)
+              time = (Time.now.to_i + r["header"]["expire_in"]) * 1_000_000_000
+              query.predexp.not.expiration_time(:greater, time)
+
+              response = @client.query(query)
+              expect(response.count).to eq(1)
+              expect(response.map{ |r| r["int_bin"] }).to eq([101])
+            end
+
+            it "greatereq" do
+              r = @client.get(@key_3, [], with_header: true)
+              time = (Time.now.to_i + r["header"]["expire_in"]) * 1_000_000_000
+              query.predexp.not.expiration_time(:greatereq, time)
+
+              response = @client.query(query)
+              expect(response.count).to eq(2)
+              expect(response.first["int_bin"]).to eq(101)
+              expect(response.last["int_bin"]).to eq(102)
+            end
+
+            it "less" do
+              r = @client.get(@key_1, [], with_header: true)
+              time = (Time.now.to_i + r["header"]["expire_in"]) * 1_000_000_000
+              query.predexp.not.expiration_time(:less, time)
+
+              response = @client.query(query)
+              expect(response.count).to eq(3)
+              expect(response.map{ |r| r["int_bin"] }).to eq([101, 102, 103])
+            end
+
+            it "lesseq" do
+              r = @client.get(@key_1, [], with_header: true)
+              time = (Time.now.to_i + r["header"]["expire_in"]) * 1_000_000_000
+              query.predexp.not.expiration_time(:lesseq, time)
+
+              response = @client.query(query)
+              expect(response.count).to eq(2)
+              expect(response.first["int_bin"]).to eq(102)
+              expect(response.last["int_bin"]).to eq(103)
+            end
+          end
+
+          context "last_update" do
+            # time of last update is in nanoseconds, at this moment we are unable to get exact time of update
+
+            it "less" do
+              time = Time.now.strftime("%s%9N").to_i # time in nanoseconds
+              sleep 0.1
+              @client.touch(@key_1, ttl: 10)
+
+              query.predexp.not.last_update(:less, time)
+              response = @client.query(query)
+              expect(response.count).to eq(1)
+              expect(response.map{ |r| r["int_bin"] }).to eq([101])
+            end
+
+            it "greater" do
+              @client.touch(@key_1, ttl: 10)
+              time = Time.now.strftime("%s%9N").to_i # time in nanoseconds
+              sleep 0.1
+              @client.touch(@key_2, ttl: 10)
+
+              query.predexp.not.last_update(:greater, time)
+              response = @client.query(query)
+              expect(response.count).to eq(2)
+              expect(response.map{ |r| r["int_bin"] }).to eq([101, 103])
+            end
           end
         end
       end

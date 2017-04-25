@@ -86,6 +86,7 @@
 ;
 
 #define predexp_sym                   ID2SYM(rb_intern("predexp"))   // :predexp
+#define predexp_negate_sym            ID2SYM(rb_intern("negate"))    // :negate
 #define predexp_equal_sym             ID2SYM(rb_intern("equal"))     // :equal
 #define predexp_unequal_sym           ID2SYM(rb_intern("unequal"))   // :unequal
 #define predexp_greater_sym           ID2SYM(rb_intern("greater"))   // :greater

@@ -22,6 +22,7 @@ void predexp_obj2_as_predexp_ary(as_predexp_array *a, VALUE predexp_obj){
       VALUE pred = rb_hash_aref(predexp_o, predexp_sym);
       VALUE bin = rb_hash_aref(predexp_o, bin_sym);
       VALUE val = rb_hash_aref(predexp_o, value_sym);
+      VALUE negate = rb_hash_aref(predexp_o, predexp_negate_sym);
       // rb_p(type);
       // rb_p(pred);
       // rb_p(bin);
@@ -33,17 +34,17 @@ void predexp_obj2_as_predexp_ary(as_predexp_array *a, VALUE predexp_obj){
           VALUE predexp_sym_val = rb_hash_aref(predexp_o, predexp_record_predexp_sym);
           if (predexp_type == predexp_record_expiration_time_sym) {
             insert_as_predexp_array(a, as_predexp_rec_void_time());
-            insert_integer_predicate(a, predexp_sym_val, val);
+            insert_integer_predicate(a, predexp_sym_val, val, negate);
           } else if (predexp_type == predexp_record_last_update_sym) {
             insert_as_predexp_array(a, as_predexp_rec_last_update());
-            insert_integer_predicate(a, predexp_sym_val, val);
+            insert_integer_predicate(a, predexp_sym_val, val, negate);
           }
 
         } else {
           val = NUM2UINT(val);
           bin = StringValueCStr(bin);
           insert_as_predexp_array(a, as_predexp_integer_bin(bin));
-          insert_integer_predicate(a, pred, val);
+          insert_integer_predicate(a, pred, val, negate);
         }
       } else if(type == string_sym){
         val = StringValueCStr(val);
@@ -71,11 +72,14 @@ void predexp_obj2_as_predexp_ary(as_predexp_array *a, VALUE predexp_obj){
           insert_as_predexp_array(a, as_predexp_geojson_contains());
         }
       }
+      if(negate == Qtrue) {
+        insert_as_predexp_array(a, as_predexp_not());
+      }
     }
   }
 }
 
-void insert_integer_predicate(as_predexp_array *a, VALUE predicate, VALUE val) {
+void insert_integer_predicate(as_predexp_array *a, VALUE predicate, VALUE val, VALUE negate) {
   insert_as_predexp_array(a, as_predexp_integer_value(val));
   if (predicate == predexp_equal_sym) {
     insert_as_predexp_array(a, as_predexp_integer_equal());
