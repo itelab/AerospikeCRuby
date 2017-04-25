@@ -793,6 +793,129 @@ describe AerospikeC::Client do
           expect(response.last["int_bin"]).to eq(101)
         end
       end
+
+      context "record" do
+        before(:each) do
+          query.range!("int_bin", 101, 110)
+          @key_1 = AerospikeC::Key.new("test", "query_test", "query101")
+          bins = {
+            "int_bin" => 101
+          }
+          @client.put(@key_1, bins)
+
+          @query_keys << @key_1
+
+          @key_2 = AerospikeC::Key.new("test", "query_test", "query102")
+          bins["int_bin"] = 102
+
+          @client.put(@key_2, bins)
+
+          @query_keys << @key_2
+
+          @key_3 = AerospikeC::Key.new("test", "query_test", "query103")
+          bins["int_bin"] = 103
+
+          @client.put(@key_3, bins)
+
+          @query_keys << @key_3
+
+          @client.touch(@key_1, ttl: 10)
+          @client.touch(@key_2, ttl: 20)
+          @client.touch(@key_3, ttl: 30)
+        end
+
+        context "expiration_time" do
+          it "equal" do
+            r = @client.get(@key_1, [], with_header: true)
+            time = (Time.now.to_i + r["header"]["expire_in"]) * 1_000_000_000
+            query.predexp.expiration_time(:equal, time)
+            response = @client.query(query)
+            expect(response.count).to eq(1)
+            expect(response.last["int_bin"]).to eq(101)
+          end
+
+          it "unequal" do
+            r = @client.get(@key_2, [], with_header: true)
+            time = (Time.now.to_i + r["header"]["expire_in"]) * 1_000_000_000
+            query.predexp.expiration_time(:unequal, time)
+
+            response = @client.query(query)
+            expect(response.count).to eq(2)
+            expect(response.first["int_bin"]).to eq(101)
+            expect(response.last["int_bin"]).to eq(103)
+          end
+
+          it "greater" do
+            r = @client.get(@key_1, [], with_header: true)
+            time = (Time.now.to_i + r["header"]["expire_in"]) * 1_000_000_000
+            query.predexp.expiration_time(:greater, time)
+
+            response = @client.query(query)
+            expect(response.count).to eq(2)
+            expect(response.first["int_bin"]).to eq(102)
+            expect(response.last["int_bin"]).to eq(103)
+          end
+
+          it "greatereq" do
+            r = @client.get(@key_1, [], with_header: true)
+            time = (Time.now.to_i + r["header"]["expire_in"]) * 1_000_000_000
+            query.predexp.expiration_time(:greatereq, time)
+
+            response = @client.query(query)
+            expect(response.count).to eq(3)
+            expect(response.map{ |r| r["int_bin"] }).to eq([101, 102, 103])
+          end
+
+          it "less" do
+            r = @client.get(@key_3, [], with_header: true)
+            time = (Time.now.to_i + r["header"]["expire_in"]) * 1_000_000_000
+            query.predexp.expiration_time(:less, time)
+
+            response = @client.query(query)
+            expect(response.count).to eq(2)
+            expect(response.first["int_bin"]).to eq(101)
+            expect(response.last["int_bin"]).to eq(102)
+          end
+
+          it "lesseq" do
+            r = @client.get(@key_3, [], with_header: true)
+            time = (Time.now.to_i + r["header"]["expire_in"]) * 1_000_000_000
+            query.predexp.expiration_time(:lesseq, time)
+
+            response = @client.query(query)
+            expect(response.count).to eq(3)
+            expect(response.map{ |r| r["int_bin"] }).to eq([101, 102, 103])
+          end
+        end
+
+        context "last_update" do
+
+          # time of last update is in nanoseconds, at this moment we are unable to get exact time of update
+
+          it "less" do
+            time = Time.now.strftime("%s%9N").to_i # time in nanoseconds
+            sleep 0.1
+            @client.touch(@key_1, ttl: 10)
+
+            query.predexp.last_update(:less, time)
+            response = @client.query(query)
+            expect(response.count).to eq(2)
+            expect(response.map{ |r| r["int_bin"] }).to eq([102, 103])
+          end
+
+          it "greater" do
+            @client.touch(@key_1, ttl: 10)
+            time = Time.now.strftime("%s%9N").to_i # time in nanoseconds
+            sleep 0.1
+            @client.touch(@key_2, ttl: 10)
+
+            query.predexp.last_update(:greater, time)
+            response = @client.query(query)
+            expect(response.count).to eq(1)
+            expect(response.map{ |r| r["int_bin"] }).to eq([102])
+          end
+        end
+      end
     end
   end
 end

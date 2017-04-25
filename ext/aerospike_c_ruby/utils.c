@@ -27,22 +27,23 @@ void predexp_obj2_as_predexp_ary(as_predexp_array *a, VALUE predexp_obj){
       // rb_p(bin);
       // rb_p(val);
       if (type == numeric_sym){
-        val = NUM2UINT(val);
-        bin = StringValueCStr(bin);
-        insert_as_predexp_array(a, as_predexp_integer_bin(bin));
-        insert_as_predexp_array(a, as_predexp_integer_value(val));
-        if (pred == predexp_equal_sym) {
-          insert_as_predexp_array(a, as_predexp_integer_equal());
-        } else if(pred == predexp_unequal_sym) {
-          insert_as_predexp_array(a, as_predexp_integer_unequal());
-        } else if(pred == predexp_greater_sym) {
-          insert_as_predexp_array(a, as_predexp_integer_greater());
-        } else if(pred == predexp_greatereq_sym) {
-          insert_as_predexp_array(a, as_predexp_integer_greatereq());
-        } else if(pred == predexp_less_sym) {
-          insert_as_predexp_array(a, as_predexp_integer_less());
-        } else if(pred == predexp_lesseq_sym) {
-          insert_as_predexp_array(a, as_predexp_integer_lesseq());
+        if(pred == predexp_record_sym) {
+          val = NUM2ULONG(val);
+          VALUE predexp_type = rb_hash_aref(predexp_o, predexp_record_predexp_type_sym);
+          VALUE predexp_sym_val = rb_hash_aref(predexp_o, predexp_record_predexp_sym);
+          if (predexp_type == predexp_record_expiration_time_sym) {
+            insert_as_predexp_array(a, as_predexp_rec_void_time());
+            insert_integer_predicate(a, predexp_sym_val, val);
+          } else if (predexp_type == predexp_record_last_update_sym) {
+            insert_as_predexp_array(a, as_predexp_rec_last_update());
+            insert_integer_predicate(a, predexp_sym_val, val);
+          }
+
+        } else {
+          val = NUM2UINT(val);
+          bin = StringValueCStr(bin);
+          insert_as_predexp_array(a, as_predexp_integer_bin(bin));
+          insert_integer_predicate(a, pred, val);
         }
       } else if(type == string_sym){
         val = StringValueCStr(val);
@@ -71,6 +72,23 @@ void predexp_obj2_as_predexp_ary(as_predexp_array *a, VALUE predexp_obj){
         }
       }
     }
+  }
+}
+
+void insert_integer_predicate(as_predexp_array *a, VALUE predicate, VALUE val) {
+  insert_as_predexp_array(a, as_predexp_integer_value(val));
+  if (predicate == predexp_equal_sym) {
+    insert_as_predexp_array(a, as_predexp_integer_equal());
+  } else if(predicate == predexp_unequal_sym) {
+    insert_as_predexp_array(a, as_predexp_integer_unequal());
+  } else if(predicate == predexp_greater_sym) {
+    insert_as_predexp_array(a, as_predexp_integer_greater());
+  } else if(predicate == predexp_greatereq_sym) {
+    insert_as_predexp_array(a, as_predexp_integer_greatereq());
+  } else if(predicate == predexp_less_sym) {
+    insert_as_predexp_array(a, as_predexp_integer_less());
+  } else if(predicate == predexp_lesseq_sym) {
+    insert_as_predexp_array(a, as_predexp_integer_lesseq());
   }
 }
 

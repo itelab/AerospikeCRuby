@@ -97,4 +97,13 @@
 #define predexp_regexp_sym            ID2SYM(rb_intern("regexp"))    // :regexp
 ;
 
+#define predexp_record_sym               ID2SYM(rb_intern("record"))              // :record
+#define predexp_record_predexp_type_sym  ID2SYM(rb_intern("record_predexp_type")) // :record_predexp_type
+#define predexp_record_predexp_sym       ID2SYM(rb_intern("record_predexp"))      // :record_predexp
+;
+
+#define predexp_record_expiration_time_sym  ID2SYM(rb_intern("expiration_time")) // :record_expiration_time
+#define predexp_record_last_update_sym      ID2SYM(rb_intern("last_update"))     // :record_last_update
+;
+
 #endif // AEROSPIKE_C_RUBY_SYM_H

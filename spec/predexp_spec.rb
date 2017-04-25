@@ -139,4 +139,104 @@ describe AerospikeC::PredExp do
       }.to raise_error(AerospikeC::OptionError)
     end
   end
+
+  context "#expiration_time" do
+    it "as valid Symbol" do
+      @predexp.expiration_time(:equal, 10)
+      expect(@predexp.predexp).to eq([{:predexp=>:record, :record_predexp_type=>:expiration_time, :record_predexp => :equal, :value=>10, :type=>:numeric}])
+    end
+
+    context "valid symbols" do
+      it "equal" do
+        @symbol = :equal
+      end
+
+      it "unequal" do
+        @symbol = :unequal
+      end
+
+      it "greater" do
+        @symbol = :greater
+      end
+
+      it "greatereq" do
+        @symbol = :greatereq
+      end
+
+      it "less" do
+        @symbol = :less
+      end
+
+      it "lesseq" do
+        @symbol = :lesseq
+      end
+
+      after(:each) do
+        @predexp.expiration_time(@symbol, 10)
+        expect(@predexp.predexp.last[:record_predexp]).to eq(@symbol)
+      end
+    end
+
+    it "invalid Symbol" do
+      expect{
+        @predexp.expiration_time(:eql, 10)
+      }.to raise_error(AerospikeC::OptionError)
+    end
+
+    it "invalid type" do
+      expect{
+        @predexp.expiration_time(:equal, "10")
+      }.to raise_error(AerospikeC::OptionError)
+    end
+  end
+
+  context "#last_update" do
+    it "as valid Symbol" do
+      @predexp.last_update(:equal, 10)
+      expect(@predexp.predexp).to eq([{:predexp=>:record, :record_predexp_type=>:last_update, :record_predexp => :equal, :value=>10, :type=>:numeric}])
+    end
+
+    context "valid symbols" do
+      it "equal" do
+        @symbol = :equal
+      end
+
+      it "unequal" do
+        @symbol = :unequal
+      end
+
+      it "greater" do
+        @symbol = :greater
+      end
+
+      it "greatereq" do
+        @symbol = :greatereq
+      end
+
+      it "less" do
+        @symbol = :less
+      end
+
+      it "lesseq" do
+        @symbol = :lesseq
+      end
+
+      after(:each) do
+        @predexp.last_update(@symbol, 10)
+        expect(@predexp.predexp.last[:record_predexp]).to eq(@symbol)
+      end
+    end
+
+    it "invalid Symbol" do
+      expect{
+        @predexp.last_update(:eql, 10)
+      }.to raise_error(AerospikeC::OptionError)
+    end
+
+    it "invalid type" do
+      expect{
+        @predexp.last_update(:equal, "10")
+      }.to raise_error(AerospikeC::OptionError)
+    end
+  end
 end
