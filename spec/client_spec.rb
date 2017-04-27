@@ -589,5 +589,9 @@ describe AerospikeC::Client do
       expect(@client.last_query_id).to eq(task.query_id)
       task.wait_till_completed(100)
     end
+
+    context "predexp" do
+      let(:predexp) { AerospikeC::PredExp.new }
+    end
   end
 end

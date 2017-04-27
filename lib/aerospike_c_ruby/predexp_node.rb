@@ -14,8 +14,6 @@ module AerospikeC
       end
     end
 
-    attr_reader :node
-
     def self.define_comparsion_method(name, classes = nil)
       define_method name do |val|
         check_class(val, classes)
@@ -30,6 +28,7 @@ module AerospikeC
     define_comparsion_method :gteq,   [Integer]
     define_comparsion_method :lt,     [Integer]
     define_comparsion_method :lteq,   [Integer]
+    define_comparsion_method :regexp, [String]
 
     def initialize(bin)
       @node = {
@@ -41,8 +40,13 @@ module AerospikeC
       }
     end
 
+    def node
+      raise AttributeError.new(nil, "Empty node") if @node[:filters] == {}
+      @node
+    end
+
     def not
-      node[:true] = false
+      @node[:true] = false
       self
     end
 
@@ -62,25 +66,25 @@ module AerospikeC
 
     def and(val)
       check_class(val, AerospikeC::PredExpNode)
-      node[:and] << val.node
+      @node[:and] << val.node
       self
     end
 
     def or(val)
       check_class(val, AerospikeC::PredExpNode)
-      node[:or] << val.node
+      @node[:or] << val.node
       self
     end
 
     def last_update
-      raise AttributeError.new(val, "not a record predicate") unless node[:bin] == :record
-      node[:filters][:rec_method] = __method__
+      raise AttributeError.new(nil, "not a record predicate") unless @node[:bin] == :record
+      @node[:filters][:rec_method] = __method__
       self
     end
 
     def void_time
-      raise AttributeError.new(val, "not a record predicate") unless node[:bin] == :record
-      node[:filters][:rec_method] = __method__
+      raise AttributeError.new(nil, "not a record predicate") unless @node[:bin] == :record
+      @node[:filters][:rec_method] = __method__
       self
     end
 
@@ -113,12 +117,12 @@ module AerospikeC
     end
 
     def add_val(mthd, val)
-      node[:filters][:filter] = mthd
-      node[:filters][:value] = val
+      @node[:filters][:filter] = mthd
+      @node[:filters][:value] = val
     end
 
     def not_record_predicate!
-      raise AttributeError.new(val, "invalid function for record predicate") if node[:bin] == :record
+      raise AttributeError.new(nil, "invalid function for record predicate") if @node[:bin] == :record
     end
   end
 end
@@ -129,8 +133,28 @@ AerospikeC::PredExp.class_eval do
   end
 
   def where(val)
-    raise 1 unless val.is_a?(AerospikeC::PredExpNode)
+    raise(AerospikeC::PredExpNode::AttributeError, val) unless val.is_a?(AerospikeC::PredExpNode)
     @predexp = val.node
+    self
+  end
+
+  def and(val)
+    raise(AerospikeC::PredExpNode::AttributeError, val) unless val.is_a?(AerospikeC::PredExpNode)
+    if @predexp
+      @predexp[:and] << val.node
+    else
+      raise(AerospikeC::PredExpNode::AttributeError, nil, "use #where first")
+    end
+    self
+  end
+
+  def or(val)
+    raise(AerospikeC::PredExpNode::AttributeError, val) unless val.is_a?(AerospikeC::PredExpNode)
+    if @predexp
+      @predexp[:or] << val.node
+    else
+      raise(AerospikeC::PredExpNode::AttributeError, nil, "use #where first")
+    end
     self
   end
 

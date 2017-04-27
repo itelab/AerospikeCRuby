@@ -9,6 +9,12 @@ describe AerospikeC::PredExpNode do
     expect(@node).to be_kind_of(AerospikeC::PredExpNode)
   end
 
+  it "raises error when trying to access the node without setting it first" do
+    expect{
+      @node.node
+    }.to raise_error(AerospikeC::PredExpNode::AttributeError)
+  end
+
   context "#eq" do
     it "integer" do
       expect(@node.eq(1).node).to include(
@@ -163,6 +169,38 @@ describe AerospikeC::PredExpNode do
     it "invalid" do
       expect {
         @node.contains("a")
+      }.to raise_error(AerospikeC::PredExpNode::AttributeError)
+    end
+  end
+
+  context "#and" do
+    it "another node" do
+      node2 = AerospikeC::PredExpNode.new("bar").eq(3)
+      @node = @node.eq(3).and(node2)
+      expect(@node.node).to include(
+        and: [node2.node]
+      )
+    end
+
+    it "hash" do
+      expect{
+        @node.eq(4).and({foo: "bar"})
+      }.to raise_error(AerospikeC::PredExpNode::AttributeError)
+    end
+  end
+
+  context "#or" do
+    it "another node" do
+      node2 = AerospikeC::PredExpNode.new("bar").eq(3)
+      @node = @node.eq(3).or(node2)
+      expect(@node.node).to include(
+        or: [node2.node]
+      )
+    end
+
+    it "hash" do
+      expect{
+        @node.eq(4).or({foo: "bar"})
       }.to raise_error(AerospikeC::PredExpNode::AttributeError)
     end
   end

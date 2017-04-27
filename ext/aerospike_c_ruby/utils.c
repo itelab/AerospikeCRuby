@@ -1,5 +1,4 @@
 #include <aerospike_c_ruby.h>
-#include <as_predexp_array.h>
 
 static int foreach_hash2record(VALUE key, VALUE val, VALUE record);
 static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE map);
@@ -820,20 +819,20 @@ as_query * query_obj2as_query(VALUE query_obj) {
 
   VALUE predexp = rb_iv_get(query_obj, "@predexp");
 
-  // if( predexp != Qnil ) {
-  //   as_predexp_array a; // dynamic array
-  //   init_as_predexp_array(&a, 100);
-  //   predexp_obj2_as_predexp_ary(&a, predexp);
-  //
-  //   if (a.capacity > 0) {
-  //     as_query_predexp_init(query, a.capacity);
-  //     for(int i = 0; i < a.capacity; i++){
-  //       as_query_predexp_add(query, a.array[i]);
-  //     }
-  //   }
-  //
-  //   free_as_predexp_array(&a);
-  // }
+  if( predexp != Qnil ) {
+    as_predexp_array a; // dynamic array
+    init_as_predexp_array(&a, 100);
+    predexp_2_as_predexp(predexp, &a);
+
+    if (a.capacity > 0) {
+      as_query_predexp_init(query, a.capacity);
+      for(int i = 0; i < a.capacity; i++){
+        as_query_predexp_add(query, a.array[i]);
+      }
+    }
+
+    free_as_predexp_array(&a);
+  }
 
   // log_debug("Converted ruby AerospikeC::Query to as_query");
 

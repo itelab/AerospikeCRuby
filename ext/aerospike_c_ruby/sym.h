@@ -85,24 +85,28 @@
 #define list_get_range_from_sym ID2SYM(rb_intern("list_get_range_from"))// :list_get_range_from
 ;
 
+#define predexp_true_sym              ID2SYM(rb_intern("true"))      // :true
+#define predexp_filters_sym           ID2SYM(rb_intern("filters"))   // :filters
+#define predexp_filter_sym            ID2SYM(rb_intern("filter"))    // :filter
+#define predexp_and_sym               ID2SYM(rb_intern("and"))       // :and
+#define predexp_or_sym                ID2SYM(rb_intern("or"))        // :or
 #define predexp_sym                   ID2SYM(rb_intern("predexp"))   // :predexp
 #define predexp_negate_sym            ID2SYM(rb_intern("negate"))    // :negate
-#define predexp_equal_sym             ID2SYM(rb_intern("equal"))     // :equal
-#define predexp_unequal_sym           ID2SYM(rb_intern("unequal"))   // :unequal
-#define predexp_greater_sym           ID2SYM(rb_intern("greater"))   // :greater
-#define predexp_greatereq_sym         ID2SYM(rb_intern("greatereq")) // :greatereq
-#define predexp_less_sym              ID2SYM(rb_intern("less"))      // :less
-#define predexp_lesseq_sym            ID2SYM(rb_intern("lesseq"))    // :lesseq
+#define predexp_equal_sym             ID2SYM(rb_intern("eq"))        // :equal
+#define predexp_unequal_sym           ID2SYM(rb_intern("not_eq"))    // :unequal
+#define predexp_greater_sym           ID2SYM(rb_intern("gt"))        // :greater
+#define predexp_greatereq_sym         ID2SYM(rb_intern("gteq"))      // :greatereq
+#define predexp_less_sym              ID2SYM(rb_intern("lt"))        // :less
+#define predexp_lesseq_sym            ID2SYM(rb_intern("lteq"))      // :lesseq
 #define predexp_within_sym            ID2SYM(rb_intern("within"))    // :within
 #define predexp_contains_sym          ID2SYM(rb_intern("contains"))  // :contains
 #define predexp_regexp_sym            ID2SYM(rb_intern("regexp"))    // :regexp
 ;
 
 #define predexp_record_sym               ID2SYM(rb_intern("record"))              // :record
-#define predexp_record_predexp_type_sym  ID2SYM(rb_intern("record_predexp_type")) // :record_predexp_type
-#define predexp_record_predexp_sym       ID2SYM(rb_intern("record_predexp"))      // :record_predexp
 ;
 
+#define predexp_record_filter_sym           ID2SYM(rb_intern("rec_method")) // :rec_method
 #define predexp_record_expiration_time_sym  ID2SYM(rb_intern("expiration_time")) // :record_expiration_time
 #define predexp_record_last_update_sym      ID2SYM(rb_intern("last_update"))     // :record_last_update
 ;

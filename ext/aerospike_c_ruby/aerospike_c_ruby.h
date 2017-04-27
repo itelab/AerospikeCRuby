@@ -44,6 +44,7 @@
 #include <sym.h>
 #include <logger.h>
 #include <utils.h>
+#include <as_predexp_array.h>
 
 
 // ---------------------------------------------------
