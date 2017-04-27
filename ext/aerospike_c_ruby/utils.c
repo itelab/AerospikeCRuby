@@ -5,97 +5,6 @@ static int foreach_hash2record(VALUE key, VALUE val, VALUE record);
 static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE map);
 static char * key2bin_name(VALUE key);
 
-void predexp_obj2_as_predexp_ary(as_predexp_array *a, VALUE predexp_obj){
-  VALUE predexp = rb_iv_get(predexp_obj, "@predexp");
-
-  if(TYPE(predexp) != T_ARRAY) {
-    return;
-  }
-
-  VALUE len = rb_ary_len_int(predexp);
-
-  if(len > 0) {
-    for (int i = 0; i < len; ++i) {
-      VALUE predexp_o = rb_ary_entry(predexp, i);
-
-      VALUE type = rb_hash_aref(predexp_o, type_sym);
-      VALUE pred = rb_hash_aref(predexp_o, predexp_sym);
-      VALUE bin = rb_hash_aref(predexp_o, bin_sym);
-      VALUE val = rb_hash_aref(predexp_o, value_sym);
-      VALUE negate = rb_hash_aref(predexp_o, predexp_negate_sym);
-      // rb_p(type);
-      // rb_p(pred);
-      // rb_p(bin);
-      // rb_p(val);
-      if (type == numeric_sym){
-        if(pred == predexp_record_sym) {
-          val = NUM2ULONG(val);
-          VALUE predexp_type = rb_hash_aref(predexp_o, predexp_record_predexp_type_sym);
-          VALUE predexp_sym_val = rb_hash_aref(predexp_o, predexp_record_predexp_sym);
-          if (predexp_type == predexp_record_expiration_time_sym) {
-            insert_as_predexp_array(a, as_predexp_rec_void_time());
-            insert_integer_predicate(a, predexp_sym_val, val, negate);
-          } else if (predexp_type == predexp_record_last_update_sym) {
-            insert_as_predexp_array(a, as_predexp_rec_last_update());
-            insert_integer_predicate(a, predexp_sym_val, val, negate);
-          }
-
-        } else {
-          val = NUM2UINT(val);
-          bin = StringValueCStr(bin);
-          insert_as_predexp_array(a, as_predexp_integer_bin(bin));
-          insert_integer_predicate(a, pred, val, negate);
-        }
-      } else if(type == string_sym){
-        val = StringValueCStr(val);
-        bin = StringValueCStr(bin);
-        insert_as_predexp_array(a, as_predexp_string_bin(bin));
-        insert_as_predexp_array(a, as_predexp_string_value(val));
-        if (pred == predexp_equal_sym) {
-          insert_as_predexp_array(a, as_predexp_string_equal());
-        } else if(pred == predexp_unequal_sym) {
-          insert_as_predexp_array(a, as_predexp_string_unequal());
-        } else if(pred == predexp_regexp_sym) {
-          insert_as_predexp_array(a, as_predexp_string_regex(1));
-        }
-      } else if(type == geo_json_sym){
-        as_geojson * geo = get_geo_json_struct(val);
-        char * buffer = (char *) malloc ( strlen(geo->value) + 1 );
-        strcpy(buffer, geo->value);
-        bin = StringValueCStr(bin);
-
-        insert_as_predexp_array(a, as_predexp_geojson_bin(bin));
-        insert_as_predexp_array(a, as_predexp_geojson_value(buffer));
-        if (pred == predexp_within_sym) {
-          insert_as_predexp_array(a, as_predexp_geojson_within());
-        } else if(pred == predexp_contains_sym) {
-          insert_as_predexp_array(a, as_predexp_geojson_contains());
-        }
-      }
-      if(negate == Qtrue) {
-        insert_as_predexp_array(a, as_predexp_not());
-      }
-    }
-  }
-}
-
-void insert_integer_predicate(as_predexp_array *a, VALUE predicate, VALUE val, VALUE negate) {
-  insert_as_predexp_array(a, as_predexp_integer_value(val));
-  if (predicate == predexp_equal_sym) {
-    insert_as_predexp_array(a, as_predexp_integer_equal());
-  } else if(predicate == predexp_unequal_sym) {
-    insert_as_predexp_array(a, as_predexp_integer_unequal());
-  } else if(predicate == predexp_greater_sym) {
-    insert_as_predexp_array(a, as_predexp_integer_greater());
-  } else if(predicate == predexp_greatereq_sym) {
-    insert_as_predexp_array(a, as_predexp_integer_greatereq());
-  } else if(predicate == predexp_less_sym) {
-    insert_as_predexp_array(a, as_predexp_integer_less());
-  } else if(predicate == predexp_lesseq_sym) {
-    insert_as_predexp_array(a, as_predexp_integer_lesseq());
-  }
-}
-
 void start_timing(struct timeval * tm) {
   gettimeofday(tm, NULL);
 }
@@ -911,20 +820,20 @@ as_query * query_obj2as_query(VALUE query_obj) {
 
   VALUE predexp = rb_iv_get(query_obj, "@predexp");
 
-  if( predexp != Qnil ) {
-    as_predexp_array a; // dynamic array
-    init_as_predexp_array(&a, 100);
-    predexp_obj2_as_predexp_ary(&a, predexp);
-
-    if (a.capacity > 0) {
-      as_query_predexp_init(query, a.capacity);
-      for(int i = 0; i < a.capacity; i++){
-        as_query_predexp_add(query, a.array[i]);
-      }
-    }
-
-    free_as_predexp_array(&a);
-  }
+  // if( predexp != Qnil ) {
+  //   as_predexp_array a; // dynamic array
+  //   init_as_predexp_array(&a, 100);
+  //   predexp_obj2_as_predexp_ary(&a, predexp);
+  //
+  //   if (a.capacity > 0) {
+  //     as_query_predexp_init(query, a.capacity);
+  //     for(int i = 0; i < a.capacity; i++){
+  //       as_query_predexp_add(query, a.array[i]);
+  //     }
+  //   }
+  //
+  //   free_as_predexp_array(&a);
+  // }
 
   // log_debug("Converted ruby AerospikeC::Query to as_query");
 
