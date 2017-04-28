@@ -67,12 +67,14 @@ module AerospikeC
     def and(val)
       check_class(val, AerospikeC::PredExpNode)
       @node[:and] << val.node
+      @all_vars = get_vars_from_hash(@node)
       self
     end
 
     def or(val)
       check_class(val, AerospikeC::PredExpNode)
       @node[:or] << val.node
+      @all_vars = get_vars_from_hash(@node)
       self
     end
 
@@ -85,6 +87,36 @@ module AerospikeC
     def void_time
       raise AttributeError.new(nil, "not a record predicate") unless @node[:bin] == :record
       @node[:filters][:rec_method] = __method__
+      self
+    end
+
+    def list_and
+      set_collection_vals(:array, :and)
+      self
+    end
+
+    def list_or
+      set_collection_vals(:array, :or)
+      self
+    end
+
+    def map_key_and
+      set_collection_vals(:mapkey, :and)
+      self
+    end
+
+    def map_key_or
+      set_collection_vals(:mapkey, :or)
+      self
+    end
+
+    def map_val_and
+      set_collection_vals(:mapval, :and)
+      self
+    end
+
+    def map_val_or
+      set_collection_vals(:mapval, :or)
       self
     end
 
@@ -121,8 +153,34 @@ module AerospikeC
       @node[:filters][:value] = val
     end
 
+    def set_collection_vals(collection, pred)
+      @node[:filters][:collection] = collection
+      @node[:filters][:collection_pred] = pred
+      node_var = (0...3).map { (65 + rand(26)).chr }.join
+      while get_all_vars.include?(node_var)
+        node_var = (0...3).map { (65 + rand(26)).chr }.join
+      end
+      @node[:filters][:collection_var] = node_var
+    end
+
+    def get_all_vars
+      @all_vars ||= get_vars_from_hash(@node)
+    end
+
     def not_record_predicate!
       raise AttributeError.new(nil, "invalid function for record predicate") if @node[:bin] == :record
+    end
+
+    def get_vars_from_hash(h)
+      vars = []
+      vars << h[:filters][:collection_var]
+      h[:and].each do |an|
+        vars << get_vars_from_hash(an)
+      end
+      h[:or].each do |an|
+        vars << get_vars_from_hash(an)
+      end
+      vars.flatten.compact
     end
   end
 end

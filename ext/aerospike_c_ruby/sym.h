@@ -106,9 +106,17 @@
 #define predexp_record_sym               ID2SYM(rb_intern("record"))              // :record
 ;
 
-#define predexp_record_filter_sym           ID2SYM(rb_intern("rec_method")) // :rec_method
+#define predexp_record_filter_sym           ID2SYM(rb_intern("rec_method"))      // :rec_method
 #define predexp_record_expiration_time_sym  ID2SYM(rb_intern("expiration_time")) // :record_expiration_time
 #define predexp_record_last_update_sym      ID2SYM(rb_intern("last_update"))     // :record_last_update
+;
+
+#define predexp_collection_sym      ID2SYM(rb_intern("collection"))      // :collection
+#define predexp_collection_pred_sym ID2SYM(rb_intern("collection_pred")) // :collection_pred
+#define predexp_collection_var_sym  ID2SYM(rb_intern("collection_var")) // :collection_var
+#define predexp_array_sym           ID2SYM(rb_intern("array")) // :array
+#define predexp_map_key_sym         ID2SYM(rb_intern("mapkey")) // :mapkey
+#define predexp_map_val_sym         ID2SYM(rb_intern("mapval")) // :mapval
 ;
 
 #endif // AEROSPIKE_C_RUBY_SYM_H

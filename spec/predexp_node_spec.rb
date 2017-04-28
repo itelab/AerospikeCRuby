@@ -204,4 +204,66 @@ describe AerospikeC::PredExpNode do
       }.to raise_error(AerospikeC::PredExpNode::AttributeError)
     end
   end
+
+  context "array" do
+    it "and" do
+      @node = @node.list_and.eq(5)
+      expect(@node.node[:filters]).to include(
+        collection: :array,
+        collection_pred: :and,
+        value: 5
+      )
+    end
+
+    it "or" do
+      @node = @node.list_or.eq(5)
+      expect(@node.node[:filters]).to include(
+        collection: :array,
+        collection_pred: :or,
+        value: 5
+      )
+    end
+  end
+
+  context "mapkey/hash" do
+    context "key" do
+      it "and" do
+        @node = @node.map_key_and.eq(5)
+        expect(@node.node[:filters]).to include(
+          collection: :mapkey,
+          collection_pred: :and,
+          value: 5
+        )
+      end
+
+      it "or" do
+        @node = @node.map_key_or.eq(5)
+        expect(@node.node[:filters]).to include(
+          collection: :mapkey,
+          collection_pred: :or,
+          value: 5
+        )
+      end
+    end
+
+    context "value" do
+      it "and" do
+        @node = @node.map_val_and.eq(5)
+        expect(@node.node[:filters]).to include(
+          collection: :mapval,
+          collection_pred: :and,
+          value: 5
+        )
+      end
+
+      it "or" do
+        @node = @node.map_val_or.eq(5)
+        expect(@node.node[:filters]).to include(
+          collection: :mapval,
+          collection_pred: :or,
+          value: 5
+        )
+      end
+    end
+  end
 end

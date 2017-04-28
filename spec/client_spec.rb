@@ -911,6 +911,103 @@ describe AerospikeC::Client do
           end
         end
       end
+
+      context 'list' do
+        before(:each) do
+          (101..110).each do |f|
+            key = AerospikeC::Key.new('test', 'query_test', "query#{f}")
+            bins = {
+              int_bin: f,
+              list_bin: [f, f + 1]
+            }
+
+            @query_keys << key
+
+            @client.put(key, bins)
+          end
+
+          query.range!("int_bin", 101, 110)
+        end
+
+        context "and" do
+          it "returns records which all elements of the list are greater" do
+            predexp.where(predexp["list_bin"].list_and.gt(108))
+            query.predexp = predexp
+            result = @client.query(query)
+            expect(result.count).to eq(2)
+            expect(result.map{|b| b["int_bin"]}).to eq([109,110])
+          end
+        end
+
+        context "or" do
+          it "returns records which list contains number" do
+            predexp.where(predexp["list_bin"].list_or.eq(108))
+            query.predexp = predexp
+            result = @client.query(query)
+            expect(result.count).to eq(2)
+            expect(result.map{|b| b["int_bin"]}).to eq([107,108])
+          end
+        end
+      end
+
+      context "map" do
+        before(:each) do
+          (101..110).each do |f|
+            key = AerospikeC::Key.new('test', 'query_test', "query#{f}")
+            bins = {
+              int_bin: f,
+              hash_bin: {
+                second_int_bin: f,
+                second_str_bin: "str#{f}"
+              },
+              hash_and_bin: {
+                second_int_bin: f,
+                third_int_bin: f + 1
+              }
+            }
+
+            @query_keys << key
+
+            @client.put(key, bins)
+          end
+
+          query.range!("int_bin", 101, 110)
+        end
+
+        context "key" do
+          it "map_key_and returns records which all map keys match" do
+            predexp.where(predexp["hash_bin"].map_key_and.regexp("second"))
+            query.predexp = predexp
+            result = @client.query(query)
+            expect(result.count).to eq(10)
+          end
+
+          it "map_key_or returns records which any map key match" do
+            predexp.where(predexp["hash_bin"].map_key_or.eq("second_int_bin"))
+            query.predexp = predexp
+            result = @client.query(query)
+            expect(result.count).to eq(10)
+          end
+        end
+
+        context "val" do
+          it "map_val_and returns records which all map values match" do
+            predexp.where(predexp["hash_and_bin"].map_val_and.gt(108))
+            query.predexp = predexp
+            result = @client.query(query)
+            expect(result.count).to eq(2)
+            expect(result.map{|b| b["int_bin"]}).to eq([109,110])
+          end
+
+          it "map_val_or returns records which any map value match" do
+            predexp.where(predexp["hash_bin"].map_val_or.eq("str105"))
+            query.predexp = predexp
+            result = @client.query(query)
+            expect(result.count).to eq(1)
+            expect(result.last["int_bin"]).to eq(105)
+          end
+        end
+      end
     end
   end
 end
