@@ -130,7 +130,7 @@ void push_2_as_predexp(as_predexp_array *a, VALUE node_bin, VALUE node_true, VAL
     } else if(node_filter == predexp_unequal_sym) {
       insert_as_predexp_array(a, as_predexp_string_unequal());
     } else if(node_filter == predexp_regexp_sym) {
-      insert_as_predexp_array(a, as_predexp_string_regexp(1));
+      insert_as_predexp_array(a, as_predexp_string_regex(1));
     } else {
       raise_parse_error();
     }
@@ -140,7 +140,7 @@ void push_2_as_predexp(as_predexp_array *a, VALUE node_bin, VALUE node_true, VAL
       char * buffer = (char *) malloc ( strlen(geo->value) + 1 );
       strcpy(buffer, geo->value);
       insert_as_predexp_array(a, as_predexp_geojson_bin(bin));
-      insert_as_predexp_array(a, as_predexp_geojson_value(geo));
+      insert_as_predexp_array(a, as_predexp_geojson_value(buffer));
       if (node_filter == predexp_within_sym) {
         insert_as_predexp_array(a, as_predexp_geojson_within());
       } else if(node_filter == predexp_contains_sym) {
