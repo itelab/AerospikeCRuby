@@ -84,7 +84,7 @@ module AerospikeC
       self
     end
 
-    def void_time
+    def expiration_time
       raise AttributeError.new(nil, "not a record predicate") unless @node[:bin] == :record
       @node[:filters][:rec_method] = __method__
       self

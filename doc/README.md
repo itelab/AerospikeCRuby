@@ -30,6 +30,8 @@ client = AerospikeC::Client.new("127.0.0.1", 3000)
 - [GeoJson class](geo_json.md)
 - [PasswordEngine class](password_engine.md)
 - [Password class](password.md)
+- [PredExp class](predexp.md)
+- [PredExpNode class](predexp_node.md)
 
 
 <a name="aerospike_c"></a>

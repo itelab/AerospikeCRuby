@@ -114,6 +114,7 @@ void push_2_as_predexp(as_predexp_array *a, VALUE node_bin, VALUE node_true, VAL
       raise_parse_error();
     }
     node_value = NUM2ULONG(node_value);
+    insert_as_predexp_array(a, as_predexp_integer_value(node_value));
     insert_integer_predicate(a, node_filter);
 
   } else if(node_collection != Qnil) {
