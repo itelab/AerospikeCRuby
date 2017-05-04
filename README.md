@@ -1,5 +1,5 @@
 # AerospikeCRuby
-### master version - 0.4.8
+### master version - 0.5
 
 AerospikeCRuby is an aerospike library using aerospike-c-client wrapped into ruby. Responses does not build any objects and return pure ruby hashes for speed.
 
@@ -156,9 +156,9 @@ client.delete(key)
 
 ### Build information:
 
-* aerospike          - 3.9.1.1
-* aerospike-c-client - 4.0.4
-* ruby version       - 2.2.3
+* aerospike          - 3.12.1
+* aerospike-c-client - 4.1.5
+* ruby version       - 2.3.0
 
 
 
@@ -167,7 +167,7 @@ client.delete(key)
 <a name="license"></a>
 
 ```
-Copyright (c) 2015-2016 Itelab (www.itelab.eu)
+Copyright (c) 2015-2017 Itelab (www.itelab.eu)
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

@@ -46,7 +46,10 @@ With a new operation, you can use any of the methods specified below:
 ### initialize(value)
 
 Create a new object.
-Object also can be created by using [AerospikeC::PredExp#[]](predexp.md#ary)
+
+Object also can be created by using [AerospikeC::PredExp#[]](predexp.md#ary).
+
+Providing symbol `:record` allows to filter records by [time of last update](#last_update) or [time to live](#void_time).
 
 Parameters:
 
@@ -287,5 +290,253 @@ Example:
 
 ```ruby
 node = AerospikeC::PredExpNode.new(:int_bin)
-node.not.eq(5)
+node.not.eq(5) # same effect as node.not_eq(5)
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- and -->
+<a name="and"></a>
+
+### and(value)
+
+Adds an "and" predicate to the filter
+
+Parameters:
+
+- `value` - another AerospikeC::PredExpNode
+
+Retrun `self`
+
+Example:
+
+```ruby
+# searches for records with 'int_bin' < 10 and 'string_bin' equal to 'foo'
+node = AerospikeC::PredExpNode.new(:int_bin)
+node2 = AerospikeC::PredExpNode.new(:string_bin)
+node.lt(10).and(node2.eq("foo"))
+
+# multiple nodes can be added
+node.lt(10).and(node2.eq("foo")).and(node.gt(100))
+
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- or -->
+<a name="or"></a>
+
+### or(value)
+
+Adds an "or" predicate to the filter
+
+Parameters:
+
+- `value` - another AerospikeC::PredExpNode
+
+Retrun `self`
+
+Example:
+
+```ruby
+# searches for records with 'int_bin' < 10 or 'string_bin' equal to 'foo'
+node = AerospikeC::PredExpNode.new(:int_bin)
+node2 = AerospikeC::PredExpNode.new(:string_bin)
+node.lt(10).or(node2.eq("foo"))
+
+# multiple nodes can be added
+node.lt(10).or(node2.eq("foo")).or(node.gt(100))
+
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- last_update -->
+<a name="last_update"></a>
+
+### last_update
+
+To use this method bin `:record` must be provided.
+
+Search for records by the time of last update.
+
+Provided time must be an Integer being Epoch time in nanoseconds.
+
+Retrun `self`
+
+Example:
+
+```ruby
+# time 10 minutes ago in nanoseconds
+time = (Time.now - 10.minutes).strftime('%s%9N').to_i
+
+# searches for records with last update time older than 10 minutes ago
+node = AerospikeC::PredExpNode.new(:record)
+node.last_update.lt(time)
+
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- void_time -->
+<a name="void_time"></a>
+
+### void_time
+
+To use this method bin `:record` must be provided.
+
+Search for records by the time of expiration of the record.
+
+Provided time must be an Integer being Epoch time in nanoseconds.
+
+Retrun `self`
+
+Example:
+
+```ruby
+# time in 10 minutes in nanoseconds
+time = (Time.now + 10.minutes).strftime('%s%9N').to_i
+
+# searches for records which expire sooner than 10 minutes from now
+node = AerospikeC::PredExpNode.new(:record)
+node.void_time.lt(time)
+
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- list_and -->
+<a name="list_and"></a>
+
+### list_and
+
+Search for records with selected bin being a list and all values inside it passing the filter.
+
+Retrun `self`
+
+Example:
+
+```ruby
+# assuming we have records:
+# {"ary_bin" => [1,2,3,4,5]}
+# {"ary_bin" => [3,4,5,6,7]}
+
+node = AerospikeC::PredExpNode.new(:ary_bin)
+node.list_and.lt(6) # this will return only the first record
+
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- list_or -->
+<a name="list_or"></a>
+
+### list_or
+
+Search for records with selected bin being a list and any value inside it passing the filter.
+
+Retrun `self`
+
+Example:
+
+```ruby
+# assuming we have records:
+# {"ary_bin" => [1,2,3,4,5]}
+# {"ary_bin" => [3,4,5,6,7]}
+
+node = AerospikeC::PredExpNode.new(:ary_bin)
+node.list_or.eq(7) # this will return only the second record
+
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- map_key_or -->
+<a name="map_key_or"></a>
+
+### map_key_or
+
+Search for records with selected bin being a mapkey(Hash) and any key inside it passing the filter.
+
+Retrun `self`
+
+Example:
+
+```ruby
+# assuming we have records:
+# {"h_bin" => {"foo"=> "bar", "bar" => "baz"}}
+# {"h_bin" => {"foo"=> "bar", "baz" => "qux"}}
+
+node = AerospikeC::PredExpNode.new(:h_bin)
+node.map_key_or.eq("bar") # this will return only the first record
+
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- map_key_and -->
+<a name="map_key_and"></a>
+
+### map_key_and
+
+Search for records with selected bin being a mapkey(Hash) and every key inside it passing the filter.
+
+Retrun `self`
+
+Example:
+
+```ruby
+# assuming we have records:
+# {"h_bin" => {"foo"=> "bar", "foobar" => "baz"}}
+# {"h_bin" => {"foo"=> "bar", "baz" => "qux"}}
+
+node = AerospikeC::PredExpNode.new(:h_bin)
+node.map_key_and.regexp("foo") # this will return only the first record
+
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- map_val_or -->
+<a name="map_val_or"></a>
+
+### map_val_or
+
+Search for records with selected bin being a mapkey(Hash) and any value inside it passing the filter.
+
+Retrun `self`
+
+Example:
+
+```ruby
+# assuming we have records:
+# {"h_bin" => {"foo"=> "bar", "bar" => "baz"}}
+# {"h_bin" => {"foo"=> "bar", "baz" => "qux"}}
+
+node = AerospikeC::PredExpNode.new(:h_bin)
+node.map_val_or.eq("baz") # this will return only the first record
+
+```
+
+<!--===============================================================================-->
+<hr/>
+<!-- map_val_and -->
+<a name="map_val_and"></a>
+
+### map_val_and
+
+Search for records with selected bin being a mapkey(Hash) and all values inside it passing the filter.
+
+Retrun `self`
+
+Example:
+
+```ruby
+# assuming we have records:
+# {"h_bin" => {"foo"=> "foobar", "bar" => "barbaz"}}
+# {"h_bin" => {"foo"=> "bar", "baz" => "qux"}}
+
+node = AerospikeC::PredExpNode.new(:h_bin)
+node.map_val_and.regexp("bar") # this will return only the first record
+
 ```
