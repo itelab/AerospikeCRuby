@@ -1008,6 +1008,35 @@ describe AerospikeC::Client do
           end
         end
       end
+
+      context "record" do
+        before(:each) do
+          (101..110).each do |f|
+            key = AerospikeC::Key.new('test', 'query_test', "query#{f}")
+            bins = {
+              int_bin: f
+            }
+
+            @query_keys << key
+
+            @client.put(key, bins)
+          end
+
+          query.range!("int_bin", 101, 110)
+        end
+
+        context "expiration time" do
+          it "greater than" do
+            time = Time.now.strftime('%s%9N').to_i
+            node = AerospikeC::PredExpNode.new(:record)
+            predexp.where(node.expiration_time.gt(time))
+            query.predexp = predexp
+
+            result = @client.query(query)
+            puts result
+          end
+        end
+      end
     end
   end
 end

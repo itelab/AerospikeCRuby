@@ -27,7 +27,7 @@ With a new operation, you can use any of the methods specified below:
   - [#and](#and)
   - [#or](#or)
   - [#last_update](#last_update)
-  - [#void_time](#void_time)
+  - [#expiration_time](#expiration_time)
   - [#list_and](#list_and)
   - [#list_or](#list_or)
   - [#map_key_and](#map_key_and)
@@ -49,7 +49,7 @@ Create a new object.
 
 Object also can be created by using [AerospikeC::PredExp#[]](predexp.md#ary).
 
-Providing symbol `:record` allows to filter records by [time of last update](#last_update) or [time to live](#void_time).
+Providing symbol `:record` allows to filter records by [time of last update](#last_update) or [time to live](#expiration_time).
 
 Parameters:
 
@@ -378,10 +378,10 @@ node.last_update.lt(time)
 
 <!--===============================================================================-->
 <hr/>
-<!-- void_time -->
-<a name="void_time"></a>
+<!-- expiration_time -->
+<a name="expiration_time"></a>
 
-### void_time
+### expiration_time
 
 To use this method bin `:record` must be provided.
 
@@ -399,7 +399,7 @@ time = (Time.now + 10.minutes).strftime('%s%9N').to_i
 
 # searches for records which expire sooner than 10 minutes from now
 node = AerospikeC::PredExpNode.new(:record)
-node.void_time.lt(time)
+node.expiration_time.lt(time)
 
 ```
 
