@@ -7,8 +7,8 @@ describe AerospikeC::Record do
 
   before(:each) do
     @bins = {
-      "bin_int" => @bin_int,
-      "bin_string" => @bin_string,
+      "bin_int" => 1,
+      "bin_string" => "hey!",
       "bin_tab" => [rand(1..100), rand(1..100), rand_string(100), [rand(1..200), rand_string(25)], rand(1.2...276.9)],
       "bin_float" => rand(-123.2...123.2),
 

@@ -11,4 +11,5 @@ require "aerospike_c_ruby"
 # Pry.start
 
 require "irb"
+
 IRB.start

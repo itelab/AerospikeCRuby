@@ -221,5 +221,3 @@ class AerospikeC::ErrorCodes < StandardError
       end
     end
 end
-
-

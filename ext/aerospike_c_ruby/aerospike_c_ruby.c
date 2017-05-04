@@ -73,4 +73,5 @@ void Init_aerospike_c_ruby() {
   init_aerospike_c_ldt_proxy(rb_aero_AerospikeC);
   init_aerospike_c_exceptions(rb_aero_AerospikeC);
   init_aerospike_c_password(rb_aero_AerospikeC);
+  init_aerospike_c_predexp(rb_aero_AerospikeC);
 }

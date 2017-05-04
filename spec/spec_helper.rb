@@ -10,7 +10,7 @@ def put_default_ttl(ttl)
 end
 
 def ttl_default
-  4294967295
+  2592000
 end
 
 def rand_string(len = 8)

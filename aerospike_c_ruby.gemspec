@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name        = 'aerospike_c_ruby'
-  s.version     = '0.4.8'
-  s.date        = '2017-04-04'
+  s.version     = '0.5'
+  s.date        = '2017-05-04'
   s.summary     = "aerospike_c_ruby"
   s.description = "aerospike_c_ruby"
   s.authors     = ["Adam Stomski", "Arkadiusz Jasinski"]

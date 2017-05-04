@@ -4,8 +4,6 @@ static int foreach_hash2record(VALUE key, VALUE val, VALUE record);
 static int foreach_hash2as_hashmap(VALUE key, VALUE val, VALUE map);
 static char * key2bin_name(VALUE key);
 
-
-
 void start_timing(struct timeval * tm) {
   gettimeofday(tm, NULL);
 }
@@ -817,6 +815,23 @@ as_query * query_obj2as_query(VALUE query_obj) {
 
       as_query_orderby(query, StringValueCStr(order_bin), FIX2INT(order_type));
     }
+  }
+
+  VALUE predexp = rb_iv_get(query_obj, "@predexp");
+
+  if( predexp != Qnil ) {
+    as_predexp_array a; // dynamic array
+    init_as_predexp_array(&a, 100);
+    predexp_2_as_predexp(predexp, &a);
+
+    if (a.capacity > 0) {
+      as_query_predexp_init(query, a.capacity);
+      for(int i = 0; i < a.capacity; i++){
+        as_query_predexp_add(query, a.array[i]);
+      }
+    }
+
+    free_as_predexp_array(&a);
   }
 
   // log_debug("Converted ruby AerospikeC::Query to as_query");

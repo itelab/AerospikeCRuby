@@ -18,7 +18,7 @@ static void rec_deallocate(as_record * rec) {
 }
 
 static VALUE rec_allocate(VALUE self) {
-  as_record * rec = (as_record *) malloc( sizeof(as_record) );
+  as_record * rec = (as_record *) cf_malloc( sizeof(as_record) );
   if (! rec) rb_raise(rb_aero_MemoryError, "[AerospikeC::Record][initialize] Error while allocating memory for aerospike record");
 
   return Data_Wrap_Struct(self, NULL, rec_deallocate, rec);
@@ -56,7 +56,7 @@ static void rec_initialize(int argc, VALUE * argv, VALUE self) {
   as_record_init(rec, len);
   rec->ttl = FIX2INT( rb_hash_aref(options, ttl_sym) );
 
-  hash2record(value, self);
+  hash2record(value, rec);
 }
 
 //

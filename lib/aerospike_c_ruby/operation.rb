@@ -33,11 +33,11 @@ class AerospikeC::Operation
   ##@return     ttl
   ##
   def ttl=(val)
-    if val.is_a?(Fixnum)
+    unless val.is_a?(Numeric)
       raise AerospikeC::OptionError.new(must_be_int_msg)
     end
 
-    @ttl = val
+    @ttl = val.to_i
   end
 
 
@@ -63,6 +63,17 @@ class AerospikeC::Operation
   ##
   def touch!
     @operations << { operation: :touch }
+    self
+  end
+
+  #-----------------------------------------------------------------------------
+  ##@brief      append operation as hash
+  ##
+  ##@return     self
+  ##
+  def <<(val)
+    return self unless val.is_a?(Hash)
+    @operations << val
     self
   end
 
