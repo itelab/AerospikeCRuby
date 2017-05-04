@@ -106,9 +106,9 @@ void push_2_as_predexp(as_predexp_array *a, VALUE node_bin, VALUE node_true, VAL
 
   if (node_bin == predexp_record_sym){
     VALUE record_filter = rb_hash_aref(node_filters, predexp_record_filter_sym);
-    if(record_filter == predexp_record_expiration_time_sym ) {
+    if(record_filter ==  predexp_record_last_update_sym) {
       insert_as_predexp_array(a, as_predexp_rec_last_update());
-    } else if (record_filter == predexp_record_last_update_sym) {
+    } else if (record_filter == predexp_record_expiration_time_sym) {
       insert_as_predexp_array(a, as_predexp_rec_void_time());
     } else {
       raise_parse_error();
