@@ -746,56 +746,59 @@ as_query * query_obj2as_query(VALUE query_obj) {
   }
 
   VALUE filter      = rb_iv_get(query_obj, "@filter");
-  VALUE filter_type = rb_hash_aref(filter, filter_type_sym);
-  VALUE query_bin   = rb_hash_aref(filter, bin_sym);
 
-  // ----------------
-  // where
-  if ( filter_type == eql_sym ) { // eql
-    VALUE val        = rb_hash_aref(filter, value_sym);
-    VALUE where_type = rb_hash_aref(filter, type_sym);
+  if (TYPE(filter) != T_NIL) {
+    VALUE filter_type = rb_hash_aref(filter, filter_type_sym);
+    VALUE query_bin   = rb_hash_aref(filter, bin_sym);
 
-    if ( where_type == numeric_sym ) {
-      as_query_where(query, StringValueCStr(query_bin), as_integer_equals(FIX2LONG(val)) );
+    // ----------------
+    // where
+    if ( filter_type == eql_sym ) { // eql
+      VALUE val        = rb_hash_aref(filter, value_sym);
+      VALUE where_type = rb_hash_aref(filter, type_sym);
+
+      if ( where_type == numeric_sym ) {
+        as_query_where(query, StringValueCStr(query_bin), as_integer_equals(FIX2LONG(val)) );
+      }
+      else if ( where_type == string_sym ) {
+        as_query_where(query, StringValueCStr(query_bin), as_string_equals(StringValueCStr(val)) );
+      }
+      else {
+        destroy_query(query);
+        rb_raise(rb_aero_ParseError, "[Utils][query_obj2as_query] Unsupported eql value type: %s", val_inspect(val));
+      }
     }
-    else if ( where_type == string_sym ) {
-      as_query_where(query, StringValueCStr(query_bin), as_string_equals(StringValueCStr(val)) );
+    else if ( filter_type == range_sym ) { // range
+      VALUE min = rb_hash_aref(filter, min_sym);
+      VALUE max = rb_hash_aref(filter, max_sym);
+
+      as_query_where(query, StringValueCStr(query_bin), as_integer_range( FIX2LONG(min), FIX2LONG(max) ) );
+    }
+    else if ( filter_type == geo_within_sym ) { // geo_within
+      VALUE val = rb_hash_aref(filter, value_sym);
+
+      as_geojson * geo = get_geo_json_struct(val);
+
+      char * buffer = (char *) malloc ( strlen(geo->value) + 1 );
+      strcpy(buffer, geo->value);
+
+      as_query_where(query, StringValueCStr(query_bin), as_geo_within(buffer));
+    }
+    else if ( filter_type == geo_contains_sym ) { // geo_contains
+      VALUE val = rb_hash_aref(filter, value_sym);
+
+      as_geojson * geo = get_geo_json_struct(val);
+
+      char * buffer = (char *) malloc ( strlen(geo->value) + 1 );
+      strcpy(buffer, geo->value);
+
+      as_query_where(query, StringValueCStr(query_bin), as_geo_contains(buffer));
     }
     else {
+      VALUE tmp = rb_hash_aref(filter, filter_type_sym);
       destroy_query(query);
-      rb_raise(rb_aero_ParseError, "[Utils][query_obj2as_query] Unsupported eql value type: %s", val_inspect(val));
+      rb_raise(rb_aero_ParseError, "[Utils][query_obj2as_query] Unsupported filter type: %s", val_inspect(tmp));
     }
-  }
-  else if ( filter_type == range_sym ) { // range
-    VALUE min = rb_hash_aref(filter, min_sym);
-    VALUE max = rb_hash_aref(filter, max_sym);
-
-    as_query_where(query, StringValueCStr(query_bin), as_integer_range( FIX2LONG(min), FIX2LONG(max) ) );
-  }
-  else if ( filter_type == geo_within_sym ) { // geo_within
-    VALUE val = rb_hash_aref(filter, value_sym);
-
-    as_geojson * geo = get_geo_json_struct(val);
-
-    char * buffer = (char *) malloc ( strlen(geo->value) + 1 );
-    strcpy(buffer, geo->value);
-
-    as_query_where(query, StringValueCStr(query_bin), as_geo_within(buffer));
-  }
-  else if ( filter_type == geo_contains_sym ) { // geo_contains
-    VALUE val = rb_hash_aref(filter, value_sym);
-
-    as_geojson * geo = get_geo_json_struct(val);
-
-    char * buffer = (char *) malloc ( strlen(geo->value) + 1 );
-    strcpy(buffer, geo->value);
-
-    as_query_where(query, StringValueCStr(query_bin), as_geo_contains(buffer));
-  }
-  else {
-    VALUE tmp = rb_hash_aref(filter, filter_type_sym);
-    destroy_query(query);
-    rb_raise(rb_aero_ParseError, "[Utils][query_obj2as_query] Unsupported filter type: %s", val_inspect(tmp));
   }
 
   VALUE order_by = rb_iv_get(query_obj, "@order");
