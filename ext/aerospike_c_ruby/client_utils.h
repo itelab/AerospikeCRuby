@@ -48,7 +48,9 @@ typedef struct scan_list_s {
 void client_deallocate(aerospike * as);
 void options2config(as_config * config, VALUE options, VALUE self);
 void set_priority_options(as_scan * scan, VALUE options);
-void check_for_llist_workaround(VALUE self, VALUE key, VALUE hash);
+
+// @deprecated Starting from version 4.1.6 C Client does not support LDT
+// void check_for_llist_workaround(VALUE self, VALUE key, VALUE hash);
 
 VALUE check_with_header(VALUE bins, VALUE options, as_record * rec);
 

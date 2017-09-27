@@ -211,7 +211,7 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
     as_record_destroy(rec);
     inputArray_destroy(inputArray);
 
-    check_for_llist_workaround(self, key, bins);
+    // check_for_llist_workaround(self, key, bins);
 
     rb_aero_logger(AS_LOG_LEVEL_DEBUG, &tm, 2, rb_str_new2("[Client][get] success"), rb_aero_KEY_INFO);
 
@@ -235,7 +235,7 @@ static VALUE get(int argc, VALUE * argv, VALUE self) {
 
   as_record_destroy(rec);
 
-  check_for_llist_workaround(self, key, bins);
+  // check_for_llist_workaround(self, key, bins);
 
   rb_aero_logger(AS_LOG_LEVEL_DEBUG, &tm, 2, rb_str_new2("[Client][get] success"), rb_aero_KEY_INFO);
 
@@ -1307,6 +1307,7 @@ static VALUE close_connection(VALUE self) {
 }
 
 
+// @deprecated Starting from version 4.1.6 C Client does not support LDT
 // ----------------------------------------------------------------------------------
 //
 // creates new AerospikeC::Llist instance
@@ -1321,17 +1322,17 @@ static VALUE close_connection(VALUE self) {
 //  RETURN:
 //    1. new AerospikeC::Llist object
 //
-static VALUE llist(int argc, VALUE * argv, VALUE self) {
-  VALUE key;
-  VALUE bin_name;
-  VALUE options;
-
-  rb_scan_args(argc, argv, "21", &key, &bin_name, &options);
-
-  if ( NIL_P(options) ) options = rb_hash_new(); // default options
-
-  return rb_funcall(rb_aero_Llist, rb_intern("new"), 4, self, key, bin_name, options);
-}
+// static VALUE llist(int argc, VALUE * argv, VALUE self) {
+//   VALUE key;
+//   VALUE bin_name;
+//   VALUE options;
+//
+//   rb_scan_args(argc, argv, "21", &key, &bin_name, &options);
+//
+//   if ( NIL_P(options) ) options = rb_hash_new(); // default options
+//
+//   return rb_funcall(rb_aero_Llist, rb_intern("new"), 4, self, key, bin_name, options);
+// }
 
 
 // ----------------------------------------------------------------------------------
@@ -1397,7 +1398,7 @@ void init_aerospike_c_client(VALUE AerospikeC) {
   rb_define_method(rb_aero_Client, "background_execute_udf_on_query", RB_FN_ANY()background_execute_udf_on_query, -1);
 
   // llist
-  rb_define_method(rb_aero_Client, "llist", RB_FN_ANY()llist, -1);
+  // rb_define_method(rb_aero_Client, "llist", RB_FN_ANY()llist, -1);
 
   //
   // aliases

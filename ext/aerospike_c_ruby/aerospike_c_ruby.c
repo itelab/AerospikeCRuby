@@ -45,8 +45,8 @@ static VALUE set_ttl_name(VALUE self, VALUE ttl_name) {
 void Init_aerospike_c_ruby() {
   rb_aero_AerospikeC = rb_define_module("AerospikeC");
 
-  rb_define_const(rb_aero_AerospikeC, "VERSION", rb_str_new2("0.2.0"));
-  rb_define_const(rb_aero_AerospikeC, "C_CLIENT_VERSION", rb_str_new2("3.1.24"));
+  rb_define_const(rb_aero_AerospikeC, "VERSION", rb_str_new2("0.5.1"));
+  rb_define_const(rb_aero_AerospikeC, "C_CLIENT_VERSION", rb_str_new2("4.1.6"));
 
   rb_iv_set(rb_aero_AerospikeC, "@encoding", Qnil);
   rb_iv_set(rb_aero_AerospikeC, "@ttl_name", rb_str_new2("expire_in"));
@@ -69,9 +69,11 @@ void Init_aerospike_c_ruby() {
   init_aerospike_c_query(rb_aero_AerospikeC);
   init_aerospike_c_query_task(rb_aero_AerospikeC);
   init_aerospike_c_policy(rb_aero_AerospikeC);
-  init_aerospike_c_llist(rb_aero_AerospikeC);
-  init_aerospike_c_ldt_proxy(rb_aero_AerospikeC);
   init_aerospike_c_exceptions(rb_aero_AerospikeC);
   init_aerospike_c_password(rb_aero_AerospikeC);
   init_aerospike_c_predexp(rb_aero_AerospikeC);
+
+  // @deprecated Starting from version 4.1.6 C Client does not support LDT
+  // init_aerospike_c_llist(rb_aero_AerospikeC);
+  // init_aerospike_c_ldt_proxy(rb_aero_AerospikeC);
 }

@@ -290,7 +290,19 @@ Example:
 
 ```ruby
 node = AerospikeC::PredExpNode.new(:int_bin)
-node.not.eq(5) # same effect as node.not_eq(5)
+node.not.eq(5) # does NOT have the same effect as node.not_eq(5)
+
+# not_eq will NOT return records which do NOT contain bin in question
+# not.eq will do it
+
+# Here's an example:
+# assuming we have to records with bins:
+# { "foo": 1, "bar": 2 }
+# { "foo": 1 }
+
+node = AerospikeC::PredExpNode.new(:bar)
+node.not_eq(2) # will return empty array
+node.not.eq(2) # will return second record
 ```
 
 <!--===============================================================================-->

@@ -132,11 +132,11 @@ static void init_policy_read(VALUE self, VALUE options) {
   options_buffer buffer;
   options2buffer(self, options, &buffer);
 
-  policy->consistency_level = buffer.consistency_level;
-  policy->replica           = buffer.replica;
-  policy->key               = buffer.key;
-  policy->retry             = buffer.retry;
-  policy->timeout           = buffer.timeout;
+  policy->consistency_level   = buffer.consistency_level;
+  policy->replica             = buffer.replica;
+  policy->key                 = buffer.key;
+  policy->base.max_retries    = buffer.retry;
+  policy->base.total_timeout  = buffer.timeout;
 
   VALUE policy_struct = Data_Wrap_Struct(rb_aero_Policy, NULL, free_policy_read, policy);
 
@@ -173,12 +173,12 @@ static void init_policy_write(VALUE self, VALUE options) {
   options_buffer buffer;
   options2buffer(self, options, &buffer);
 
-  policy->commit_level = buffer.commit_level;
-  policy->exists       = buffer.exists;
-  policy->gen          = buffer.gen;
-  policy->key          = buffer.key;
-  policy->retry        = buffer.retry;
-  policy->timeout      = buffer.timeout;
+  policy->commit_level       = buffer.commit_level;
+  policy->exists             = buffer.exists;
+  policy->gen                = buffer.gen;
+  policy->key                = buffer.key;
+  policy->base.max_retries   = buffer.retry;
+  policy->base.total_timeout = buffer.timeout;
 
   VALUE policy_struct = Data_Wrap_Struct(rb_aero_Policy, NULL, free_policy_write, policy);
 
@@ -215,12 +215,12 @@ static void init_policy_remove(VALUE self, VALUE options) {
   options_buffer buffer;
   options2buffer(self, options, &buffer);
 
-  policy->commit_level = buffer.commit_level;
-  policy->gen          = buffer.gen;
-  policy->generation   = buffer.generation;
-  policy->key          = buffer.key;
-  policy->retry        = buffer.retry;
-  policy->timeout      = buffer.timeout;
+  policy->commit_level       = buffer.commit_level;
+  policy->gen                = buffer.gen;
+  policy->generation         = buffer.generation;
+  policy->key                = buffer.key;
+  policy->base.max_retries   = buffer.retry;
+  policy->base.total_timeout = buffer.timeout;
 
   VALUE policy_struct = Data_Wrap_Struct(rb_aero_Policy, NULL, free_policy_remove, policy);
 
@@ -259,7 +259,7 @@ static void init_policy_apply(VALUE self, VALUE options) {
 
   policy->commit_level = buffer.commit_level;
   policy->key          = buffer.key;
-  policy->timeout      = buffer.timeout;
+  policy->base.total_timeout      = buffer.timeout;
 
   VALUE policy_struct = Data_Wrap_Struct(rb_aero_Policy, NULL, free_policy_apply, policy);
 
@@ -296,7 +296,7 @@ static void init_policy_query(VALUE self, VALUE options) {
   options_buffer buffer;
   options2buffer(self, options, &buffer);
 
-  policy->timeout = buffer.timeout;
+  policy->base.total_timeout = buffer.timeout;
 
   VALUE policy_struct = Data_Wrap_Struct(rb_aero_Policy, NULL, free_policy_query, policy);
 
@@ -333,13 +333,13 @@ static void init_policy_operate(VALUE self, VALUE options) {
   options_buffer buffer;
   options2buffer(self, options, &buffer);
 
-  policy->consistency_level = buffer.consistency_level;
-  policy->commit_level = buffer.commit_level;
-  policy->gen          = buffer.gen;
-  policy->key          = buffer.key;
-  policy->retry        = buffer.retry;
-  policy->timeout      = buffer.timeout;
-  policy->replica      = buffer.replica;
+  policy->consistency_level  = buffer.consistency_level;
+  policy->commit_level       = buffer.commit_level;
+  policy->gen                = buffer.gen;
+  policy->key                = buffer.key;
+  policy->base.max_retries   = buffer.retry;
+  policy->base.total_timeout = buffer.timeout;
+  policy->replica            = buffer.replica;
 
   VALUE policy_struct = Data_Wrap_Struct(rb_aero_Policy, NULL, free_policy_operate, policy);
 
