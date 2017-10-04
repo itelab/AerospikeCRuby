@@ -37,7 +37,7 @@
 #include <aerospike/aerospike_batch.h>
 #include <aerospike/aerospike_scan.h>
 #include <aerospike/aerospike_query.h>
-#include <aerospike/as_ldt.h>
+// #include <aerospike/as_ldt.h>
 #include <aerospike/as_password.h>
 #include <aerospike/as_predexp.h>
 
@@ -95,12 +95,14 @@ void init_aerospike_c_udf_task(VALUE AerospikeC);   // udf_task.c
 void init_aerospike_c_scan_task(VALUE AerospikeC);  // scan_task.c
 void init_aerospike_c_query(VALUE AerospikeC);      // query.c
 void init_aerospike_c_policy(VALUE AerospikeC);     // policy.c
-void init_aerospike_c_llist(VALUE AerospikeC);      // llist.c
-void init_aerospike_c_ldt_proxy(VALUE AerospikeC);  // ldt_proxy.c
 void init_aerospike_c_exceptions(VALUE AerospikeC); // exceptions.c
 void init_aerospike_c_geo_json(VALUE AerospikeC);   // geo_json.c
 void init_aerospike_c_password(VALUE AerospikeC);   // password.c
 void init_aerospike_c_predexp(VALUE AerospikeC);    // predexp.c
+
+// @deprecated Starting from version 4.1.6 C Client does not support LDT
+// void init_aerospike_c_llist(VALUE AerospikeC);      // llist.c
+// void init_aerospike_c_ldt_proxy(VALUE AerospikeC);  // ldt_proxy.c
 
 // query_task.c
 void init_aerospike_c_query_task(VALUE AerospikeC);
@@ -137,8 +139,8 @@ extern VALUE rb_aero_ApplyPolicy;
 extern VALUE rb_aero_QueryPolicy;
 extern VALUE rb_aero_OperatePolicy;
 
-extern VALUE rb_aero_Llist;
-extern VALUE rb_aero_LdtProxy;
+// extern VALUE rb_aero_Llist;
+// extern VALUE rb_aero_LdtProxy;
 
 extern VALUE rb_aero_AsError;
 extern VALUE rb_aero_MemoryError;

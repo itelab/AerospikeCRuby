@@ -169,24 +169,25 @@ as_policy_query * get_query_policy(VALUE query_obj) {
   }
 }
 
-// ----------------------------------------------------------------------------------
+// @deprecated Starting from version 4.1.6 C Client does not support LDT
+// // ----------------------------------------------------------------------------------
+// //
+// // workaround for: https://discuss.aerospike.com/t/parsing-record-with-ldt/2264/2
+// //
+// void check_for_llist_workaround(VALUE self, VALUE key, VALUE hash) {
+//   if ( rb_iv_get(self, "@ldt_proxy") != Qtrue ) return;
 //
-// workaround for: https://discuss.aerospike.com/t/parsing-record-with-ldt/2264/2
+//   VALUE rblliststat = rb_hash_aref(hash, RB_LLIST_WORAROUND_BIN);
 //
-void check_for_llist_workaround(VALUE self, VALUE key, VALUE hash) {
-  if ( rb_iv_get(self, "@ldt_proxy") != Qtrue ) return;
-
-  VALUE rblliststat = rb_hash_aref(hash, RB_LLIST_WORAROUND_BIN);
-
-  if ( rblliststat == Qnil ) return;
-
-  rb_foreach_ary_int(rblliststat) {
-    VALUE bin_name = rb_ary_entry(rblliststat, i);
-    VALUE llist    = rb_funcall(rb_aero_LdtProxy, rb_intern("new"), 3, self, key, bin_name);
-
-    rb_hash_aset(hash, bin_name, llist);
-  }
-}
+//   if ( rblliststat == Qnil ) return;
+//
+//   rb_foreach_ary_int(rblliststat) {
+//     VALUE bin_name = rb_ary_entry(rblliststat, i);
+//     VALUE llist    = rb_funcall(rb_aero_LdtProxy, rb_intern("new"), 3, self, key, bin_name);
+//
+//     rb_hash_aset(hash, bin_name, llist);
+//   }
+// }
 
 // ----------------------------------------------------------------------------------
 //
